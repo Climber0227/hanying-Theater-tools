@@ -132,37 +132,29 @@ function renderZones(zones) {
     container.innerHTML = html;
 }
 
-// 获取战区名称的CSS类
-function getZoneClass(zoneName) {
-    if (zoneName.includes('火焰') || zoneName.includes('火')) return 'fire';
-    if (zoneName.includes('机械') || zoneName.includes('物理')) return 'physical';
-    if (zoneName.includes('镭射') || zoneName.includes('蚀刃') || zoneName.includes('熵钟')) return 'thunder';
-    return 'physical';
-}
-
 // 渲染排行榜
-function renderRankings(rankings) {
+function renderRankings(rankings, zones) {
     const container = document.getElementById('rankingTable');
 
-    let html = `
+    // 动态生成表头，显示每个战区名称
+    let headerHtml = `
         <div class="ranking-header">
             <div class="col-rank">排名</div>
             <div class="col-player">玩家</div>
-            <div class="col-zone">选择战区</div>
-            <div class="col-score">分数</div>
+    `;
+    zones.forEach(zone => {
+        const zoneClass = getElementClassByName(zone.name);
+        headerHtml += `<div class="col-zone-score ${zoneClass}">${zone.name}</div>`;
+    });
+    headerHtml += `
+            <div class="col-total">总分</div>
         </div>
     `;
 
+    let html = headerHtml;
+
     rankings.slice(0, 100).forEach(ranking => {
         const rankClass = ranking.rank <= 3 ? `top-${ranking.rank}` : '';
-        // 找到玩家得分最高的战区
-        let bestZone = null;
-        if (ranking.zones && ranking.zones.length > 0) {
-            bestZone = ranking.zones.reduce((best, z) =>
-                z.score > best.score ? z : best, ranking.zones[0]);
-        }
-        const zoneName = bestZone ? getZoneNameById(bestZone.id) : '--';
-        const zoneClass = getZoneClass(zoneName);
 
         html += `
             <div class="ranking-row">
@@ -171,10 +163,18 @@ function renderRankings(rankings) {
                     <div class="player-name">${ranking.player.name}</div>
                     <div class="guild-name">${ranking.player.guildName || ''}</div>
                 </div>
-                <div class="zone-tag">
-                    <span class="zone-badge ${zoneClass}">${zoneName}</span>
-                </div>
-                <div class="score">${formatNumber(ranking.score)}</div>
+        `;
+
+        // 显示每个战区的分数
+        zones.forEach(zone => {
+            const zoneData = ranking.zones ? ranking.zones.find(z => z.id === zone.id) : null;
+            const score = zoneData ? formatNumber(zoneData.score) : '--';
+            const zoneClass = getElementClassByName(zone.name);
+            html += `<div class="zone-score ${zoneClass}">${score}</div>`;
+        });
+
+        html += `
+                <div class="total-score">${formatNumber(ranking.score)}</div>
             </div>
         `;
     });
@@ -182,12 +182,8 @@ function renderRankings(rankings) {
     container.innerHTML = html;
 }
 
-// 根据ID获取战区名称（需要从zones数据中获取）
+// 保存zones数据
 let zonesData = [];
-function getZoneNameById(zoneId) {
-    const zone = zonesData.find(z => z.id === zoneId);
-    return zone ? zone.name : '--';
-}
 
 // 更新页面标题信息
 function updateHeader(data) {
@@ -217,7 +213,7 @@ async function loadData() {
 
             // 渲染排行榜
             if (rankings) {
-                renderRankings(rankings);
+                renderRankings(rankings, zonesData);
             }
         } else {
             console.error('API返回数据格式错误:', result);

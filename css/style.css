@@ -192,8 +192,11 @@ body {
 
 .ranking-header .col-rank { width: 60px; color: #00d4ff; }
 .ranking-header .col-player { flex: 1; color: #00d4ff; }
-.ranking-header .col-zone { width: 100px; color: #00d4ff; text-align: center; }
-.ranking-header .col-score { width: 120px; color: #00d4ff; text-align: right; }
+.ranking-header .col-zone-score { width: 120px; color: #00d4ff; text-align: right; }
+.ranking-header .col-zone-score.fire { color: #ff6b00; }
+.ranking-header .col-zone-score.physical { color: #0096ff; }
+.ranking-header .col-zone-score.thunder { color: #9600ff; }
+.ranking-header .col-total { width: 120px; color: #00d4ff; text-align: right; font-weight: bold; }
 
 .ranking-row {
     display: flex;
@@ -237,34 +240,17 @@ body {
     font-size: 12px;
 }
 
-.zone-tag {
-    width: 100px;
-    text-align: center;
+.zone-score {
+    width: 120px;
+    text-align: right;
+    font-size: 13px;
 }
 
-.zone-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 15px;
-    font-size: 12px;
-}
+.zone-score.fire { color: #ff6b00; }
+.zone-score.physical { color: #0096ff; }
+.zone-score.thunder { color: #9600ff; }
 
-.zone-badge.fire {
-    background: rgba(255, 107, 0, 0.3);
-    color: #ff6b00;
-}
-
-.zone-badge.physical {
-    background: rgba(0, 150, 255, 0.3);
-    color: #0096ff;
-}
-
-.zone-badge.thunder {
-    background: rgba(150, 0, 255, 0.3);
-    color: #9600ff;
-}
-
-.score {
+.total-score {
     width: 120px;
     color: #00d4ff;
     font-weight: bold;
@@ -292,13 +278,13 @@ body {
         font-size: 12px;
     }
 
-    .ranking-header .col-zone,
-    .zone-tag {
-        width: 80px;
+    .ranking-header .col-zone-score,
+    .zone-score {
+        width: 90px;
     }
 
-    .ranking-header .col-score,
-    .score {
+    .ranking-header .col-total,
+    .total-score {
         width: 100px;
     }
 }

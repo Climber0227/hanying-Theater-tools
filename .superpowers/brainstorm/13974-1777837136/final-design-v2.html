@@ -1,0 +1,145 @@
+<h2>完整设计方案预览 - 最终版</h2>
+<p class="subtitle">战区信息展示网页</p>
+
+<div class="mockup">
+  <div class="mockup-header">预览：完整页面布局</div>
+  <div class="mockup-body">
+    <div style="background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%); padding: 20px; border-radius: 8px; font-family: 'Microsoft YaHei', sans-serif;">
+
+      <!-- 页面标题 -->
+      <div style="text-align: center; margin-bottom: 25px;">
+        <h1 style="color: #00d4ff; font-size: 28px; margin: 0;">战区数据</h1>
+        <div style="color: #888; font-size: 14px; margin-top: 8px;">服务器: CN | 参与人数: 6,060 | 更新时间: 2026-05-03 19:31</div>
+      </div>
+
+      <!-- 天气效果 -->
+      <div style="background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.3); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <div style="width: 50px; height: 50px; background: rgba(0,212,255,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 24px;">🔥</span>
+          </div>
+          <div>
+            <div style="color: #00d4ff; font-size: 18px; font-weight: bold;">薪炎崇光</div>
+            <div style="color: #ccc; font-size: 13px; margin-top: 5px;">角色每消除一个信号球，自身火属性伤害提升10%，最高叠加6层，持续8秒，重复触发后刷新。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 战区卡片横向排列 -->
+      <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+        <div style="flex: 1; background: rgba(255,107,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,107,0,0.4); text-align: center;">
+          <div style="color: #ff6b00; font-size: 16px; font-weight: bold;">火焰轮回</div>
+          <div style="color: #888; font-size: 12px; margin-top: 8px;">困兽犹斗：每一波次固定只刷新1只怪物</div>
+          <div style="color: #ff6b00; font-size: 11px; margin-top: 8px; padding: 5px; background: rgba(255,107,0,0.2); border-radius: 4px;">火属性伤害大幅提升</div>
+        </div>
+        <div style="flex: 1; background: rgba(0,150,255,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(0,150,255,0.4); text-align: center;">
+          <div style="color: #0096ff; font-size: 16px; font-weight: bold;">机械工厂</div>
+          <div style="color: #888; font-size: 12px; margin-top: 8px;">祸不单行：每一波固定刷新2只精英怪物</div>
+          <div style="color: #0096ff; font-size: 11px; margin-top: 8px; padding: 5px; background: rgba(0,150,255,0.2); border-radius: 4px;">物理伤害大幅提升</div>
+        </div>
+        <div style="flex: 1; background: rgba(150,0,255,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(150,0,255,0.4); text-align: center;">
+          <div style="color: #9600ff; font-size: 16px; font-weight: bold;">熵钟异数</div>
+          <div style="color: #888; font-size: 12px; margin-top: 8px;">祸不单行：每一波固定刷新2只精英怪物</div>
+          <div style="color: #9600ff; font-size: 11px; margin-top: 8px; padding: 5px; background: rgba(150,0,255,0.2); border-radius: 4px;">雷属性伤害大幅提升</div>
+        </div>
+      </div>
+
+      <!-- 分隔线 -->
+      <div style="height: 2px; background: linear-gradient(90deg, transparent, #00d4ff, transparent); margin: 20px 0;"></div>
+
+      <!-- 排行榜 -->
+      <div>
+        <div style="color: #00d4ff; font-size: 20px; font-weight: bold; margin-bottom: 15px;">排行榜 <span style="color: #888; font-size: 14px;">TOP 100</span></div>
+
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden;">
+          <!-- 表头 -->
+          <div style="display: flex; padding: 12px 15px; background: rgba(0,212,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 12px;">
+            <div style="width: 50px; color: #00d4ff; font-weight: bold;">排名</div>
+            <div style="flex: 1; color: #00d4ff; font-weight: bold;">玩家</div>
+            <div style="width: 100px; color: #ff6b00; font-weight: bold; text-align: right;">火焰轮回</div>
+            <div style="width: 100px; color: #0096ff; font-weight: bold; text-align: right;">机械工厂</div>
+            <div style="width: 100px; color: #9600ff; font-weight: bold; text-align: right;">熵钟异数</div>
+            <div style="width: 110px; color: #00d4ff; font-weight: bold; text-align: right;">总分</div>
+          </div>
+
+          <!-- 第1名 -->
+          <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; font-size: 13px;">
+            <div style="width: 50px; color: #ffd700; font-weight: bold;">1</div>
+            <div style="flex: 1;">
+              <div style="color: #fff; font-weight: bold;">巴黎圣坑院</div>
+              <div style="color: #666; font-size: 11px;">玫落薇</div>
+            </div>
+            <div style="width: 100px; color: #ff6b00; text-align: right;">40,030,791</div>
+            <div style="width: 100px; color: #0096ff; text-align: right;">21,407,355</div>
+            <div style="width: 100px; color: #9600ff; text-align: right;">38,202,389</div>
+            <div style="width: 110px; color: #00d4ff; font-weight: bold; text-align: right;">99,640,535</div>
+          </div>
+
+          <!-- 第2名 -->
+          <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; font-size: 13px;">
+            <div style="width: 50px; color: #c0c0c0; font-weight: bold;">2</div>
+            <div style="flex: 1;">
+              <div style="color: #fff; font-weight: bold;">皇牌</div>
+              <div style="color: #666; font-size: 11px;">公会名</div>
+            </div>
+            <div style="width: 100px; color: #ff6b00; text-align: right;">38,500,000</div>
+            <div style="width: 100px; color: #0096ff; text-align: right;">20,200,000</div>
+            <div style="width: 100px; color: #9600ff; text-align: right;">36,423,456</div>
+            <div style="width: 110px; color: #00d4ff; font-weight: bold; text-align: right;">95,123,456</div>
+          </div>
+
+          <!-- 第3名 -->
+          <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; font-size: 13px;">
+            <div style="width: 50px; color: #cd7f32; font-weight: bold;">3</div>
+            <div style="flex: 1;">
+              <div style="color: #fff; font-weight: bold;">玩家C</div>
+              <div style="color: #666; font-size: 11px;">公会名</div>
+            </div>
+            <div style="width: 100px; color: #ff6b00; text-align: right;">36,000,000</div>
+            <div style="width: 100px; color: #0096ff; text-align: right;">19,500,000</div>
+            <div style="width: 100px; color: #9600ff; text-align: right;">34,956,789</div>
+            <div style="width: 110px; color: #00d4ff; font-weight: bold; text-align: right;">90,456,789</div>
+          </div>
+
+          <!-- 第4名 -->
+          <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; font-size: 13px;">
+            <div style="width: 50px; color: #888; font-weight: bold;">4</div>
+            <div style="flex: 1;">
+              <div style="color: #fff;">玩家D</div>
+              <div style="color: #666; font-size: 11px;">公会名</div>
+            </div>
+            <div style="width: 100px; color: #ff6b00; text-align: right;">34,000,000</div>
+            <div style="width: 100px; color: #0096ff; text-align: right;">18,000,000</div>
+            <div style="width: 100px; color: #9600ff; text-align: right;">33,000,000</div>
+            <div style="width: 110px; color: #00d4ff; text-align: right;">85,000,000</div>
+          </div>
+
+          <!-- 第5名 -->
+          <div style="display: flex; padding: 12px 15px; align-items: center; font-size: 13px;">
+            <div style="width: 50px; color: #888; font-weight: bold;">5</div>
+            <div style="flex: 1;">
+              <div style="color: #fff;">玩家E</div>
+              <div style="color: #666; font-size: 11px;">公会名</div>
+            </div>
+            <div style="width: 100px; color: #ff6b00; text-align: right;">32,000,000</div>
+            <div style="width: 100px; color: #0096ff; text-align: right;">17,000,000</div>
+            <div style="width: 100px; color: #9600ff; text-align: right;">31,000,000</div>
+            <div style="width: 110px; color: #00d4ff; text-align: right;">80,000,000</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 20px; padding: 15px; background: rgba(0,212,255,0.1); border-radius: 8px; border: 1px solid rgba(0,212,255,0.3);">
+  <h3 style="color: #00d4ff; margin-top: 0;">页面元素说明</h3>
+  <ul style="color: #ccc; line-height: 1.8;">
+    <li><strong>页面标题</strong>：显示服务器、参与人数、更新时间</li>
+    <li><strong>天气效果</strong>：带图标的醒目横幅，显示当前天气名称和效果描述</li>
+    <li><strong>战区卡片</strong>：横向排列3个战区，用元素颜色区分（火=橙、物理=蓝、雷=紫）</li>
+    <li><strong>排行榜</strong>：TOP 100列表，显示每个战区分数和总分，显示公会名</li>
+    <li><strong>整体风格</strong>：深色科技感，渐变背景，霓虹蓝点缀</li>
+  </ul>
+</div>
