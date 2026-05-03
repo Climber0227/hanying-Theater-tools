@@ -1,14 +1,14 @@
 // API配置
 const WARZONE_API_BASE = 'https://api.huaxu.app/servers/cn/warzone';
 const PLAYER_API_BASE = 'https://api.huaxu.app/servers/cn/players';
-const ASSETS_BASE = 'https://assets.huaxu.app/cn';
+const ASSETS_BASE = 'https://assets.huaxu.app/cn-beta';
 let currentWeek = 568;
 let currentDifficulty = '16';
 
 // 获取图片URL
 function getImageUrl(path) {
     if (!path) return '';
-    return `${ASSETS_BASE}/${path}.256.webp`;
+    return `${ASSETS_BASE}/${path}.png`;
 }
 
 // 模拟浏览器请求头

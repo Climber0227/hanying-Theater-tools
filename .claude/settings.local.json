@@ -20,7 +20,11 @@
       "Bash(python -m json.tool)",
       "Bash(curl -s \"https://api.huaxu.app/servers/cn/players/34801366\")",
       "Bash(curl -s -I \"https://api.huaxu.app/image/roleplayersp/roleheadr4luna5\")",
-      "Bash(curl -s -I \"https://api.huaxu.app/servers/cn/image/roleplayersp/roleheadr4luna5\")"
+      "Bash(curl -s -I \"https://api.huaxu.app/servers/cn/image/roleplayersp/roleheadr4luna5\")",
+      "Bash(curl -s \"https://assets.huaxu.app/browse/cn-beta/\")",
+      "Bash(curl -s \"https://assets.huaxu.app/browse/cn-beta/image/\")",
+      "Bash(curl -s \"https://assets.huaxu.app/browse/cn-beta/image/rolecharacter/\")",
+      "Bash(curl -s -I \"https://assets.huaxu.app/cn-beta/image/rolecharacter/roleheadr2bangbinata1.png\")"
     ]
   }
 }
