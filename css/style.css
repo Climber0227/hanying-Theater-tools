@@ -1,0 +1,304 @@
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
+    color: #fff;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 页面标题 */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    color: #00d4ff;
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.meta {
+    color: #888;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* 战区卡片区域 */
+.zones-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+/* 普通战区卡片 */
+.zone-card {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.zone-card.fire {
+    background: rgba(255, 107, 0, 0.15);
+    border-color: rgba(255, 107, 0, 0.3);
+}
+
+.zone-card.physical {
+    background: rgba(0, 150, 255, 0.15);
+    border-color: rgba(0, 150, 255, 0.3);
+}
+
+.zone-card.thunder {
+    background: rgba(150, 0, 255, 0.15);
+    border-color: rgba(150, 0, 255, 0.3);
+}
+
+.zone-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.zone-card.fire .zone-name { color: #ff6b00; }
+.zone-card.physical .zone-name { color: #0096ff; }
+.zone-card.thunder .zone-name { color: #9600ff; }
+
+.zone-desc {
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.zone-info {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.zone-info:last-child {
+    margin-bottom: 0;
+}
+
+.info-label {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.zone-card.fire .info-label { color: #ff6b00; }
+.zone-card.physical .info-label { color: #0096ff; }
+.zone-card.thunder .info-label { color: #9600ff; }
+
+.info-desc {
+    color: #ccc;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+/* 混合区 */
+.mixed-zone {
+    flex: 2;
+    border: 2px solid rgba(150, 0, 255, 0.5);
+    border-radius: 12px;
+    padding: 18px;
+    background: rgba(150, 0, 255, 0.05);
+}
+
+.mixed-zone-header {
+    color: #9600ff;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(150, 0, 255, 0.3);
+}
+
+.mixed-zone-header .tag {
+    font-size: 12px;
+    color: #ff6b00;
+    margin-left: 8px;
+}
+
+.mixed-zone-content {
+    display: flex;
+    gap: 12px;
+}
+
+.mixed-zone-card {
+    flex: 1;
+    background: rgba(150, 0, 255, 0.15);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(150, 0, 255, 0.3);
+}
+
+.mixed-zone-card .zone-name {
+    font-size: 16px;
+    color: #9600ff;
+}
+
+/* 分隔线 */
+.divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+    margin: 30px 0;
+}
+
+/* 排行榜 */
+.rankings h2 {
+    color: #00d4ff;
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+.top-label {
+    font-size: 14px;
+    color: #888;
+    font-weight: normal;
+}
+
+.ranking-table {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.ranking-header {
+    display: flex;
+    padding: 15px 20px;
+    background: rgba(0, 212, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.ranking-header .col-rank { width: 60px; color: #00d4ff; }
+.ranking-header .col-player { flex: 1; color: #00d4ff; }
+.ranking-header .col-zone { width: 100px; color: #00d4ff; text-align: center; }
+.ranking-header .col-score { width: 120px; color: #00d4ff; text-align: right; }
+
+.ranking-row {
+    display: flex;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    align-items: center;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.ranking-row:hover {
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.ranking-row:last-child {
+    border-bottom: none;
+}
+
+.rank-num {
+    width: 60px;
+    font-weight: bold;
+    color: #888;
+}
+
+.rank-num.top-1 { color: #ffd700; }
+.rank-num.top-2 { color: #c0c0c0; }
+.rank-num.top-3 { color: #cd7f32; }
+
+.player-info {
+    flex: 1;
+}
+
+.player-name {
+    color: #fff;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.guild-name {
+    color: #666;
+    font-size: 12px;
+}
+
+.zone-tag {
+    width: 100px;
+    text-align: center;
+}
+
+.zone-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+}
+
+.zone-badge.fire {
+    background: rgba(255, 107, 0, 0.3);
+    color: #ff6b00;
+}
+
+.zone-badge.physical {
+    background: rgba(0, 150, 255, 0.3);
+    color: #0096ff;
+}
+
+.zone-badge.thunder {
+    background: rgba(150, 0, 255, 0.3);
+    color: #9600ff;
+}
+
+.score {
+    width: 120px;
+    color: #00d4ff;
+    font-weight: bold;
+    text-align: right;
+}
+
+/* 响应式 */
+@media (max-width: 900px) {
+    .zones-container {
+        flex-direction: column;
+    }
+
+    .mixed-zone-content {
+        flex-direction: column;
+    }
+
+    .meta {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .ranking-header,
+    .ranking-row {
+        padding: 10px 15px;
+        font-size: 12px;
+    }
+
+    .ranking-header .col-zone,
+    .zone-tag {
+        width: 80px;
+    }
+
+    .ranking-header .col-score,
+    .score {
+        width: 100px;
+    }
+}
