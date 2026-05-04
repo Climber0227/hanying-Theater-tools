@@ -18,15 +18,14 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // 拼接目标 URL
-    const pathParts = req.query.path || [];
-    const targetPath = Array.isArray(pathParts) ? pathParts.join('/') : pathParts;
+    // 从 req.url 直接提取路径，比 catch-all 参数更可靠
+    const url = req.url.split('?')[0]; // 去掉 query string
+    const targetPath = url.replace(/^\/api\/proxy\/?/, '');
     const targetUrl = `${TARGET}/${targetPath}`;
 
-    // 传递 query string（排除 path 参数）
-    const { path: _, ...otherQuery } = req.query;
-    const qs = new URLSearchParams(otherQuery).toString();
-    const fullUrl = qs ? `${targetUrl}?${qs}` : targetUrl;
+    // 提取 query string
+    const queryStr = req.url.includes('?') ? req.url.split('?')[1] : '';
+    const fullUrl = queryStr ? `${targetUrl}?${queryStr}` : targetUrl;
 
     try {
         const response = await fetch(fullUrl, {
