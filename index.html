@@ -64,21 +64,6 @@
                 <!-- 动态生成 -->
             </section>
 
-            <!-- 战区历史查询 -->
-            <section class="zone-history-section">
-                <h3>战区历史查询</h3>
-                <div class="zone-history-controls">
-                    <select id="zoneNameSelect" class="week-select"></select>
-                    <select id="monsterCountSelect" class="week-select">
-                        <option value="单怪">单怪</option>
-                        <option value="双怪">双怪</option>
-                        <option value="群怪">群怪</option>
-                    </select>
-                    <button id="zoneHistorySearchBtn" class="bind-go-btn">查询</button>
-                </div>
-                <div id="zoneHistoryResult" class="zone-history-result"></div>
-            </section>
-
             <!-- 分隔线 -->
             <div class="divider"></div>
 
@@ -381,33 +366,6 @@
     <script src="js/auth.js"></script>
     <script src="js/main.js"></script>
     <script>
-        // 预加载历史数据（兼容浏览器和Electron）
-        (async function loadHistoryData() {
-            try {
-                let data = null;
-                if (window.electronAPI && window.electronAPI.isElectron) {
-                    // Electron: 从 userData 读取
-                    const path = await window.electronAPI.getHistoryPath();
-                    const resp = await fetch('file:///' + path.replace(/\\/g, '/'));
-                    data = await resp.json();
-                } else {
-                    // 浏览器: 优先读取 localStorage 缓存（含自动更新的数据）
-                    const cached = localStorage.getItem('huaxu_wz_history_cache');
-                    if (cached) {
-                        data = JSON.parse(cached);
-                    } else {
-                        // 没有缓存则从静态文件加载
-                        const resp = await fetch('data/warzone-history.json');
-                        data = await resp.json();
-                    }
-                }
-                window.__wzHistoryData = data;
-                if (typeof populateZoneNameSelect === 'function') populateZoneNameSelect();
-            } catch {
-                window.__wzHistoryData = null;
-            }
-        })();
-
         // ========== 建站天数 & 访问次数 ==========
         (function siteStats() {
             // 建站起始日期
