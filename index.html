@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>战区数据</title>
+    <title>含英牌战区数据工具</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,6 +12,8 @@
         <nav class="nav">
             <button class="nav-btn active" data-page="warzone">战区数据</button>
             <button class="nav-btn" data-page="player">玩家查询</button>
+            <button class="nav-btn" data-page="ppc">幻痛囚笼</button>
+            <button class="nav-btn" data-page="mine">我的</button>
         </nav>
 
         <!-- 战区数据页面 -->
@@ -20,30 +22,28 @@
                 <h1>战区数据</h1>
                 <div class="controls">
                     <select id="difficultySelect">
-                        <option value="16">传说 (80-120)</option>
-                        <option value="15">Hero (80-120)</option>
-                        <option value="14">Leader (80-120)</option>
-                        <option value="13">Leader (55-79)</option>
-                        <option value="12">Elite (80-120)</option>
-                        <option value="11">Elite (55-79)</option>
-                        <option value="10">Elite (1-54)</option>
-                        <option value="9">Vanguard (80-120)</option>
-                        <option value="8">Vanguard (55-79)</option>
-                        <option value="7">Vanguard (1-54)</option>
-                        <option value="6">Recon (80-120)</option>
-                        <option value="5">Recon (55-79)</option>
-                        <option value="4">Recon (1-54)</option>
-                        <option value="3">Backup (80-120)</option>
-                        <option value="2">Backup (55-79)</option>
-                        <option value="1">Backup (1-54)</option>
+                        <option value="16">传奇 (80-120)</option>
+                        <option value="15">英雄 (80-120)</option>
+                        <option value="14">领袖 (80-120)</option>
+                        <option value="13">领袖 (55-79)</option>
+                        <option value="12">精英 (80-120)</option>
+                        <option value="11">精英 (55-79)</option>
+                        <option value="10">精英 (1-54)</option>
+                        <option value="9">先锋 (80-120)</option>
+                        <option value="8">先锋 (55-79)</option>
+                        <option value="7">先锋 (1-54)</option>
+                        <option value="6">侦察 (80-120)</option>
+                        <option value="5">侦察 (55-79)</option>
+                        <option value="4">侦察 (1-54)</option>
+                        <option value="3">预备 (80-120)</option>
+                        <option value="2">预备 (55-79)</option>
+                        <option value="1">预备 (1-54)</option>
                     </select>
                     <div class="week-nav">
-                        <button id="prevWeek">◀</button>
-                        <span id="weekDisplay">第568周</span>
-                        <button id="nextWeek">▶</button>
+                        <select id="weekSelect" class="week-select"></select>
                     </div>
                 </div>
-                <div class="date-range" id="dateRange">2026年04月21日 - 2026年04月27日</div>
+                <div class="date-range" id="dateRange"></div>
                 <div class="meta">
                     <span id="members">参与人数: --</span>
                     <span id="updatedAt">更新时间: --</span>
@@ -55,12 +55,27 @@
                 <!-- 动态生成 -->
             </section>
 
+            <!-- 战区历史查询 -->
+            <section class="zone-history-section">
+                <h3>战区历史查询</h3>
+                <div class="zone-history-controls">
+                    <select id="zoneNameSelect" class="week-select"></select>
+                    <select id="monsterCountSelect" class="week-select">
+                        <option value="单怪">单怪</option>
+                        <option value="双怪">双怪</option>
+                        <option value="群怪">群怪</option>
+                    </select>
+                    <button id="zoneHistorySearchBtn" class="bind-go-btn">查询</button>
+                </div>
+                <div id="zoneHistoryResult" class="zone-history-result"></div>
+            </section>
+
             <!-- 分隔线 -->
             <div class="divider"></div>
 
             <!-- 排行榜 -->
             <section class="rankings">
-                <h2>排行榜 <span class="top-label">TOP 100</span></h2>
+                <h2>排行榜 <span class="top-label">TOP 100</span> <button id="refreshWzBtn" class="refresh-btn">刷新</button></h2>
                 <div class="ranking-table" id="rankingTable">
                     <!-- 动态生成 -->
                 </div>
@@ -107,6 +122,10 @@
                         <div class="player-likes">
                             点赞：<span id="playerLikes">--</span>
                         </div>
+                        <div class="player-actions">
+                            <button class="bind-set-btn" id="bindSetBtn">绑定为我的角色</button>
+                            <button class="bind-set-btn follow-set-btn" id="followSetBtn">关注</button>
+                        </div>
                     </div>
                 </div>
 
@@ -119,9 +138,232 @@
                 </div>
             </div>
         </div>
+
+        <!-- 幻痛囚笼页面 -->
+        <div id="ppcPage" class="page">
+            <header class="header">
+                <h1>幻痛囚笼</h1>
+                <div class="controls">
+                    <select id="ppcLevelSelect">
+                        <option value="4">终级区 (80-120)</option>
+                        <option value="3">高级区 (80-120)</option>
+                    </select>
+                    <div class="week-nav">
+                        <select id="ppcWeekSelect" class="week-select"></select>
+                    </div>
+                </div>
+                <div class="date-range" id="ppcDateRange"></div>
+                <div class="meta">
+                    <span id="ppcLevel">分区: --</span>
+                    <span id="ppcUpdatedAt">更新时间: --</span>
+                </div>
+            </header>
+
+            <!-- Boss列表 -->
+            <section class="ppc-bosses" id="ppcBossesContainer">
+                <!-- 动态生成 -->
+            </section>
+
+            <!-- 分隔线 -->
+            <div class="divider"></div>
+
+            <!-- 排行榜 -->
+            <section class="rankings">
+                <h2>排行榜 <span class="top-label">TOP 100</span> <button id="refreshPpcBtn" class="refresh-btn">刷新</button></h2>
+                <div class="ranking-table" id="ppcRankingTable">
+                    <!-- 动态生成 -->
+                </div>
+            </section>
+        </div>
+
+        <!-- 我的页面 -->
+        <div id="minePage" class="page">
+            <header class="header">
+                <h1>我的</h1>
+            </header>
+
+            <!-- 登录/用户状态 -->
+            <div class="mine-section" id="loginSection">
+                <div class="mine-section-header">
+                    <h3>登录同步数据</h3>
+                </div>
+                <div class="login-form">
+                    <div class="login-input-row">
+                        <input type="text" class="login-input" id="loginIdInput" placeholder="游戏ID">
+                    </div>
+                    <div class="login-input-row">
+                        <input type="password" class="login-input" id="loginPwInput" placeholder="密码（至少4位）">
+                    </div>
+                    <button class="bind-go-btn login-btn" id="loginBtn">登 录</button>
+                    <div class="login-hint">首次登录自动注册，数据将同步到云端</div>
+                    <div class="login-error" id="loginError"></div>
+                </div>
+            </div>
+
+            <div class="mine-section" id="loggedInSection" style="display:none;">
+                <div class="mine-section-header">
+                    <h3>已登录</h3>
+                </div>
+                <div class="logged-in-info">
+                    <div class="logged-in-user">
+                        <span class="logged-in-name" id="loggedInName">--</span>
+                        <span class="logged-in-id">ID: <span id="loggedInId">--</span></span>
+                    </div>
+                    <div class="logged-in-status">数据已自动同步到云端</div>
+                    <button class="bind-btn bind-btn-unbind" id="logoutBtn">退出登录</button>
+                </div>
+            </div>
+
+            <!-- 绑定角色 -->
+            <div class="mine-section">
+                <div class="mine-section-header">
+                    <h3>绑定角色</h3>
+                </div>
+                <div id="bindSection">
+                    <div class="bind-empty" id="bindEmpty">
+                        <div class="bind-input-row">
+                            <input type="text" class="bind-input" id="bindIdInput" placeholder="输入玩家ID">
+                            <button class="bind-go-btn" id="bindByIdBtn">绑定</button>
+                        </div>
+                    </div>
+                    <div class="bind-player" id="bindPlayer" style="display:none;">
+                        <div class="bind-player-info">
+                            <img class="bind-avatar" id="bindAvatar" src="" alt="">
+                            <div class="bind-details">
+                                <div class="bind-name" id="bindName">--</div>
+                                <div class="bind-id">ID: <span id="bindId">--</span></div>
+                            </div>
+                        </div>
+                        <div class="bind-actions">
+                            <button class="bind-btn" id="viewBindPlayer">查看</button>
+                            <button class="bind-btn bind-btn-unbind" id="unbindBtn">解绑</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 我的战区 -->
+            <div class="mine-section">
+                <div class="mine-section-header">
+                    <h3>我的战区</h3>
+                    <div class="week-nav">
+                        <select id="myWzWeekSelect" class="week-select"></select>
+                    </div>
+                </div>
+                <div id="wzScoreInput">
+                    <div class="score-input-grid" id="wzInputGrid">
+                        <!-- 动态生成 -->
+                    </div>
+                    <button class="bind-go-btn" id="saveWzBtn" style="margin-top:12px;">保存</button>
+                    <div id="wzEvaluation" class="evaluation-box"></div>
+                </div>
+                <div class="score-history" id="wzHistory"></div>
+            </div>
+
+            <!-- 我的幻痛 -->
+            <div class="mine-section">
+                <div class="mine-section-header">
+                    <h3>我的幻痛</h3>
+                    <div class="week-nav">
+                        <select id="myPpcWeekSelect" class="week-select"></select>
+                    </div>
+                </div>
+                <div id="ppcScoreInput">
+                    <div class="score-input-grid" id="ppcInputGrid">
+                        <!-- 动态生成 -->
+                    </div>
+                    <button class="bind-go-btn" id="savePpcBtn" style="margin-top:12px;">保存</button>
+                </div>
+                <div class="score-history" id="ppcHistory"></div>
+            </div>
+
+            <!-- 我的角色 -->
+            <div class="mine-section" id="myCharsSection" style="display:none;">
+                <div class="mine-section-header">
+                    <h3>我的角色 <span id="myCharCount">(0)</span></h3>
+                </div>
+                <div class="characters-grid" id="myCharsGrid">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 关注列表 -->
+            <div class="mine-section">
+                <div class="mine-section-header">
+                    <h3>关注列表</h3>
+                    <button class="clear-btn" id="clearFollows">清空</button>
+                </div>
+                <div class="follow-list" id="followList">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 数据管理 -->
+            <div class="mine-section">
+                <div class="mine-section-header">
+                    <h3>数据管理</h3>
+                </div>
+                <div class="data-mgmt-desc">导出或导入本地数据（绑定角色、搜索历史、关注列表、战区分数、幻痛分数）</div>
+                <div class="data-mgmt-actions">
+                    <button class="bind-go-btn" id="exportDataBtn">导出数据</button>
+                    <button class="bind-go-btn data-import-btn" id="importDataBtn">导入数据</button>
+                    <input type="file" id="importFileInput" accept=".json" style="display:none;">
+                </div>
+                <div id="dataMgmtMsg" class="data-mgmt-msg"></div>
+            </div>
+        </div>
+
+        <footer class="footer">数据来源 <a href="https://huaxu.app" target="_blank">huaxu.app</a></footer>
+    </div>
+
+    <!-- Boss详情弹窗 -->
+    <div id="bossModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div id="bossDetail"></div>
+        </div>
+    </div>
+
+    <!-- 角色详情弹窗 -->
+    <div id="charModal" class="modal" style="display: none;">
+        <div class="modal-content modal-wide">
+            <button class="modal-close" id="charModalClose">&times;</button>
+            <div id="charDetail">
+                <div class="char-loading">加载中...</div>
+            </div>
+        </div>
     </div>
 
     <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/main.js"></script>
+    <script>
+        // 预加载历史数据（兼容浏览器和Electron）
+        (async function loadHistoryData() {
+            try {
+                let data = null;
+                if (window.electronAPI && window.electronAPI.isElectron) {
+                    // Electron: 从 userData 读取
+                    const path = await window.electronAPI.getHistoryPath();
+                    const resp = await fetch('file:///' + path.replace(/\\/g, '/'));
+                    data = await resp.json();
+                } else {
+                    // 浏览器: 优先读取 localStorage 缓存（含自动更新的数据）
+                    const cached = localStorage.getItem('huaxu_wz_history_cache');
+                    if (cached) {
+                        data = JSON.parse(cached);
+                    } else {
+                        // 没有缓存则从静态文件加载
+                        const resp = await fetch('data/warzone-history.json');
+                        data = await resp.json();
+                    }
+                }
+                window.__wzHistoryData = data;
+                if (typeof populateZoneNameSelect === 'function') populateZoneNameSelect();
+            } catch {
+                window.__wzHistoryData = null;
+            }
+        })();
+    </script>
 </body>
 </html>

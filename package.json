@@ -1,0 +1,47 @@
+{
+  "name": "huaxu-data",
+  "version": "1.0.0",
+  "description": "华胥 - 奥分也够的数据分析工具",
+  "author": "huaxu",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.huaxu.data",
+    "productName": "含英牌战区数据工具",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "index.html",
+      "css/**/*",
+      "js/**/*",
+      "data/**/*",
+      "electron-main.js",
+      "electron-preload.js"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico",
+      "signAndEditExecutable": false
+    },
+    "forceCodeSigning": false,
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.1"
+  }
+}

@@ -1,13 +1,25 @@
+// 环境检测
+const IS_WEB = !window.electronAPI;
+const IS_LOCAL = IS_WEB && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+// API 代理地址（部署到 Vercel 时使用代理解决跨域，本地开发时直连）
+const API_BASE = IS_WEB && !IS_LOCAL ? '/api/proxy' : '';
+const AUTH_API = IS_WEB && !IS_LOCAL ? '/api/auth' : '';
+const USER_DATA_API = IS_WEB && !IS_LOCAL ? '/api/user-data' : '';
+
 // API配置
 const API_CONFIG = {
     // 战区数据API
-    warzone: 'https://api.huaxu.app/servers/cn/warzone',
+    warzone: `${API_BASE ? API_BASE : 'https://api.huaxu.app'}/servers/cn/warzone`,
 
     // 玩家数据API
-    player: 'https://api.huaxu.app/servers/cn/players',
+    player: `${API_BASE ? API_BASE : 'https://api.huaxu.app'}/servers/cn/players`,
 
-    // 资源基础URL
-    assets: 'https://assets.huaxu.app/cn-beta'
+    // 幻痛囚笼API
+    ppc: `${API_BASE ? API_BASE : 'https://api.huaxu.app'}/servers/cn/ppc`,
+
+    // 资源基础URL（图片不需要代理，直接跨域加载）
+    assets: 'https://assets.huaxu.app/cn'
 };
 
 // 图片资源路径
@@ -142,6 +154,11 @@ function getVideoUrl(path) {
 // 导出配置（如果需要模块化）
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        IS_WEB,
+        IS_LOCAL,
+        API_BASE,
+        AUTH_API,
+        USER_DATA_API,
         API_CONFIG,
         IMAGE_PATHS,
         AUDIO_PATHS,
