@@ -184,9 +184,10 @@ function renderZones(zones) {
 }
 
 // 渲染排行榜
-function getZoneScore(ranking, zoneIndex) {
-    if (!ranking.zones || !ranking.zones[zoneIndex]) return 0;
-    return ranking.zones[zoneIndex].score;
+function getZoneScore(ranking, zoneId) {
+    if (!ranking.zones) return 0;
+    const zoneData = ranking.zones.find(z => z.id === zoneId);
+    return zoneData ? (zoneData.score || 0) : 0;
 }
 
 function sortRankings(rankings, zones) {
@@ -195,11 +196,11 @@ function sortRankings(rankings, zones) {
     sorted.sort((a, b) => {
         let va, vb;
         if (wzSortKey === 'total') {
-            va = a.score; vb = b.score;
+            va = a.score || 0; vb = b.score || 0;
         } else {
-            const idx = parseInt(wzSortKey);
-            va = getZoneScore(a, idx);
-            vb = getZoneScore(b, idx);
+            const zoneId = zones[parseInt(wzSortKey)]?.id;
+            va = zoneId ? getZoneScore(a, zoneId) : 0;
+            vb = zoneId ? getZoneScore(b, zoneId) : 0;
         }
         return wzSortAsc ? va - vb : vb - va;
     });
@@ -977,7 +978,11 @@ function renderPpcRankings(ranking) {
     // 排序
     const sorted = [...ranking];
     if (rawPpcRankings.length > 0) {
-        sorted.sort((a, b) => ppcSortAsc ? a.score - b.score : b.score - a.score);
+        sorted.sort((a, b) => {
+            const sa = a.score || 0;
+            const sb = b.score || 0;
+            return ppcSortAsc ? sa - sb : sb - sa;
+        });
     }
     const sliced = sorted.slice(0, 100);
 
