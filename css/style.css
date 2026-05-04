@@ -2124,6 +2124,12 @@ body {
     color: #86868b;
 }
 
+.contact-tip {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #86868b;
+}
+
 /* ========== 响应式 ========== */
 @media (max-width: 900px) {
     .zones-container {
@@ -2332,6 +2338,26 @@ body {
 .footer a:hover {
     color: #1d1d1f;
     text-decoration: underline;
+}
+
+.site-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #86868b;
+}
+
+.site-stats strong {
+    color: #6e6e73;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.stats-divider {
+    color: rgba(0, 0, 0, 0.1);
 }
 
 /* ========== 登录表单 ========== */

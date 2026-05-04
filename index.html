@@ -340,14 +340,22 @@
                     <p class="contact-desc">遇到问题、建议反馈、删除云端数据，都可以联系我</p>
                     <a class="contact-btn" href="https://wpa.qq.com/msgrd?v=3&uin=2813509189&site=qq&menu=yes" target="_blank">
                         <span class="contact-icon">QQ</span>
-                        联系我
+                        添加好友
                     </a>
+                    <p class="contact-tip">打开后点击「加为好友」即可</p>
                     <span class="contact-qq">QQ: 2813509189</span>
                 </div>
             </div>
         </div>
 
-        <footer class="footer">数据来源 <a href="https://huaxu.app" target="_blank">huaxu.app</a></footer>
+        <footer class="footer">
+            <div class="site-stats">
+                <span>建站 <strong id="siteDays">0</strong> 天 <strong id="siteHours">0</strong> 时 <strong id="siteMinutes">0</strong> 分 <strong id="siteSeconds">0</strong> 秒</span>
+                <span class="stats-divider">|</span>
+                <span>访问 <strong id="visitCount">0</strong> 次</span>
+            </div>
+            <div>数据来源 <a href="https://huaxu.app" target="_blank">huaxu.app</a></div>
+        </footer>
     </div>
 
     <!-- Boss详情弹窗 -->
@@ -396,6 +404,44 @@
                 if (typeof populateZoneNameSelect === 'function') populateZoneNameSelect();
             } catch {
                 window.__wzHistoryData = null;
+            }
+        })();
+
+        // ========== 建站天数 & 访问次数 ==========
+        (function siteStats() {
+            // 建站起始日期
+            var SITE_START = new Date('2026-05-04T00:00:00');
+
+            // 建站时长，按秒更新
+            function updateDuration() {
+                var now = new Date();
+                var diff = Math.floor((now - SITE_START) / 1000);
+                var days = Math.floor(diff / 86400);
+                var hours = Math.floor((diff % 86400) / 3600);
+                var minutes = Math.floor((diff % 3600) / 60);
+                var seconds = diff % 60;
+                document.getElementById('siteDays').textContent = days;
+                document.getElementById('siteHours').textContent = hours;
+                document.getElementById('siteMinutes').textContent = minutes;
+                document.getElementById('siteSeconds').textContent = seconds;
+            }
+            updateDuration();
+            setInterval(updateDuration, 1000);
+
+            // 全站共享访问计数
+            var visitEl = document.getElementById('visitCount');
+            if (IS_WEB && !IS_LOCAL) {
+                // 线上环境：通过 API 原子自增
+                fetch('/api/visit').then(function(r) { return r.json(); }).then(function(d) {
+                    if (d.status === 'success') visitEl.textContent = d.count;
+                }).catch(function() { visitEl.textContent = '--'; });
+            } else {
+                // 本地开发：用 localStorage 兜底
+                var VISIT_KEY = 'huaxu_visit_count';
+                var c = parseInt(localStorage.getItem(VISIT_KEY)) || 0;
+                c++;
+                localStorage.setItem(VISIT_KEY, c);
+                visitEl.textContent = c;
             }
         })();
     </script>
