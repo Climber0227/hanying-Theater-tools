@@ -11,7 +11,12 @@
       "Bash(curl -s \"https://jiatenghui.icu/api/proxy/servers/cn/warzone/current/16\")",
       "Bash(curl -s \"https://jiatenghui.icu/api/proxy/test\")",
       "Bash(curl -s \"https://jiatenghui.icu/api/proxy/servers\")",
-      "Bash(curl -s \"https://jiatenghui.icu/api/proxy/servers/cn\")"
+      "Bash(curl -s \"https://jiatenghui.icu/api/proxy/servers/cn\")",
+      "Bash(curl -s -w \"\\\\n%{http_code}\" \"https://jiatenghui.icu/api/proxy/servers/cn/warzone/current/16\")",
+      "Bash(curl *)",
+      "WebSearch",
+      "WebFetch(domain:supabase.com)",
+      "Bash(node -e ' *)"
     ]
   }
 }
