@@ -1,4 +1,4 @@
-https://api.huaxu.app/servers/cn/warzone/current/16
+https://api.huaxu.app/servers/cn/warzone/576/16
 
 
 

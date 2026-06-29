@@ -18,13 +18,16 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // 从 req.url 直接提取路径，比 catch-all 参数更可靠
-    const url = req.url.split('?')[0]; // 去掉 query string
-    const targetPath = url.replace(/^\/api\/proxy\/?/, '');
+    // 优先从 rewrite 传递的 query 参数获取路径，兼容旧方式从 url 提取
+    const targetPath = req.query?.apiPath || req.url.split('?')[0].replace(/^\/api\/proxy\/?/, '');
+    if (!targetPath) {
+        return res.status(400).json({ error: 'Missing proxy path' });
+    }
     const targetUrl = `${TARGET}/${targetPath}`;
 
-    // 提取 query string
-    const queryStr = req.url.includes('?') ? req.url.split('?')[1] : '';
+    // 提取原始 query string（去掉 apiPath）
+    const rawQuery = req.url.includes('?') ? req.url.split('?')[1] : '';
+    const queryStr = rawQuery.replace(/&?apiPath=[^&]*&?/, '').replace(/^&/, '');
     const fullUrl = queryStr ? `${targetUrl}?${queryStr}` : targetUrl;
 
     try {

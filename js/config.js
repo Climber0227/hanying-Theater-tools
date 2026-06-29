@@ -2,23 +2,23 @@
 const IS_WEB = !window.electronAPI;
 const IS_LOCAL = IS_WEB && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-// API 代理地址（部署到 Vercel 时使用代理解决跨域，本地开发时直连）
-const API_BASE = IS_WEB && !IS_LOCAL ? '/api/proxy' : '';
+// API 地址直连（api.huaxu.app 已设置 Access-Control-Allow-Origin: *，无需代理）
+const API_BASE = '';
 const AUTH_API = IS_WEB && !IS_LOCAL ? '/api/auth' : '';
 const USER_DATA_API = IS_WEB && !IS_LOCAL ? '/api/user-data' : '';
 
 // API配置
 const API_CONFIG = {
     // 战区数据API
-    warzone: `${API_BASE ? API_BASE : 'https://api.huaxu.app'}/servers/cn/warzone`,
+    warzone: 'https://api.huaxu.app/servers/cn/warzone',
 
     // 玩家数据API
-    player: `${API_BASE ? API_BASE : 'https://api.huaxu.app'}/servers/cn/players`,
+    player: 'https://api.huaxu.app/servers/cn/players',
 
     // 幻痛囚笼API
-    ppc: `${API_BASE ? API_BASE : 'https://api.huaxu.app'}/servers/cn/ppc`,
+    ppc: 'https://api.huaxu.app/servers/cn/ppc',
 
-    // 资源基础URL（图片不需要代理，直接跨域加载）
+    // 资源基础URL
     assets: 'https://assets.huaxu.app/cn'
 };
 
