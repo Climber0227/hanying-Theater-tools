@@ -2171,6 +2171,10 @@ body {
         width: 80px;
     }
 
+    .ranking-header .col-player {
+        width: 150px;
+    }
+
     .player-info {
         width: 150px;
     }
@@ -2254,86 +2258,264 @@ body {
     }
 }
 
-/* 小屏手机：排行榜卡片布局 */
-@media (max-width: 600px) {
+/* 手机端适配 */
+@media (max-width: 700px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        max-width: 100%;
+    }
+
+    .nav {
+        gap: 4px;
+        padding: 4px;
+        margin-bottom: 20px;
+    }
+    .nav-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    .header h1 {
+        font-size: 22px;
+    }
+
+    .controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .controls select {
+        font-size: 15px;
+        padding: 8px 28px 8px 12px;
+        width: 100%;
+        max-width: 320px;
+    }
+    .week-select {
+        font-size: 15px;
+        padding: 8px 28px 8px 12px;
+        max-width: 100%;
+        width: 100%;
+    }
+    .date-range, .meta {
+        font-size: 12px;
+    }
+
+    .filter-hint {
+        font-size: 11px;
+        padding: 6px 12px;
+        margin-bottom: 8px;
+    }
+
+    /* 排行榜横滚 */
     .ranking-table {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
-    .ranking-header {
-        display: none;
-    }
-
+    .ranking-header,
     .ranking-row {
-        flex-wrap: wrap;
-        padding: 12px 14px;
-        gap: 6px 0;
-        align-items: flex-start;
+        padding: 8px 12px;
+        font-size: 11px;
     }
-
+    .ranking-header .col-rank,
     .rank-num {
-        width: 30px;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding-top: 2px;
+        width: 36px;
     }
-
+    .ranking-header .col-player,
     .player-info {
-        width: calc(100% - 40px);
-        gap: 6px;
+        width: 130px;
+    }
+    .ranking-header .col-total,
+    .total-score {
+        width: 70px;
+    }
+    .col-reset {
+        width: 44px;
+    }
+    .reset-filter-btn {
+        font-size: 10px;
+        padding: 3px 6px;
     }
 
-    .player-name {
-        font-size: 14px;
+    /* 缩小区内筛选 */
+    .char-slot-filters {
+        gap: 2px;
+        margin-top: 4px;
+    }
+    .char-slot-select {
+        width: 36px;
+        font-size: 9px;
+        padding: 3px 1px;
+    }
+    .zone-quick-filters {
+        gap: 2px;
+        margin-top: 4px;
+    }
+    .zone-quick-btn {
+        font-size: 9px;
+        padding: 2px 5px;
     }
 
-    .player-sign {
+    .player-avatar-sm {
         display: none;
     }
-
-    .col-zone-detail,
-    .zone-detail {
-        width: 33.33%;
-        flex: none;
-        padding: 4px 2px;
+    .player-name {
+        font-size: 12px;
     }
-
-    .zone-name-sm {
-        display: block;
+    .guild-name, .player-id-text, .player-sign {
         font-size: 10px;
-        color: #86868b;
-        margin-bottom: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    }
+    .player-sign {
+        max-width: 80px;
     }
 
     .zone-score-val {
         font-size: 12px;
-        margin-bottom: 2px;
+        margin-bottom: 3px;
     }
-
     .zone-chars {
-        display: none;
+        gap: 2px;
+    }
+    .char-row {
+        gap: 3px;
+    }
+    .char-icon-sm {
+        width: 18px;
+        height: 18px;
+    }
+    .char-name-sm {
+        font-size: 10px;
+        max-width: 36px;
+    }
+    .char-bp {
+        font-size: 9px;
+    }
+    .rank-quality-sm {
+        font-size: 8px;
+        padding: 0 4px;
+    }
+    .cub-icon-sm {
+        width: 14px;
+        height: 14px;
     }
 
-    .col-total,
-    .total-score {
+    .zone-card {
+        padding: 14px;
+    }
+    .zone-name {
+        font-size: 16px;
+    }
+    .zone-info {
+        padding: 10px;
+    }
+    .mixed-zone {
+        padding: 14px;
+    }
+
+    /* 玩家查询 */
+    .search-box {
+        flex-direction: column;
+        align-items: center;
+    }
+    .search-box input {
         width: 100%;
-        text-align: left;
-        padding-top: 4px;
-        border-top: 0.5px solid rgba(0,0,0,0.06);
-        margin-top: 4px;
-        font-size: 14px;
+        max-width: 300px;
+        font-size: 16px;
+    }
+    .search-box button {
+        width: 100%;
+        max-width: 300px;
     }
 
-    .total-score::before {
-        content: '总分: ';
-        font-weight: 400;
-        color: #86868b;
+    .player-profile {
+        padding: 16px;
+    }
+    .player-avatar {
+        width: 80px;
+        height: 80px;
+    }
+    .player-details h2 {
+        font-size: 20px;
+    }
+
+    .score-input-grid {
+        flex-direction: column;
+    }
+
+    /* PPC */
+    .ppc-boss-card {
+        max-width: 100%;
+    }
+    .ppc-boss-name {
+        font-size: 13px;
+        padding: 8px;
+    }
+
+    /* 我的页面 */
+    .mine-section {
+        padding: 14px;
+    }
+    .bind-input {
+        width: 100%;
+    }
+    .bind-input-row {
+        flex-direction: column;
+        align-items: center;
+    }
+    .bind-player {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    .bind-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .follow-item {
+        width: 100%;
+    }
+
+    .data-mgmt-actions {
+        flex-direction: column;
+    }
+
+    .character-card {
+        padding: 12px;
+    }
+
+    .score-table {
         font-size: 12px;
+    }
+}
+
+@media (max-width: 420px) {
+    body {
+        padding: 6px;
+    }
+    .nav-btn {
+        padding: 5px 8px;
+        font-size: 12px;
+    }
+    .ranking-header .col-player,
+    .player-info {
+        width: 100px;
+    }
+    .col-zone-detail {
+        min-width: 0;
+    }
+    .char-slot-select {
+        width: 30px;
+        font-size: 8px;
+    }
+    .zone-quick-btn {
+        font-size: 8px;
+        padding: 2px 4px;
+    }
+    .char-name-sm {
+        max-width: 28px;
     }
 }
 
