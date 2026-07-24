@@ -209,7 +209,21 @@ function sortRankings(rankings, zones) {
 
 function renderRankings(rankings, zones) {
     const container = document.getElementById('rankingTable');
-    const sorted = sortRankings(rankings, zones).slice(0, 100);
+
+    // 按角色位筛选：每个区独立，每个角色位独立筛选
+    const filtered = rankings.filter(r => {
+        if (!r.zones) return wzCharFilters.every(fz => fz.every(f => !f));
+        return wzCharFilters.every((zoneFilters, zi) => {
+            if (!zoneFilters) return true;
+            return zoneFilters.every((filterVal, ci) => {
+                if (!filterVal) return true;
+                const zoneData = r.zones.find(z => z.id === zones[zi]?.id);
+                const char = zoneData?.characters?.[ci];
+                return char && char.rank === parseInt(filterVal);
+            });
+        });
+    });
+    const sorted = sortRankings(filtered, zones).slice(0, 100);
 
     // 排序指示器
     const arrow = (key) => {
@@ -217,17 +231,27 @@ function renderRankings(rankings, zones) {
         return ' ⇅';
     };
 
-    // 动态生成表头（可点击排序）
+    // 动态生成表头（每区含3个角色位筛选下拉）
     let headerHtml = `
         <div class="ranking-header">
             <div class="col-rank">排名</div>
             <div class="col-player">玩家</div>
     `;
     zones.forEach((zone, i) => {
-        headerHtml += `<div class="col-zone-detail sortable" data-sort="${i}">${zone.name}<span class="sort-arrow">${arrow(String(i))}</span></div>`;
+        headerHtml += `<div class="col-zone-detail"><div class="sortable" data-sort="${i}">${zone.name}<span class="sort-arrow">${arrow(String(i))}</span></div>`;
+        if (!wzCharFilters[i]) wzCharFilters[i] = ['', '', ''];
+        headerHtml += `<div class="char-slot-filters">`;
+        for (let ci = 0; ci < 3; ci++) {
+            const cur = wzCharFilters[i][ci] || '';
+            headerHtml += `<select class="char-slot-select" data-zone="${i}" data-slot="${ci}"><option value="">-</option><option value="3"${cur==='3'?' selected':''}>S</option><option value="4"${cur==='4'?' selected':''}>SS</option><option value="5"${cur==='5'?' selected':''}>SSS</option><option value="6"${cur==='6'?' selected':''}>SSS+</option></select>`;
+        }
+        headerHtml += `</div>`;
+        headerHtml += `<div class="zone-quick-filters"><button class="zone-quick-btn" data-zone="${i}" data-quick="sss">全SSS</button><button class="zone-quick-btn" data-zone="${i}" data-quick="sssp">全SSS+</button></div>`;
+        headerHtml += `</div>`;
     });
     headerHtml += `
             <div class="col-total sortable" data-sort="total">总分<span class="sort-arrow">${arrow('total')}</span></div>
+            <div class="col-reset"><button class="reset-filter-btn" id="wzFilterReset">重置</button></div>
         </div>
     `;
 
@@ -265,10 +289,12 @@ function renderRankings(rankings, zones) {
                 zoneData.characters.forEach(c => {
                     const charIcon = c.icon ? getImageUrl(c.icon) : '';
                     const cubIcon = c.cubIcon ? getImageUrl(c.cubIcon) : '';
+                    const qualityText = getQualityInfo(c.rank);
                     charsHtml += `
                         <div class="char-row">
                             <img class="char-icon-sm" src="${charIcon}" alt="" onerror="this.style.display='none'">
                             <span class="char-name-sm">${c.characterName}</span>
+                            ${qualityText ? `<span class="rank-quality-sm quality-${c.rank}">${qualityText}</span>` : ''}
                             <span class="char-bp">${c.bp}</span>
                             <img class="cub-icon-sm" src="${cubIcon}" alt="" title="${c.cubName || ''}" onerror="this.style.display='none'">
                         </div>
@@ -286,6 +312,7 @@ function renderRankings(rankings, zones) {
 
         html += `
                 <div class="total-score">${formatNumber(ranking.score)}</div>
+                <div class="col-reset"></div>
             </div>
         `;
     });
@@ -316,6 +343,37 @@ function renderRankings(rankings, zones) {
             }
         });
     });
+
+    // 各区角色位筛选变更
+    container.querySelectorAll('.char-slot-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const zi = parseInt(this.dataset.zone);
+            const ci = parseInt(this.dataset.slot);
+            if (!wzCharFilters[zi]) wzCharFilters[zi] = ['', '', ''];
+            wzCharFilters[zi][ci] = this.value;
+            renderRankings(rawRankings, zonesData);
+        });
+    });
+
+    // 重置筛选
+    const resetBtn = container.querySelector('#wzFilterReset');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            wzCharFilters = [];
+            renderRankings(rawRankings, zonesData);
+        });
+    }
+
+    // 各区快速筛选：全SSS / 全SSS+
+    container.querySelectorAll('.zone-quick-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const zi = parseInt(this.dataset.zone);
+            const rankVal = this.dataset.quick === 'sss' ? '5' : '6';
+            if (!wzCharFilters[zi]) wzCharFilters[zi] = ['', '', ''];
+            wzCharFilters[zi] = [rankVal, rankVal, rankVal];
+            renderRankings(rawRankings, zonesData);
+        });
+    });
 }
 
 // 保存zones数据
@@ -327,6 +385,8 @@ let rawPpcRankings = [];
 let wzSortKey = null;
 let wzSortAsc = false;
 let ppcSortAsc = false;
+// 各区角色位筛选：wzCharFilters[区索引][角色位索引] = '' | '3' | '4' | '5' | '6'
+let wzCharFilters = [];
 
 // 保存PPC boss数据
 let ppcBossesData = [];
@@ -418,6 +478,7 @@ async function loadWarzoneData() {
                 rawRankings = rankings;
                 wzSortKey = null;
                 wzSortAsc = false;
+                wzCharFilters = [];
                 renderRankings(rankings, zonesData);
             }
 

@@ -10,28 +10,28 @@ body {
     background: rgb(235, 235, 242);
     color: #1d1d1f;
     min-height: 100vh;
-    padding: 20px;
+    padding: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
 }
 ::-webkit-scrollbar-track {
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.15);
-    border-radius: 3px;
+    border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.25);
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1440px;
     margin: 0 auto;
 }
 
@@ -412,6 +412,21 @@ body {
     font-weight: 400;
 }
 
+.filter-hint {
+    font-size: 12px;
+    color: #86868b;
+    margin-bottom: 12px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 8px;
+    border: 0.5px solid rgba(0,0,0,0.05);
+    line-height: 1.6;
+}
+.filter-hint b {
+    color: #1d1d1f;
+    font-weight: 600;
+}
+
 .ranking-table {
     background: #fff;
     border-radius: 14px;
@@ -422,31 +437,93 @@ body {
 
 .ranking-header {
     display: flex;
-    padding: 12px 20px;
+    padding: 14px 24px;
     background: #f5f5f7;
     border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     align-items: center;
     color: #6e6e73;
     letter-spacing: 0.01em;
 }
 
-.ranking-header .col-rank { width: 50px; flex-shrink: 0; }
-.ranking-header .col-player { width: 200px; flex-shrink: 0; }
+.ranking-header .col-rank { width: 56px; flex-shrink: 0; }
+.ranking-header .col-player { width: 220px; flex-shrink: 0; }
 .ranking-header .col-zone-detail { flex: 1; text-align: center; min-width: 0; }
-.ranking-header .col-total { width: 100px; text-align: right; flex-shrink: 0; }
+.ranking-header .col-total { width: 110px; text-align: right; flex-shrink: 0; }
 .ranking-header .sortable { cursor: pointer; user-select: none; }
 .ranking-header .sortable:hover { color: #1d1d1f; }
 .sort-arrow { font-size: 11px; margin-left: 2px; opacity: 0.4; }
 .sortable:hover .sort-arrow { opacity: 1; }
 
+.col-reset {
+    width: 56px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.reset-filter-btn {
+    background: transparent;
+    color: #86868b;
+    border: 0.5px solid rgba(0,0,0,0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.reset-filter-btn:hover { color: #ff3b30; background: rgba(255,59,48,0.06); border-color: rgba(255,59,48,0.2); }
+
+.zone-quick-filters {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    justify-content: center;
+}
+.zone-quick-btn {
+    background: transparent;
+    color: #86868b;
+    border: 0.5px solid rgba(0,0,0,0.1);
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.zone-quick-btn:hover { color: #1d1d1f; background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.2); }
+
+.char-slot-filters {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    justify-content: center;
+}
+.char-slot-select {
+    font-size: 11px;
+    padding: 4px 2px;
+    border: 0.5px solid rgba(0,0,0,0.15);
+    border-radius: 4px;
+    background: #fff;
+    color: #1d1d1f;
+    cursor: pointer;
+    width: 58px;
+    min-width: 0;
+    text-align: center;
+    text-align-last: center;
+    transition: box-shadow 0.15s ease;
+}
+.char-slot-select:hover { border-color: rgba(0,0,0,0.25); }
+.char-slot-select:focus { outline: none; box-shadow: 0 0 0 2px rgba(0,125,252,0.3); border-color: rgba(0,125,252,0.5); }
+
 .ranking-row {
     display: flex;
-    padding: 11px 20px;
+    padding: 12px 24px;
     border-bottom: 0.5px solid rgba(0, 0, 0, 0.04);
     align-items: center;
-    font-size: 13px;
+    font-size: 14px;
     transition: background 0.15s ease;
 }
 
@@ -459,7 +536,7 @@ body {
 }
 
 .rank-num {
-    width: 50px;
+    width: 56px;
     font-weight: 700;
     color: #86868b;
     flex-shrink: 0;
@@ -470,33 +547,33 @@ body {
 .rank-num.top-3 { color: #6e6e73; }
 
 .player-info {
-    width: 200px;
+    width: 220px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     flex-shrink: 0;
 }
 
 .player-avatar-sm {
     position: relative;
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     flex-shrink: 0;
 }
 
 .player-avatar-sm img {
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     object-fit: cover;
 }
 
 .player-avatar-sm .frame-sm {
     position: absolute;
-    top: -2px;
-    left: -2px;
-    width: 40px;
-    height: 40px;
+    top: -3px;
+    left: -3px;
+    width: 48px;
+    height: 48px;
     border-radius: 0;
 }
 
@@ -507,7 +584,7 @@ body {
 .player-name {
     color: #1d1d1f;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 14px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -515,7 +592,7 @@ body {
 
 .guild-name {
     color: #86868b;
-    font-size: 11px;
+    font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -523,16 +600,16 @@ body {
 
 .player-id-text {
     color: #86868b;
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .player-sign {
     color: #86868b;
-    font-size: 10px;
+    font-size: 11px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px;
+    max-width: 160px;
 }
 
 .ranking-player {
@@ -547,7 +624,7 @@ body {
     flex: 1;
     text-align: center;
     min-width: 0;
-    padding: 0 4px;
+    padding: 0 6px;
 }
 
 .zone-name-sm {
@@ -555,62 +632,78 @@ body {
 }
 
 .zone-score-val {
-    font-size: 13px;
+    font-size: 14px;
     color: #1d1d1f;
     font-weight: 600;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .zone-chars {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
 .char-row {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     justify-content: center;
 }
 
 .char-icon-sm {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
     object-fit: cover;
     flex-shrink: 0;
 }
 
 .char-name-sm {
-    font-size: 11px;
+    font-size: 12px;
     color: #6e6e73;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 60px;
+    max-width: 70px;
 }
 
 .char-bp {
-    font-size: 10px;
+    font-size: 11px;
     color: #86868b;
     flex-shrink: 0;
 }
 
+.rank-quality-sm {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    line-height: 1.4;
+}
+.rank-quality-sm.quality-1 { color: #007aff; background: rgba(0,122,255,0.1); }
+.rank-quality-sm.quality-2 { color: #af52de; background: rgba(175,82,222,0.1); }
+.rank-quality-sm.quality-3 { color: #ff3b30; background: rgba(255,59,48,0.1); }
+.rank-quality-sm.quality-4 { color: #ff2d55; background: rgba(255,45,85,0.1); }
+.rank-quality-sm.quality-5 { color: #ff9500; background: rgba(255,149,0,0.1); text-shadow: 0 0 4px rgba(255,149,0,0.2); }
+.rank-quality-sm.quality-6 { color: #ff6b00; background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,45,0,0.1)); text-shadow: 0 0 6px rgba(255,107,0,0.3); }
+
 .cub-icon-sm {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
     object-fit: cover;
     flex-shrink: 0;
 }
 
 .total-score {
-    width: 100px;
+    width: 110px;
     color: #1d1d1f;
     font-weight: 700;
     text-align: right;
     flex-shrink: 0;
+    font-size: 14px;
 }
 
 /* ========== 玩家查询 ========== */
@@ -2053,7 +2146,7 @@ body {
 }
 
 /* ========== 响应式 ========== */
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
     .zones-container {
         flex-direction: column;
     }
