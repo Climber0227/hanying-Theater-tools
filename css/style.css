@@ -2259,7 +2259,137 @@ body {
     }
 }
 
-/* 手机端适配 */
+/* ========== 手机端适配 ========== */
+@media (max-width: 900px) {
+    .zones-container { flex-direction: column; }
+    .mixed-zone-content { flex-direction: column; }
+    .meta { flex-direction: column; gap: 4px; }
+    .ppc-bosses { flex-direction: column; align-items: center; }
+    .characters-grid { grid-template-columns: 1fr; }
+    .memory-grid { grid-template-columns: 1fr; }
+    .modal-wide { max-width: 95%; }
+
+    .player-profile { flex-direction: column; align-items: center; text-align: center; }
+    .player-meta { justify-content: center; }
+    .search-box input { width: 200px; }
+
+    .ranking-header,
+    .ranking-row { padding: 10px 16px; font-size: 12px; }
+    .ranking-header .col-total,
+    .total-score { width: 80px; }
+    .ranking-header .col-player,
+    .player-info { width: 150px; }
+    .player-avatar-sm { display: none; }
+    .player-sign { display: none; }
+    .char-name-sm { max-width: 40px; }
+}
+
+@media (max-width: 640px) {
+    body { padding: 10px; }
+
+    .nav { gap: 4px; padding: 4px; margin-bottom: 20px; }
+    .nav-btn { padding: 7px 10px; font-size: 13px; flex: 1; text-align: center; }
+
+    .header h1 { font-size: 22px; }
+    .controls { flex-direction: column; align-items: center; gap: 8px; }
+    .controls select,
+    .week-select { font-size: 15px; padding: 8px 28px 8px 12px; max-width: 100%; width: 280px; }
+    .date-range,
+    .meta { font-size: 12px; }
+
+    .filter-hint { font-size: 11px; padding: 6px 12px; }
+
+    .ranking-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    .ranking-header,
+    .ranking-row { padding: 8px 12px; font-size: 11px; }
+    .ranking-header .col-rank,
+    .rank-num { width: 36px; font-size: 12px; }
+    .ranking-header .col-player,
+    .player-info { width: 120px; }
+    .ranking-header .col-total,
+    .total-score { width: 70px; font-size: 12px; }
+    .col-reset { width: 44px; }
+    .reset-filter-btn { font-size: 10px; padding: 4px 6px; }
+
+    .col-zone-detail,
+    .zone-detail { min-width: 220px; }
+
+    .char-slot-filters { gap: 3px; margin-top: 4px; }
+    .char-slot-select { width: 44px; font-size: 11px; padding: 4px 1px; min-height: 30px; }
+    .zone-quick-filters { gap: 4px; margin-top: 4px; }
+    .zone-quick-btn { font-size: 10px; padding: 4px 8px; min-height: 30px; }
+
+    .player-name { font-size: 12px; }
+    .guild-name,
+    .player-id-text { font-size: 10px; }
+    .player-sign { font-size: 10px; max-width: 80px; }
+
+    .zone-score-val { font-size: 12px; margin-bottom: 4px; }
+    .char-row { gap: 3px; }
+    .char-icon-sm { width: 20px; height: 20px; }
+    .char-name-sm { font-size: 10px; max-width: 36px; }
+    .char-bp { font-size: 10px; }
+    .rank-quality-sm { font-size: 9px; padding: 1px 4px; }
+    .cub-icon-sm { width: 16px; height: 16px; }
+
+    .zone-card { padding: 14px; }
+    .zone-name { font-size: 16px; }
+    .zone-info { padding: 10px; }
+    .mixed-zone { padding: 14px; }
+    .mixed-sub-card { padding: 10px; }
+
+    .search-box { flex-direction: column; align-items: center; gap: 8px; }
+    .search-box input { width: 100%; max-width: 300px; font-size: 16px; }
+    .search-box button { width: 100%; max-width: 300px; padding: 12px 24px; }
+
+    .player-profile { padding: 16px; gap: 16px; }
+    .player-avatar { width: 80px; height: 80px; }
+    .player-details h2 { font-size: 20px; }
+
+    .mine-section { padding: 14px; }
+    .bind-input-row { flex-direction: column; align-items: center; }
+    .bind-input { width: 100%; max-width: 300px; font-size: 16px; padding: 10px 14px; }
+    .bind-go-btn { padding: 10px 20px; font-size: 15px; }
+    .bind-player { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .bind-actions { width: 100%; justify-content: flex-end; }
+    .follow-item { width: 100%; }
+
+    .score-input-grid { flex-direction: column; gap: 8px; }
+    .score-input-item { padding: 10px; }
+    .score-input-field { font-size: 16px; padding: 8px 10px; }
+
+    .ppc-boss-card { max-width: 100%; }
+    .ppc-boss-name { font-size: 13px; padding: 8px; }
+
+    .data-mgmt-actions { flex-direction: column; }
+    .character-card { padding: 12px; }
+
+    .modal-content { padding: 20px; }
+    .char-header { flex-direction: column; align-items: center; text-align: center; }
+    .char-tags { justify-content: center; }
+    .char-stats { justify-content: center; flex-wrap: wrap; }
+    .char-tabs { overflow-x: auto; }
+    .char-tab { padding: 10px 14px; font-size: 13px; white-space: nowrap; }
+    .weapon-section,
+    .cub-section { flex-direction: column; align-items: center; text-align: center; }
+    .boss-detail-header { flex-direction: column; align-items: center; text-align: center; }
+    .boss-detail-icon { width: 80px; }
+    .memory-grid { gap: 8px; }
+}
+
+@media (max-width: 400px) {
+    body { padding: 6px; }
+    .nav-btn { padding: 6px 8px; font-size: 12px; }
+    .ranking-header .col-player,
+    .player-info { width: 100px; }
+    .col-zone-detail,
+    .zone-detail { min-width: 190px; }
+    .char-slot-select { width: 36px; font-size: 10px; }
+    .zone-quick-btn { font-size: 9px; padding: 3px 6px; }
+    .char-name-sm { max-width: 28px; }
+}
+
 /* 页脚 */
 .footer {
     text-align: center;
