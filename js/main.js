@@ -647,29 +647,6 @@ function fmtDate(ts) {
 // 当前玩家曲线（弹窗内切换 区/今日/本周）
 let curvePlayerId = null;
 let curveZoneIndex = 0;
-let curveTestMode = false;
-
-// 生成模拟数据（用于预览图表效果：周一~周日完整数据，每天0:30~23:30每2小时采样，逐日上升）
-function genTestSamples() {
-    const samples = [];
-    const now = new Date();
-    const dayOfWeek = now.getDay() || 7;
-    const dayBase = [118000, 121500, 125200, 128800, 132500, 136400, 140200];
-    for (let d = 0; d < 7; d++) {
-        const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (dayOfWeek - 1 - d));
-        for (let h = 0; h <= 23; h += 2) {
-            const t = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 30).getTime();
-            const s = dayBase[d] + Math.floor(Math.random() * 3000) + h * 45;
-            samples.push({ t, zones: [s, s + 21000, s + 43000], total: s * 3 + 64000 });
-        }
-    }
-    return samples;
-}
-
-function getCurveSamples() {
-    if (curveTestMode) return genTestSamples();
-    return getPlayerCurve(curvePlayerId, currentDifficulty, currentWeek);
-}
 
 function renderPlayerCurveModal(playerId, playerName, zoneIndex) {
     curvePlayerId = playerId;
@@ -706,7 +683,7 @@ function renderPlayerCurveModal(playerId, playerName, zoneIndex) {
 }
 
 function renderCurveContent(mode) {
-    const samples = getCurveSamples();
+    const samples = getPlayerCurve(curvePlayerId, currentDifficulty, currentWeek);
     const content = document.getElementById('curveContent');
     const zone = (zonesData || [])[curveZoneIndex];
     if (!zone) {
@@ -2902,16 +2879,6 @@ function initNavigation() {
         renderRankingModal();
         document.getElementById('rankingModal').style.display = 'flex';
     });
-
-    // 测试数据开关（预览图表）
-    const wzTestBtn = document.getElementById('wzTestBtn');
-    if (wzTestBtn) {
-        wzTestBtn.addEventListener('click', () => {
-            curveTestMode = !curveTestMode;
-            wzTestBtn.textContent = curveTestMode ? '真实数据' : '测试数据';
-            wzTestBtn.classList.toggle('bracket-btn-active', curveTestMode);
-        });
-    }
 
     // 我的页面
     document.getElementById('bindByIdBtn').addEventListener('click', () => {
