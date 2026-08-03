@@ -10,67 +10,67 @@
     <div class="container">
         <!-- 导航栏 -->
         <nav class="nav">
-            <button class="nav-btn active" data-page="warzone">战区数据</button>
-            <button class="nav-btn" data-page="player">玩家查询</button>
-            <button class="nav-btn" data-page="ppc">幻痛囚笼</button>
-            <button class="nav-btn" data-page="mine">我的</button>
+            <div class="nav-stats">
+                <span>建站 <strong id="siteDays">0</strong> 天 <strong id="siteHours">0</strong> 时 <strong id="siteMinutes">0</strong> 分 <strong id="siteSeconds">0</strong> 秒</span>
+                <span class="stats-divider">|</span>
+                <span>访问 <strong id="visitCount">0</strong> 次</span>
+                <span class="stats-divider">|</span>
+                <span>数据来源 <a href="https://huaxu.app" target="_blank">huaxu.app</a></span>
+            </div>
+            <div class="nav-btns">
+                <button class="nav-btn active" data-page="warzone">战区数据</button>
+                <button class="nav-btn" data-page="player">玩家查询</button>
+                <button class="nav-btn" data-page="ppc">幻痛囚笼</button>
+                <button class="nav-btn" data-page="mine">我的</button>
+            </div>
         </nav>
-
-        <!-- 站点信息 -->
-        <div class="site-stats">
-            <span>建站 <strong id="siteDays">0</strong> 天 <strong id="siteHours">0</strong> 时 <strong id="siteMinutes">0</strong> 分 <strong id="siteSeconds">0</strong> 秒</span>
-            <span class="stats-divider">|</span>
-            <span>访问 <strong id="visitCount">0</strong> 次</span>
-            <span class="stats-divider">|</span>
-            <span>数据来源 <a href="https://huaxu.app" target="_blank">huaxu.app</a></span>
-        </div>
 
         <!-- 战区数据页面 -->
         <div id="warzonePage" class="page active">
-            <header class="header">
-                <h1>战区数据</h1>
-                <div class="controls">
-                    <select id="difficultySelect">
-                        <option value="16">传奇 (80-120)</option>
-                        <option value="15">英雄 (80-120)</option>
-                        <option value="14">领袖 (80-120)</option>
-                        <option value="13">领袖 (55-79)</option>
-                        <option value="12">尖兵 (80-120)</option>
-                        <option value="11">尖兵 (55-79)</option>
-                        <option value="10">尖兵 (1-54)</option>
-                        <option value="9">先锋 (80-120)</option>
-                        <option value="8">先锋 (55-79)</option>
-                        <option value="7">先锋 (1-54)</option>
-                        <option value="6">侦察 (80-120)</option>
-                        <option value="5">侦察 (55-79)</option>
-                        <option value="4">侦察 (1-54)</option>
-                        <option value="3">预备 (80-120)</option>
-                        <option value="2">预备 (55-79)</option>
-                        <option value="1">预备 (1-54)</option>
-                    </select>
-                    <div class="week-nav">
-                        <select id="weekSelect" class="week-select"></select>
-                    </div>
-                </div>
-                <div class="date-range" id="dateRange"></div>
-                <div class="meta">
-                    <span id="members">参与人数: --</span>
-                    <span id="updatedAt">更新时间: --</span>
-                </div>
-            </header>
-
             <!-- 战区卡片区域 -->
             <section class="zones-container" id="zonesContainer">
                 <!-- 动态生成 -->
             </section>
 
-            <!-- 分隔线 -->
-            <div class="divider"></div>
-
             <!-- 排行榜 -->
             <section class="rankings">
+                <div class="ranking-head">
+                    <div class="controls ranking-controls">
+                        <select id="difficultySelect">
+                            <option value="16">传奇 (80-120)</option>
+                            <option value="15">英雄 (80-120)</option>
+                            <option value="14">领袖 (80-120)</option>
+                            <option value="13">领袖 (55-79)</option>
+                            <option value="12">尖兵 (80-120)</option>
+                            <option value="11">尖兵 (55-79)</option>
+                            <option value="10">尖兵 (1-54)</option>
+                            <option value="9">先锋 (80-120)</option>
+                            <option value="8">先锋 (55-79)</option>
+                            <option value="7">先锋 (1-54)</option>
+                            <option value="6">侦察 (80-120)</option>
+                            <option value="5">侦察 (55-79)</option>
+                            <option value="4">侦察 (1-54)</option>
+                            <option value="3">预备 (80-120)</option>
+                            <option value="2">预备 (55-79)</option>
+                            <option value="1">预备 (1-54)</option>
+                        </select>
+                        <select id="weekSelect" class="week-select"></select>
+                        <span class="date-range" id="dateRange"></span>
+                    </div>
+                    <div class="ranking-meta">
+                        <span id="members">参与人数: --</span>
+                        <span id="updatedAt">更新时间: --</span>
+                    </div>
+                </div>
                 <h2>排行榜 <span class="top-label">TOP 100</span> <button id="refreshWzBtn" class="refresh-btn">刷新</button></h2>
                 <div class="filter-hint">角色阶级筛选：各区3个下拉框独立筛选对应位置的阶级（3.1/3.2均视为SSS），<b>[全SSS]</b>/<b>[全SSS+]</b>快速将该区3个角色位统一设定</div>
+                <div class="ranking-toolbar">
+                    <input type="text" id="wzSearchInput" class="ranking-search" placeholder="搜索玩家ID或名字">
+                    <button id="wzBracketBtn" class="bracket-btn">分数分布</button>
+                    <button id="wzTeamBtn" class="bracket-btn">阵容参考</button>
+                    <button id="wzRankingBtn" class="bracket-btn">阵容排行</button>
+                    <button id="wzTestBtn" class="bracket-btn">测试数据</button>
+                </div>
                 <div class="ranking-table" id="rankingTable">
                     <!-- 动态生成 -->
                 </div>
@@ -120,6 +120,8 @@
                         <div class="player-actions">
                             <button class="bind-set-btn" id="bindSetBtn">绑定为我的角色</button>
                             <button class="bind-set-btn follow-set-btn" id="followSetBtn">关注</button>
+                            <button class="bind-set-btn follow-set-btn" id="historyBtn">历史战绩</button>
+                            <button class="bind-set-btn follow-set-btn" id="curveBtn">本周走势</button>
                         </div>
                     </div>
                 </div>
@@ -363,6 +365,82 @@
         </div>
     </div>
 
+    <!-- 阵容参考弹窗 -->
+    <!-- 阵容参考弹窗 -->
+    <div id="teamModal" class="modal" style="display: none;">
+        <div class="modal-content modal-wide">
+            <button class="modal-close" id="teamModalClose">&times;</button>
+            <div class="team-modal-title">阵容参考</div>
+            <div class="team-tabs">
+                <button class="team-tab active" data-tab="strong">最强阵容</button>
+                <button class="team-tab" data-tab="common">最常用阵容</button>
+            </div>
+            <div class="team-tabs team-zone-tabs" id="teamZoneTabs"></div>
+            <div id="teamContent"></div>
+        </div>
+    </div>
+
+    <!-- 阵容排行弹窗 -->
+    <div id="rankingModal" class="modal" style="display: none;">
+        <div class="modal-content modal-wide">
+            <button class="modal-close" id="rankingModalClose">&times;</button>
+            <div class="team-modal-title">阵容排行 <span class="history-sub">当前段位 · 各阵容独立排名</span></div>
+            <input type="text" id="rankingSearchInput" class="ranking-search ranking-search-full" placeholder="搜索阵容角色名">
+            <div class="team-tabs team-zone-tabs" id="rankingZoneTabs"></div>
+            <div id="rankingContent"></div>
+        </div>
+    </div>
+
+    <!-- 战区详情弹窗 -->
+    <div id="zoneModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close" id="zoneModalClose">&times;</button>
+            <div id="zoneDetail"></div>
+        </div>
+    </div>
+
+    <!-- 分数分布弹窗 -->
+    <div id="bracketModal" class="modal" style="display: none;">
+        <div class="modal-content modal-wide">
+            <button class="modal-close" id="bracketModalClose">&times;</button>
+            <div class="team-modal-title">分数分布 <span class="history-sub" id="bracketSub"></span></div>
+            <div class="team-tabs" id="bracketTabs"></div>
+            <div id="bracketContent"></div>
+        </div>
+    </div>
+
+    <!-- 玩家本周走势弹窗 -->
+    <div id="curveModal" class="modal" style="display: none;">
+        <div class="modal-content modal-wide">
+            <button class="modal-close" id="curveModalClose">&times;</button>
+            <div class="team-modal-title" id="curveTitle">本周走势</div>
+            <div class="team-tabs team-zone-tabs" id="curveZoneTabs"></div>
+            <div class="team-tabs" id="curveTabs">
+                <button class="team-tab active" data-curve-tab="today">今日</button>
+                <button class="team-tab" data-curve-tab="week">本周</button>
+            </div>
+            <div id="curveContent"></div>
+        </div>
+    </div>
+
+    <!-- 玩家历史战绩弹窗 -->
+    <div id="historyModal" class="modal" style="display: none;">
+        <div class="modal-content modal-wide">
+            <button class="modal-close" id="historyModalClose">&times;</button>
+            <div class="team-modal-title">历史战绩 <span class="history-sub" id="historySub"></span></div>
+            <div id="historyProgress"></div>
+            <div id="historyContent"></div>
+        </div>
+    </div>
+
+    <!-- 分数分析弹窗 -->
+    <div id="saModal" class="modal" style="display: none;">
+        <div class="modal-content modal-wide">
+            <button class="modal-close" id="saModalClose">&times;</button>
+            <div id="saContent"></div>
+        </div>
+    </div>
+
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/main.js"></script>
@@ -405,5 +483,8 @@
             }
         })();
     </script>
+
+    <!-- 反馈入口 -->
+    <a class="corner-feedback" href="https://wpa.qq.com/msgrd?v=3&uin=2813509189&site=qq&menu=yes" target="_blank">反馈bug联系作者QQ：2813509189</a>
 </body>
 </html>

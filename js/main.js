@@ -53,6 +53,13 @@ function formatNumber(num) {
     return num.toLocaleString('zh-CN');
 }
 
+// 紧凑格式：大数用万显示
+function formatScoreCompact(num) {
+    if (num >= 100000000) return (num / 100000000).toFixed(1) + '亿';
+    if (num >= 10000) return (num / 10000).toFixed(1) + '万';
+    return String(num);
+}
+
 // 格式化时间
 function formatTime(timeStr) {
     const date = new Date(timeStr);
@@ -88,55 +95,20 @@ function getMonsterTag(desc) {
     return '';
 }
 
-// 创建战区卡片HTML
-function createZoneCard(zone) {
-    let buffsHtml = '';
-    if (zone.buffs && zone.buffs.length > 0) {
-        buffsHtml = zone.buffs.map(buff => `
-            <div class="zone-info">
-                <div class="info-label">增益：${buff.name}</div>
-                <div class="info-desc">${buff.description}</div>
-            </div>
-        `).join('');
-    }
-
-    let weathersHtml = '';
-    if (zone.weathers && zone.weathers.length > 0) {
-        weathersHtml = zone.weathers.map(weather => `
-            <div class="zone-info">
-                <div class="info-label">天气：${weather.name}</div>
-                <div class="info-desc">${weather.description}</div>
-            </div>
-        `).join('');
-    }
-
+// 创建战区卡片HTML（单行紧凑版：区名+怪物数量+详情按钮）
+function createZoneCard(zone, index) {
     const monsterTag = getMonsterTag(zone.description);
-
+    const isMixed = zone.buffs && zone.buffs.length >= 2;
+    // 混合区：子区与主区同规格显示
+    const subChips = isMixed ? zone.buffs.map(b => `<span class="zone-sub-chip">${b.name}</span>`).join('') : '';
     return `
-        <div class="zone-card">
-            <div class="zone-name">${zone.name}${monsterTag ? ` <span class="zone-tag">${monsterTag}</span>` : ''}</div>
-            <div class="zone-desc">${zone.description}</div>
-            ${weathersHtml}
-            ${buffsHtml}
-        </div>
-    `;
-}
-
-// 创建混合区子卡片HTML
-function createMixedSubCard(zone, buff, weather) {
-    const monsterTag = getMonsterTag(zone.description);
-    return `
-        <div class="mixed-sub-card">
-            <div class="mixed-sub-header">${zone.name}${monsterTag ? ` <span class="zone-tag">${monsterTag}</span>` : ''}</div>
-            <div class="zone-name">${buff.name}</div>
-            <div class="zone-desc">${zone.description}</div>
-            <div class="zone-info">
-                <div class="info-label">天气：${weather.name}</div>
-                <div class="info-desc">${weather.description}</div>
+        <div class="zone-card${isMixed ? ' zone-card-mixed' : ''}">
+            <div class="zone-card-info">
+                <div class="zone-name">${zone.name}${monsterTag ? ` <span class="zone-tag">${monsterTag}</span>` : ''}</div>
+                ${subChips ? `<div class="zone-card-sub">${subChips}</div>` : ''}
             </div>
-            <div class="zone-info">
-                <div class="info-label">增益：${buff.name}</div>
-                <div class="info-desc">${buff.description}</div>
+            <div class="zone-card-actions">
+                <button class="zone-detail-btn" data-zone-index="${index}">详情</button>
             </div>
         </div>
     `;
@@ -147,40 +119,66 @@ function renderZones(zones) {
     const container = document.getElementById('zonesContainer');
     let html = '';
 
-    zones.forEach(zone => {
-        // 判断是否为混合区（包含多个增益）
-        if (zone.buffs && zone.buffs.length >= 2) {
-            // 为每个增益创建独立的子卡片
-            let subCardsHtml = '';
-            zone.buffs.forEach((buff, index) => {
-                // 交换天气索引：第一个buff对应第二个weather，第二个buff对应第一个weather
-                const weatherIndex = zone.weathers && zone.weathers.length >= 2 ? 1 - index : 0;
-                const weather = zone.weathers && zone.weathers[weatherIndex] ? zone.weathers[weatherIndex] : zone.weathers[0];
-                subCardsHtml += createMixedSubCard(zone, buff, weather);
-            });
-
-            // 生成子区名称和怪物数量标签
-            const monsterTag = getMonsterTag(zone.description);
-            const subZoneLabels = zone.buffs.map(buff => {
-                return buff.name + (monsterTag ? ` ${monsterTag}` : '');
-            }).join(' / ');
-
-            html += `
-                <div class="mixed-zone">
-                    <div class="mixed-zone-header">
-                        ${zone.name} <span class="sub-zone-labels">${subZoneLabels}</span>
-                    </div>
-                    <div class="mixed-zone-content">
-                        ${subCardsHtml}
-                    </div>
-                </div>
-            `;
-        } else {
-            html += createZoneCard(zone);
-        }
+    zones.forEach((zone, zi) => {
+        html += createZoneCard(zone, zi);
     });
 
     container.innerHTML = html;
+
+    // 绑定详情按钮
+    container.querySelectorAll('.zone-detail-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const zi = parseInt(btn.dataset.zoneIndex);
+            showZoneDetail(zi);
+        });
+    });
+}
+
+// 显示战区详情弹窗
+function showZoneDetail(zoneIndex) {
+    const zone = zonesData[zoneIndex];
+    if (!zone) return;
+    const modal = document.getElementById('zoneModal');
+    const detail = document.getElementById('zoneDetail');
+
+    const monsterTag = getMonsterTag(zone.description);
+    let html = `
+        <div class="zone-detail-header">
+            <div class="zone-detail-name">${zone.name}${monsterTag ? ` <span class="zone-tag">${monsterTag}</span>` : ''}</div>
+            <div class="zone-detail-desc">${zone.description}</div>
+        </div>
+    `;
+
+    // 天气
+    if (zone.weathers && zone.weathers.length > 0) {
+        html += `<div class="boss-stage-section"><div class="boss-section-title">天气</div>`;
+        zone.weathers.forEach(w => {
+            html += `
+                <div class="boss-buff">
+                    <div class="boss-buff-name">${w.name}</div>
+                    <div class="boss-buff-desc">${w.description}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+
+    // 增益
+    if (zone.buffs && zone.buffs.length > 0) {
+        html += `<div class="boss-stage-section"><div class="boss-section-title">增益</div>`;
+        zone.buffs.forEach(b => {
+            html += `
+                <div class="boss-buff">
+                    <div class="boss-buff-name">${b.name}</div>
+                    <div class="boss-buff-desc">${b.description}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+
+    detail.innerHTML = html;
+    modal.style.display = 'flex';
 }
 
 // 渲染排行榜
@@ -210,8 +208,14 @@ function sortRankings(rankings, zones) {
 function renderRankings(rankings, zones) {
     const container = document.getElementById('rankingTable');
 
-    // 按角色位筛选：每个区独立，每个角色位独立筛选
+    // 组合筛选：角色位筛选 + 搜索
     const filtered = rankings.filter(r => {
+        if (wzSearchQuery && r.player) {
+            const q = wzSearchQuery.toLowerCase();
+            const nameMatch = (r.player.name || '').toLowerCase().includes(q);
+            const idMatch = String(r.player.id).includes(wzSearchQuery);
+            if (!nameMatch && !idMatch) return false;
+        }
         if (!r.zones) return wzCharFilters.every(fz => fz.every(f => !f));
         return wzCharFilters.every((zoneFilters, zi) => {
             if (!zoneFilters) return true;
@@ -224,6 +228,12 @@ function renderRankings(rankings, zones) {
         });
     });
     const sorted = sortRankings(filtered, zones).slice(0, 100);
+
+    // 各区阵容最高分对比（基于全量数据）
+    const teamMax = computeTeamMaxScores(rawRankings, zones);
+
+    // 该段位总分最高
+    const totalMaxScore = rawRankings.reduce((m, r) => Math.max(m, r.score || 0), 0);
 
     // 排序指示器
     const arrow = (key) => {
@@ -261,12 +271,40 @@ function renderRankings(rankings, zones) {
     sorted.forEach((ranking, idx) => {
         const displayRank = wzSortAsc ? total - idx : idx + 1;
         const rankClass = displayRank <= 3 ? `top-${displayRank}` : '';
+        const rowClass = displayRank <= 3 ? ` top-${displayRank}-row` : '';
         const portraitUrl = ranking.player.portrait ? getImageUrl(ranking.player.portrait) : '';
         const frameUrl = ranking.player.frame ? getImageUrl(ranking.player.frame) : '';
 
+        // 排名/分数变化
+        let rankDeltaHtml = '';
+        let scoreDeltaHtml = '';
+        const delta = getRankDelta(ranking.player.id, ranking.rank, ranking.score);
+        if (delta) {
+            if (delta.rankDelta > 0) {
+                rankDeltaHtml = `<span class="rank-delta-up">↑${delta.rankDelta}</span>`;
+            } else if (delta.rankDelta < 0) {
+                rankDeltaHtml = `<span class="rank-delta-down">↓${Math.abs(delta.rankDelta)}</span>`;
+            } else {
+                rankDeltaHtml = `<span class="rank-delta-same">—</span>`;
+            }
+            if (delta.scoreDelta > 0) {
+                scoreDeltaHtml = `<span class="score-delta-up">+${formatScoreCompact(delta.scoreDelta)}</span>`;
+            } else if (delta.scoreDelta < 0) {
+                scoreDeltaHtml = `<span class="score-delta-down">-${formatScoreCompact(Math.abs(delta.scoreDelta))}</span>`;
+            } else {
+                scoreDeltaHtml = `<span class="score-delta-same">0</span>`;
+            }
+        }
+
+        // 前三名奖牌样式
+        const medalLabel = displayRank === 1 ? '冠军' : displayRank === 2 ? '亚军' : displayRank === 3 ? '季军' : '';
+        const rankNumHtml = displayRank <= 3
+            ? `<span class="rank-medal medal-${displayRank}">${displayRank}</span><span class="rank-medal-label">${medalLabel}</span>${rankDeltaHtml}`
+            : `${displayRank}${rankDeltaHtml}`;
+
         html += `
-            <div class="ranking-row">
-                <div class="rank-num ${rankClass}">${displayRank}</div>
+            <div class="ranking-row${rowClass}">
+                <div class="rank-num ${rankClass}">${rankNumHtml}</div>
                 <div class="player-info ranking-player" data-player-id="${ranking.player.id}">
                     <div class="player-avatar-sm">
                         <img src="${portraitUrl}" alt="" onerror="this.style.display='none'">
@@ -281,9 +319,33 @@ function renderRankings(rankings, zones) {
                 </div>
         `;
 
-        zones.forEach(zone => {
+        zones.forEach((zone, zi) => {
             const zoneData = ranking.zones ? ranking.zones.find(z => z.id === zone.id) : null;
             const score = zoneData ? formatNumber(zoneData.score) : '--';
+            // 单区分数差值（仅当上期该区有分数才显示）
+            let zoneDeltaHtml = '';
+            if (delta && delta.zoneScores && zoneData && Object.prototype.hasOwnProperty.call(delta.zoneScores, zone.id)) {
+                const prevZoneScore = delta.zoneScores[zone.id];
+                const diff = (zoneData.score || 0) - prevZoneScore;
+                if (diff > 0) zoneDeltaHtml = `<span class="score-delta-up">+${formatScoreCompact(diff)}</span>`;
+                else if (diff < 0) zoneDeltaHtml = `<span class="score-delta-down">-${formatScoreCompact(Math.abs(diff))}</span>`;
+                else zoneDeltaHtml = `<span class="score-delta-same">0</span>`;
+            }
+            // 阵容最高分对比（按阵容+阶级精确匹配）
+            let teamCompareHtml = '';
+            if (zoneData && zoneData.characters && zoneData.characters.length > 0) {
+                const teamKey = getTeamKey(zoneData.characters);
+                const max = teamMax[zone.id] && teamMax[zone.id][teamKey];
+                const zscore = zoneData.score || 0;
+                if (max && zscore > 0) {
+                    const diff = max.score - zscore;
+                    if (diff <= 0) {
+                        teamCompareHtml = `<span class="zone-max-tag">同阶级阵容最高 ${formatNumber(max.score)}</span>`;
+                    } else {
+                        teamCompareHtml = `<span class="zone-diff-tag">同阶级阵容最高 ${formatNumber(max.score)} · 低${formatScoreCompact(diff)}</span>`;
+                    }
+                }
+            }
             let charsHtml = '';
             if (zoneData && zoneData.characters) {
                 zoneData.characters.forEach(c => {
@@ -303,15 +365,28 @@ function renderRankings(rankings, zones) {
             }
             html += `
                 <div class="zone-detail">
+                    <div class="zone-actions">
+                        <button class="zone-sa-btn" data-player-id="${ranking.player.id}" data-zone-idx="${zi}">分析</button>
+                        <button class="zone-sa-btn zone-trend-btn" data-player-id="${ranking.player.id}" data-zone-idx="${zi}" data-trend="1">趋势</button>
+                    </div>
                     <div class="zone-name-sm">${zone.name}</div>
-                    <div class="zone-score-val">${score}</div>
+                    <div class="zone-score-val">${score}${zoneDeltaHtml}</div>
+                    <div class="zone-team-compare">${teamCompareHtml}</div>
                     <div class="zone-chars">${charsHtml}</div>
                 </div>
             `;
         });
 
+        // 该段位总分最高标注
+        const totalMaxTag = (ranking.score || 0) > 0 && (ranking.score || 0) >= totalMaxScore
+            ? '<div class="total-max-tag">总分最高</div>'
+            : '';
+
         html += `
-                <div class="total-score">${formatNumber(ranking.score)}</div>
+                <div class="total-score">
+                    <div>${formatNumber(ranking.score)}${scoreDeltaHtml}</div>
+                    ${totalMaxTag}
+                </div>
                 <div class="col-reset"></div>
             </div>
         `;
@@ -344,6 +419,28 @@ function renderRankings(rankings, zones) {
         });
     });
 
+    // 各区分数分析按钮
+    container.querySelectorAll('.zone-sa-btn:not([data-trend])').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const playerId = btn.dataset.playerId;
+            const zi = parseInt(btn.dataset.zoneIdx);
+            const ranking = rawRankings.find(r => String(r.player.id) === String(playerId));
+            if (ranking) {
+                renderZoneAnalysis(ranking, zi);
+                document.getElementById('saModal').style.display = 'flex';
+            }
+        });
+    });
+
+    // 各区趋势按钮
+    container.querySelectorAll('.zone-sa-btn[data-trend]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            renderPlayerCurveModal(btn.dataset.playerId, null, parseInt(btn.dataset.zoneIdx));
+        });
+    });
+
     // 各区角色位筛选变更
     container.querySelectorAll('.char-slot-select').forEach(select => {
         select.addEventListener('change', function() {
@@ -360,6 +457,11 @@ function renderRankings(rankings, zones) {
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
             wzCharFilters = [];
+            wzSearchQuery = '';
+            const searchInput = document.getElementById('wzSearchInput');
+            if (searchInput) searchInput.value = '';
+            wzSortKey = null;
+            wzSortAsc = false;
             renderRankings(rawRankings, zonesData);
         });
     }
@@ -376,6 +478,858 @@ function renderRankings(rankings, zones) {
     });
 }
 
+// 记录本周各玩家三区分数曲线快照（仅本周，按难度+周隔离）
+function recordWzCurve(difficulty, activity, rankings) {
+    try {
+        const key = `huaxu_wz_curve_${difficulty}_${activity}`;
+
+        // 清理其它周（跨周自动清空）
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('huaxu_wz_curve_') && !k.endsWith(`_${activity}`)) {
+                localStorage.removeItem(k);
+            }
+        }
+
+        let data = null;
+        try { data = JSON.parse(localStorage.getItem(key)); } catch { /* 忽略损坏数据 */ }
+        if (!data || !data.samples) data = { samples: [] };
+
+        const sample = { t: Date.now(), p: {} };
+        (rankings || []).forEach(r => {
+            sample.p[String(r.player.id)] = {
+                n: r.player.name,
+                z: (r.zones || []).map(z => z.score || 0),
+                t: r.score || 0
+            };
+        });
+
+        // 去重：与最近一次采样完全相同或间隔过短时不记录
+        const last = data.samples[data.samples.length - 1];
+        if (last) {
+            if (Date.now() - last.t < 60 * 1000) return;
+            if (JSON.stringify(last.p) === JSON.stringify(sample.p)) return;
+        }
+
+        data.samples.push(sample);
+        if (data.samples.length > 200) data.samples = data.samples.slice(-200);
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch { /* 存储失败忽略 */ }
+}
+
+// 读取某玩家本周曲线
+function getPlayerCurve(playerId, difficulty, activity) {
+    const key = `huaxu_wz_curve_${difficulty}_${activity}`;
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(key)); } catch { return []; }
+    if (!data || !data.samples) return [];
+    return data.samples.map(s => {
+        const p = s.p[String(playerId)];
+        return p ? { t: s.t, zones: p.z, total: p.t } : null;
+    }).filter(Boolean);
+}
+
+// SVG 平滑折线图（按真实时间定位：startT~endT 为 x 轴范围）
+let curveSvgId = 0;
+function buildCurveSvgTimed(points, startT, endT) {
+    const W = 640, H = 150, PAD = 10;
+    const scores = points.map(p => p.score);
+    let min = Math.min(...scores), max = Math.max(...scores);
+    if (min === max) { min -= 100; max += 100; }
+    const range = max - min;
+    min -= range * 0.08;
+    max += range * 0.08;
+    const span = Math.max(endT - startT, 1);
+    const x = t => PAD + (W - PAD * 2) * ((t - startT) / span);
+    const y = s => H - PAD - (H - PAD * 2) * ((s - min) / (max - min));
+
+    // Catmull-Rom 转贝塞尔平滑路径
+    const pathD = () => {
+        let d = `M${x(points[0].t).toFixed(1)},${y(points[0].score).toFixed(1)}`;
+        for (let i = 0; i < points.length - 1; i++) {
+            const p0 = points[Math.max(i - 1, 0)];
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const p3 = points[Math.min(i + 2, points.length - 1)];
+            const c1x = x(p1.t) + (x(p2.t) - x(p0.t)) / 6;
+            const c1y = y(p1.score) + (y(p2.score) - y(p0.score)) / 6;
+            const c2x = x(p2.t) - (x(p3.t) - x(p1.t)) / 6;
+            const c2y = y(p2.score) - (y(p3.score) - y(p1.score)) / 6;
+            d += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${x(p2.t).toFixed(1)},${y(p2.score).toFixed(1)}`;
+        }
+        return d;
+    };
+
+    const lineD = pathD();
+    const baseY = H - PAD;
+    const areaD = `${lineD} L${x(points[points.length - 1].t).toFixed(1)},${baseY.toFixed(1)} L${x(points[0].t).toFixed(1)},${baseY.toFixed(1)} Z`;
+    const gid = `curveGrad${curveSvgId++}`;
+
+    const dots = points.map((p, i) =>
+        `<circle cx="${x(p.t).toFixed(1)}" cy="${y(p.score).toFixed(1)}" r="3.5" class="curve-dot" data-curve-idx="${i}"></circle>`
+    ).join('');
+    const grid = [0.25, 0.5, 0.75].map(g => {
+        const gy = H - PAD - (H - PAD * 2) * g;
+        return `<line x1="${PAD}" y1="${gy.toFixed(1)}" x2="${W - PAD}" y2="${gy.toFixed(1)}" class="curve-grid"/>`;
+    }).join('');
+    const yLabels = [0.25, 0.5, 0.75].map(g => {
+        const gy = H - PAD - (H - PAD * 2) * g;
+        const bottomPct = ((H - gy) / H) * 100;
+        const val = min + (max - min) * g;
+        return `<span class="curve-ylabel" style="bottom:${bottomPct.toFixed(1)}%">${formatScoreCompact(val)}</span>`;
+    }).join('');
+    return `
+        <div class="curve-plot">
+            <svg class="curve-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+                <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.18"/>
+                    <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+                </linearGradient></defs>
+                ${grid}
+                <line class="curve-guide" y1="0" y2="${H}"/>
+                <path d="${areaD}" fill="url(#${gid})"/>
+                <path d="${lineD}" class="curve-line"/>
+                ${dots}
+            </svg>
+            <div class="curve-y-labels">${yLabels}</div>
+            <div class="curve-tooltip"></div>
+        </div>`;
+}
+
+// 悬浮 Tooltip：跟随鼠标，显示最近数据点的时间与分数
+function initChartTooltip(chartEl, points, startT, endT) {
+    const svg = chartEl.querySelector('.curve-svg');
+    const guide = chartEl.querySelector('.curve-guide');
+    const tooltip = chartEl.querySelector('.curve-tooltip');
+    const dots = [...chartEl.querySelectorAll('.curve-dot')];
+    const W = 640, PAD = 10;
+    const span = Math.max(endT - startT, 1);
+
+    svg.addEventListener('mousemove', (e) => {
+        const rect = svg.getBoundingClientRect();
+        const mx = ((e.clientX - rect.left) / rect.width) * W;
+        const t = startT + ((mx - PAD) / (W - PAD * 2)) * span;
+        let best = 0, bestDist = Infinity;
+        points.forEach((p, i) => {
+            const d = Math.abs(p.t - t);
+            if (d < bestDist) { bestDist = d; best = i; }
+        });
+        const p = points[best];
+        const gx = PAD + (W - PAD * 2) * ((p.t - startT) / span);
+        guide.setAttribute('x1', gx.toFixed(1));
+        guide.setAttribute('x2', gx.toFixed(1));
+        guide.style.display = 'block';
+        dots.forEach((d, i) => d.classList.toggle('curve-dot-hover', i === best));
+        const px = (gx / W) * rect.width;
+        tooltip.style.display = 'block';
+        tooltip.style.left = `${Math.min(Math.max(px + 14, 4), Math.max(rect.width - 132, 4))}px`;
+        tooltip.innerHTML = `<div class="curve-tip-time">${fmtDate(p.t)} ${fmtTime(p.t)}</div><div class="curve-tip-score">${formatNumber(p.score)}</div>`;
+    });
+    svg.addEventListener('mouseleave', () => {
+        guide.style.display = 'none';
+        tooltip.style.display = 'none';
+        dots.forEach(d => d.classList.remove('curve-dot-hover'));
+    });
+}
+
+function fmtTime(ts) {
+    const d = new Date(ts);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fmtDate(ts) {
+    const d = new Date(ts);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// 当前玩家曲线（弹窗内切换 区/今日/本周）
+let curvePlayerId = null;
+let curveZoneIndex = 0;
+let curveTestMode = false;
+
+// 生成模拟数据（用于预览图表效果：周一~周日完整数据，每天0:30~23:30每2小时采样，逐日上升）
+function genTestSamples() {
+    const samples = [];
+    const now = new Date();
+    const dayOfWeek = now.getDay() || 7;
+    const dayBase = [118000, 121500, 125200, 128800, 132500, 136400, 140200];
+    for (let d = 0; d < 7; d++) {
+        const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (dayOfWeek - 1 - d));
+        for (let h = 0; h <= 23; h += 2) {
+            const t = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 30).getTime();
+            const s = dayBase[d] + Math.floor(Math.random() * 3000) + h * 45;
+            samples.push({ t, zones: [s, s + 21000, s + 43000], total: s * 3 + 64000 });
+        }
+    }
+    return samples;
+}
+
+function getCurveSamples() {
+    if (curveTestMode) return genTestSamples();
+    return getPlayerCurve(curvePlayerId, currentDifficulty, currentWeek);
+}
+
+function renderPlayerCurveModal(playerId, playerName, zoneIndex) {
+    curvePlayerId = playerId;
+    curveZoneIndex = zoneIndex || 0;
+    if (!playerName) {
+        const r = (rawRankings || []).find(x => String(x.player.id) === String(playerId));
+        playerName = r ? r.player.name : playerId;
+    }
+    const difficultyLabel = (() => {
+        const opt = document.querySelector(`#difficultySelect option[value="${currentDifficulty}"]`);
+        return opt ? opt.textContent : currentDifficulty;
+    })();
+    document.getElementById('curveTitle').innerHTML =
+        `${playerName} 本周走势 <span class="history-sub">${difficultyLabel} · 第${currentWeek}周</span>`;
+
+    // 区Tab栏
+    const zoneTabsEl = document.getElementById('curveZoneTabs');
+    zoneTabsEl.innerHTML = (zonesData || []).map((z, i) =>
+        `<button class="team-tab${i === curveZoneIndex ? ' active' : ''}" data-curve-zone-tab="${i}">${z.name}</button>`
+    ).join('');
+    zoneTabsEl.style.display = (zonesData && zonesData.length > 1) ? 'flex' : 'none';
+    zoneTabsEl.querySelectorAll('[data-curve-zone-tab]').forEach(tab => {
+        tab.addEventListener('click', () => {
+            zoneTabsEl.querySelectorAll('[data-curve-zone-tab]').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            curveZoneIndex = parseInt(tab.dataset.curveZoneTab);
+            const activeMode = document.querySelector('#curveTabs .team-tab.active');
+            renderCurveContent(activeMode ? activeMode.dataset.curveTab : 'today');
+        });
+    });
+
+    renderCurveContent('today');
+    document.getElementById('curveModal').style.display = 'flex';
+}
+
+function renderCurveContent(mode) {
+    const samples = getCurveSamples();
+    const content = document.getElementById('curveContent');
+    const zone = (zonesData || [])[curveZoneIndex];
+    if (!zone) {
+        content.innerHTML = '<div class="team-empty">暂无数据</div>';
+        return;
+    }
+
+    // x 轴范围：今日 = 今天0点~24点；本周 = 周一0点~周日24点（按天聚合）
+    const now = new Date();
+    const day = now.getDay() || 7;
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (day - 1)).getTime();
+    let startT, endT, axisFn;
+    if (mode === 'today') {
+        startT = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        endT = startT + 24 * 3600 * 1000;
+        axisFn = () => {
+            const hours = [0, 4, 8, 12, 16, 20, 24];
+            const pad = n => String(n).padStart(2, '0');
+            return `<div class="curve-chart-axis curve-axis-7">${hours.map(h => `<span>${pad(h)}:00</span>`).join('')}</div>`;
+        };
+    } else {
+        startT = monday;
+        endT = monday + 7 * 24 * 3600 * 1000;
+        axisFn = () => `<div class="curve-chart-axis curve-axis-7">${['周一', '周二', '周三', '周四', '周五', '周六', '周日'].map(d => `<span>${d}</span>`).join('')}</div>`;
+    }
+
+    if (samples.length < 1) {
+        content.innerHTML = '<div class="team-empty">本周暂未记录到数据。数据会随榜单每 30 分钟自动刷新时记录，刷新几次后再来看看。</div>';
+        return;
+    }
+
+    const zi = curveZoneIndex;
+    // 今日：仅当天采样点；本周：按天聚合（每天取最后一次采样作为该天数据点）
+    let pts;
+    if (mode === 'today') {
+        pts = samples
+            .map(s => ({ t: s.t, score: (s.zones && s.zones[zi]) || 0 }))
+            .filter(p => p.score > 0 && p.t >= startT && p.t < endT);
+    } else {
+        const byDay = {};
+        samples.forEach(s => {
+            const d = new Date(s.t);
+            const dayKey = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+            byDay[dayKey] = { t: s.t, score: (s.zones && s.zones[zi]) || 0 };
+        });
+        pts = Object.values(byDay).filter(p => p.score > 0).sort((a, b) => a.t - b.t);
+    }
+    const latest = pts.length ? formatNumber(pts[pts.length - 1].score) : '--';
+    const first = pts.length ? formatNumber(pts[0].score) : '--';
+    const diffHtml = (pts.length >= 2 && pts[0].score !== pts[pts.length - 1].score)
+        ? ` <span class="${pts[pts.length - 1].score > pts[0].score ? 'score-delta-up' : 'score-delta-down'}">${pts[pts.length - 1].score > pts[0].score ? '+' : ''}${formatScoreCompact(pts[pts.length - 1].score - pts[0].score)}</span>`
+        : '';
+    const chartHtml = pts.length >= 2 ? buildCurveSvgTimed(pts, startT, endT) : '<div class="team-empty">该区暂无数据</div>';
+    content.innerHTML = `
+        <div class="curve-chart">
+            <div class="curve-chart-title"><span>${zone.name}</span><span class="curve-range">${first} → ${latest}${diffHtml}</span></div>
+            ${chartHtml}
+            ${axisFn()}
+        </div>`;
+    if (pts.length >= 2) {
+        initChartTooltip(content.querySelector('.curve-chart'), pts, startT, endT);
+    }
+}
+
+// 排名变化快照：对比2小时前的榜单
+function updateWzSnapshot(difficulty, activity, rankings) {
+    const snapKey = `huaxu_wz_snap_${difficulty}`;
+    let prev = null;
+    try {
+        const raw = localStorage.getItem(snapKey);
+        if (raw) prev = JSON.parse(raw);
+    } catch { /* 忽略损坏快照 */ }
+
+    if (prev && prev.version === WZ_SNAPSHOT_VERSION && prev.activity === activity) {
+        wzPrevSnapshot = prev;
+    } else {
+        wzPrevSnapshot = null;
+    }
+
+    // 基线超过30分钟（或无基线/旧格式）才更新存储，保持对比窗口
+    const age = prev ? (Date.now() - (prev.timestamp || 0)) : Infinity;
+    if (!prev || prev.version !== WZ_SNAPSHOT_VERSION || age >= WZ_SNAPSHOT_INTERVAL) {
+        const snapshot = {
+            version: WZ_SNAPSHOT_VERSION,
+            challenge: difficulty,
+            activity: activity,
+            timestamp: Date.now(),
+            entries: rankings
+                .filter(r => r && r.player && r.score > 0) // 仅存有效分数
+                .map(r => {
+                    const zoneScores = {};
+                    (r.zones || []).forEach(z => {
+                        if (z && z.score > 0) zoneScores[z.id] = z.score;
+                    });
+                    return {
+                        id: r.player.id,
+                        rank: r.rank,
+                        score: r.score,
+                        zones: zoneScores
+                    };
+                })
+        };
+        try {
+            localStorage.setItem(snapKey, JSON.stringify(snapshot));
+        } catch { /* localStorage 满则忽略 */ }
+    }
+}
+
+// 获取排名变化信息
+function getRankDelta(playerId, currentRank, currentScore) {
+    if (!wzPrevSnapshot) return null;
+    const prev = wzPrevSnapshot.entries.find(e => String(e.id) === String(playerId));
+    if (!prev || !(prev.score > 0)) return null; // 上期无有效分数则无基线
+    return {
+        rankDelta: prev.rank - currentRank,   // 正数=上升
+        scoreDelta: (currentScore || 0) - prev.score,
+        zoneScores: prev.zones || {}
+    };
+}
+
+// ========== 阵容参考 ==========
+// 阵容去重键：角色ID+阶级排序后拼接（位置互换视为同一阵容，同角色不同机体/不同阶级区分）
+function getTeamKey(chars) {
+    return chars.map(c => `${String(c.id || c.characterName)}-${c.rank || 0}`).sort().join('|');
+}
+
+// 阵容阶级标签：全同阶级显示"SSS+"，混搭显示"SSS+/SSS"
+function getTeamRankLabel(chars) {
+    if (!chars || chars.length === 0) return '';
+    const ranks = chars.map(c => c.rank).filter(r => r > 0);
+    if (ranks.length === 0) return '';
+    const unique = [...new Set(ranks)];
+    if (unique.length === 1) return getQualityInfo(unique[0]) || '';
+    return unique.map(r => getQualityInfo(r)).join('/');
+}
+
+// 计算每区各阵容的最高分及归属玩家：map[区ID][阵容key] = { score, player }
+function computeTeamMaxScores(rankings, zones) {
+    const map = {};
+    zones.forEach(z => { map[z.id] = {}; });
+    (rankings || []).forEach(r => {
+        if (!r.zones) return;
+        r.zones.forEach(zd => {
+            if (!zd || !zd.characters || zd.characters.length === 0) return;
+            const key = getTeamKey(zd.characters);
+            const score = zd.score || 0;
+            if (!map[zd.id]) map[zd.id] = {};
+            const cur = map[zd.id][key];
+            if (!cur || score > cur.score) {
+                map[zd.id][key] = {
+                    score,
+                    chars: zd.characters,
+                    player: {
+                        id: r.player.id,
+                        name: r.player.name,
+                        portrait: r.player.portrait,
+                        frame: r.player.frame
+                    }
+                };
+            }
+        });
+    });
+    return map;
+}
+
+// 渲染阵容参考弹窗
+function renderTeamModal(mode) {
+    const content = document.getElementById('teamContent');
+    const zoneTabsEl = document.getElementById('teamZoneTabs');
+    if (!zonesData || zonesData.length === 0) {
+        content.innerHTML = '<div class="team-empty">暂无数据</div>';
+        zoneTabsEl.innerHTML = '';
+        return;
+    }
+
+    // 区Tab栏
+    let zoneTabsHtml = '';
+    zonesData.forEach((zone, i) => {
+        zoneTabsHtml += `<button class="team-tab${i === 0 ? ' active' : ''}" data-zone-tab="${i}">${zone.name}</button>`;
+    });
+    zoneTabsEl.innerHTML = zoneTabsHtml;
+    zoneTabsEl.style.display = 'flex';
+
+    renderTeamZone(0, mode);
+
+    zoneTabsEl.querySelectorAll('.team-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            zoneTabsEl.querySelectorAll('.team-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderTeamZone(parseInt(tab.dataset.zoneTab), mode);
+        });
+    });
+}
+
+// 渲染某个区的阵容数据
+function renderTeamZone(zoneIndex, mode) {
+    const content = document.getElementById('teamContent');
+    const zone = zonesData[zoneIndex];
+    if (!zone) {
+        content.innerHTML = '<div class="team-empty">暂无数据</div>';
+        return;
+    }
+    content.innerHTML = `<div class="team-zone-block"><div class="team-zone-title">${zone.name}</div>`;
+    if (mode === 'strong') {
+        content.innerHTML += renderStrongTeams(zone.id);
+    } else {
+        content.innerHTML += renderCommonTeams(zone.id);
+    }
+    content.innerHTML += '</div>';
+}
+
+// ========== 阵容排行 ==========
+// 每个阵容的玩家分数排名（按阵容去重，含阶级；折叠式展示，展开显示全部玩家）
+function renderRankingModal() {
+    const zoneTabsEl = document.getElementById('rankingZoneTabs');
+    const content = document.getElementById('rankingContent');
+    if (!zonesData || zonesData.length === 0) {
+        content.innerHTML = '<div class="team-empty">暂无数据</div>';
+        zoneTabsEl.innerHTML = '';
+        return;
+    }
+
+    let zoneTabsHtml = '';
+    zonesData.forEach((zone, i) => {
+        zoneTabsHtml += `<button class="team-tab${i === 0 ? ' active' : ''}" data-ranking-zone-tab="${i}">${zone.name}</button>`;
+    });
+    zoneTabsEl.innerHTML = zoneTabsHtml;
+    zoneTabsEl.style.display = 'flex';
+
+    const searchInput = document.getElementById('rankingSearchInput');
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    renderRankingZone(0, query);
+
+    zoneTabsEl.querySelectorAll('[data-ranking-zone-tab]').forEach(tab => {
+        tab.addEventListener('click', () => {
+            zoneTabsEl.querySelectorAll('[data-ranking-zone-tab]').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const q = document.getElementById('rankingSearchInput').value.trim().toLowerCase();
+            renderRankingZone(parseInt(tab.dataset.rankingZoneTab), q);
+        });
+    });
+}
+
+function renderRankingZone(zoneIndex, query) {
+    const content = document.getElementById('rankingContent');
+    const zone = zonesData[zoneIndex];
+    if (!zone) {
+        content.innerHTML = '<div class="team-empty">暂无数据</div>';
+        return;
+    }
+
+    const groups = {};
+    rawRankings.forEach(r => {
+        if (!r.zones) return;
+        const zd = r.zones.find(z => z.id === zone.id);
+        if (!zd || !zd.characters || zd.characters.length === 0) return;
+        const key = getTeamKey(zd.characters);
+        if (!groups[key]) groups[key] = { chars: zd.characters, players: [] };
+        groups[key].players.push({
+            name: r.player.name,
+            id: r.player.id,
+            portrait: r.player.portrait,
+            score: zd.score || 0
+        });
+    });
+
+    let teams = Object.values(groups).filter(t => t.players.length > 0);
+    if (query) {
+        teams = teams.filter(t => t.chars.some(c => (c.characterName || '').toLowerCase().includes(query)));
+    }
+    if (teams.length === 0) {
+        content.innerHTML = `<div class="team-zone-block"><div class="team-zone-title">${zone.name}</div><div class="team-empty">暂无数据</div></div>`;
+        return;
+    }
+
+    teams.forEach(t => t.players.sort((a, b) => b.score - a.score));
+    teams.sort((a, b) => b.players.length - a.players.length || b.players[0].score - a.players[0].score);
+
+    const html = `<div class="team-zone-block"><div class="team-zone-title">${zone.name} · 共 ${teams.length} 套阵容</div>${teams.map((t, idx) => {
+        const rankLabel = getTeamRankLabel(t.chars);
+        const list = t.players.map((p, i) => {
+            const posClass = i === 0 ? ' team-rank-pos-top1' : i === 1 ? ' team-rank-pos-top2' : i === 2 ? ' team-rank-pos-top3' : '';
+            const avatar = p.portrait ? `<img class="team-rank-avatar" src="${getImageUrl(p.portrait)}" onerror="this.style.display='none'">` : '';
+            return `
+                <div class="team-rank-item" data-player-id="${p.id}">
+                    <span class="team-rank-pos${posClass}">${i + 1}</span>
+                    ${avatar}
+                    <span class="team-rank-name">${p.name}</span>
+                    <span class="team-rank-score">${formatNumber(p.score)}</span>
+                </div>`;
+        }).join('');
+        return `
+            <div class="team-rank-card">
+                <div class="team-rank-card-header" data-rank-target="${idx}">
+                    <span class="team-rank-toggle">▸</span>
+                    <div class="team-rank-chars-sm">
+                        ${t.chars.map(c => `<div class="team-rank-char-sm"><img src="${c.icon ? getImageUrl(c.icon) : ''}" alt="" title="${c.characterName}" onerror="this.style.display='none'"><em class="rank-quality-sm quality-${c.rank}">${getQualityInfo(c.rank)}</em></div>`).join('')}
+                    </div>
+                    <span class="team-rank-label">${rankLabel || '阶级未知'}</span>
+                    <span class="team-rank-count">${t.players.length}人</span>
+                    <span class="team-rank-max">最高 ${formatNumber(t.players[0].score)}</span>
+                </div>
+                <div class="team-rank-body" style="display: none;">${list}</div>
+            </div>`;
+    }).join('')}</div>`;
+
+    content.innerHTML = html;
+
+    content.querySelectorAll('.team-rank-card-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const body = header.nextElementSibling;
+            const toggle = header.querySelector('.team-rank-toggle');
+            const open = body.style.display !== 'none';
+            body.style.display = open ? 'none' : 'block';
+            toggle.textContent = open ? '▸' : '▾';
+            header.classList.toggle('open', !open);
+        });
+    });
+
+    content.querySelectorAll('.team-rank-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const id = item.dataset.playerId;
+            if (id) {
+                switchPage('player');
+                loadPlayerData(id);
+            }
+        });
+    });
+}
+
+// 最强阵容：该区得分最高的玩家所用阵容（按阵容去重，位置互换视为同一阵容）
+function renderStrongTeams(zoneId) {
+    const entries = rawRankings
+        .map(r => ({ r, zd: r.zones ? r.zones.find(z => z.id === zoneId) : null }))
+        .filter(x => x.zd && x.zd.characters && x.zd.characters.length > 0);
+
+    if (entries.length === 0) return '<div class="team-empty">暂无数据</div>';
+
+    entries.sort((a, b) => (b.zd.score || 0) - (a.zd.score || 0));
+
+    // 按阵容去重（角色名排序），取分数最高的前3套
+    const seen = new Set();
+    const topTeams = [];
+    for (const { r, zd } of entries) {
+        const key = getTeamKey(zd.characters);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        topTeams.push({ chars: zd.characters, score: zd.score, playerName: r.player.name, playerId: r.player.id });
+        if (topTeams.length >= 3) break;
+    }
+
+    if (topTeams.length === 0) return '<div class="team-empty">暂无数据</div>';
+
+    return topTeams.map((t, i) => `
+        <div class="team-card">
+            <div class="team-rank-badge">NO.${i + 1}</div>
+            <div class="team-chars">
+                ${t.chars.map(c => {
+                    const icon = c.icon ? getImageUrl(c.icon) : '';
+                    return `<div class="team-char"><img src="${icon}" onerror="this.style.display='none'"><span>${c.characterName}</span><em class="rank-quality-sm quality-${c.rank}">${getQualityInfo(c.rank)}</em></div>`;
+                }).join('')}
+            </div>
+            <div class="team-meta"><span class="team-score">${formatNumber(t.score)}分</span><span class="team-player">${t.playerName}</span></div>
+        </div>
+    `).join('');
+}
+
+// 最常用阵容：按出场次数占比统计（位置互换视为同一阵容）
+function renderCommonTeams(zoneId) {
+    const counts = {};
+    let total = 0;
+    rawRankings.forEach(r => {
+        if (!r.zones) return;
+        const zd = r.zones.find(z => z.id === zoneId);
+        if (!zd || !zd.characters || zd.characters.length === 0) return;
+        const key = getTeamKey(zd.characters);
+        if (!counts[key]) counts[key] = { chars: zd.characters, count: 0 };
+        counts[key].count++;
+        total++;
+    });
+
+    const sorted = Object.values(counts).sort((a, b) => b.count - a.count);
+    if (sorted.length === 0 || total === 0) return '<div class="team-empty">暂无数据</div>';
+
+    const maxCount = sorted[0].count;
+    return sorted.slice(0, 5).map((t, i) => {
+        const pct = (t.count / total) * 100;
+        return `
+            <div class="team-card team-card-common">
+                <div class="team-usage-bar"><div class="team-usage-fill" style="width:${Math.max((t.count / maxCount) * 100, 5)}%"></div></div>
+                <div class="team-chars">
+                    ${t.chars.map(c => {
+                        const icon = c.icon ? getImageUrl(c.icon) : '';
+                        return `<div class="team-char"><img src="${icon}" onerror="this.style.display='none'"><span>${c.characterName}</span></div>`;
+                    }).join('')}
+                </div>
+                <div class="team-meta"><span class="team-usage-pct">${pct.toFixed(1)}%</span><span class="team-count">${t.count}人</span></div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ========== 玩家历史战绩 ==========
+let historyCancelled = null;
+
+async function loadPlayerHistory(playerId) {
+    const modal = document.getElementById('historyModal');
+    const progressEl = document.getElementById('historyProgress');
+    const contentEl = document.getElementById('historyContent');
+    const subEl = document.getElementById('historySub');
+
+    if (!maxWeek || !minWeek) {
+        alert('请先加载战区数据');
+        return;
+    }
+
+    historyCancelled = false;
+    modal.style.display = 'flex';
+    subEl.textContent = `(第${currentDifficulty}段位)`;
+    progressEl.innerHTML = '<div class="history-loading">正在查询历史战绩...</div>';
+    contentEl.innerHTML = '';
+    progressEl.style.display = 'block';
+
+    const results = [];
+    // 从最新往前查，最多查100周防止请求过多
+    const startWeek = maxWeek;
+    const endWeek = Math.max(minWeek, maxWeek - 99);
+
+    let idx = 0;
+    for (let week = startWeek; week >= endWeek; week--) {
+        if (historyCancelled) break;
+        idx++;
+        progressEl.innerHTML = `<div class="history-loading">查询中... 第${idx}周 (${week})</div>`;
+        try {
+            const url = `${API_CONFIG.warzone}/${week}/${currentDifficulty}`;
+            const resp = await fetchWithHeaders(url);
+            const result = await resp.json();
+            if (result.status === 'success' && result.data && result.data.rankings) {
+                const found = result.data.rankings.find(r => String(r.player.id) === String(playerId));
+                if (found) {
+                    results.push({
+                        week,
+                        rank: found.rank,
+                        score: found.score || 0
+                    });
+                }
+            }
+        } catch { /* 该周查询失败则跳过 */ }
+        // 限速，避免请求过快
+        await new Promise(r => setTimeout(r, 120));
+    }
+
+    progressEl.style.display = 'none';
+    if (historyCancelled) {
+        contentEl.innerHTML = '<div class="history-empty">查询已取消</div>';
+        return;
+    }
+
+    if (results.length === 0) {
+        contentEl.innerHTML = '<div class="history-empty">未找到该玩家在近100周该段位的上榜记录（仅统计进入TOP100的周）</div>';
+        return;
+    }
+
+    results.sort((a, b) => a.week - b.week);
+    let html = `<div class="history-summary">共找到 <b>${results.length}</b> 周上榜记录</div>`;
+    html += '<table class="score-table history-table"><thead><tr><th>周次</th><th>排名</th><th>总分</th></tr></thead><tbody>';
+    results.forEach(r => {
+        const rankClass = r.rank <= 3 ? 'top-' + r.rank : '';
+        html += `<tr><td>第${r.week}周</td><td><span class="${rankClass}" style="font-weight:700">${r.rank}</span></td><td>${formatNumber(r.score)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    contentEl.innerHTML = html;
+}
+
+// 渲染分析弹窗中的角色（图标+名字+品质+战力）
+function renderSaChar(c) {
+    const icon = c.icon ? getImageUrl(c.icon) : '';
+    const bp = c.bp ? `<span class="sa-char-bp">战力 ${formatNumber(c.bp)}</span>` : '';
+    return `<div class="sa-char"><img src="${icon}" onerror="this.style.display='none'"><span>${c.characterName}</span><em class="rank-quality-sm quality-${c.rank}">${getQualityInfo(c.rank)}</em>${bp}</div>`;
+}
+
+// 渲染单区分数分析弹窗（某玩家某区的分与同阵容最高分关系）
+function renderZoneAnalysis(ranking, zoneIndex) {
+    const content = document.getElementById('saContent');
+    const zone = zonesData[zoneIndex];
+    if (!zone) return;
+    const teamMax = computeTeamMaxScores(rawRankings, zonesData);
+
+    const zoneData = ranking.zones ? ranking.zones.find(z => z.id === zone.id) : null;
+    const monsterTag = getMonsterTag(zone.description);
+    const zscore = zoneData ? (zoneData.score || 0) : 0;
+
+    let html = `
+        <div class="sa-header">
+            <div class="sa-player-name">${ranking.player.name} <span class="sa-zone-label">${zone.name}${monsterTag ? ` <span class="zone-tag">${monsterTag}</span>` : ''}</span></div>
+            <div class="sa-player-meta">ID: ${ranking.player.id} · 排名第${ranking.rank} · 总分 ${formatNumber(ranking.score)}</div>
+        </div>
+    `;
+
+    if (!zoneData || !zoneData.characters || zoneData.characters.length === 0) {
+        html += '<div class="sa-empty">该玩家此区无上榜数据</div>';
+        content.innerHTML = html;
+        return;
+    }
+
+    // 玩家该区分数
+    html += `
+        <div class="sa-zone">
+            <div class="sa-zone-title">我的分数 <span class="sa-zone-score">${formatNumber(zscore)}分</span></div>
+            <div class="sa-team">
+                ${zoneData.characters.map(c => renderSaChar(c)).join('')}
+            </div>
+        </div>
+    `;
+
+    // 同阵容同阶级最高分对比
+    const teamKey = getTeamKey(zoneData.characters);
+    const max = teamMax[zone.id] && teamMax[zone.id][teamKey];
+    if (max && max.score > 0) {
+        const diff = max.score - zscore;
+        const maxPortrait = max.player.portrait ? getImageUrl(max.player.portrait) : '';
+        const relation = diff <= 0
+            ? '<span class="zone-max-tag">您是该阵容最高分</span>'
+            : `<span class="zone-diff-tag">低于最高分 ${formatScoreCompact(diff)}</span>`;
+
+        // 最高分玩家的阵容
+        const maxTeamHtml = max.chars && max.chars.length > 0
+            ? `<div class="sa-team">
+                ${max.chars.map(c => renderSaChar(c)).join('')}
+               </div>`
+            : '';
+
+        html += `
+            <div class="sa-zone">
+                <div class="sa-zone-title">同阶级阵容最高分 <span class="sa-zone-score">${formatNumber(max.score)}分</span></div>
+                <div class="sa-max-player">
+                    <div class="sa-max-avatar"><img src="${maxPortrait}" onerror="this.style.display='none'"></div>
+                    <div class="sa-max-info">
+                        <div class="sa-max-name">${max.player.name}</div>
+                        <div class="sa-max-id">ID: ${max.player.id}</div>
+                    </div>
+                </div>
+                ${maxTeamHtml}
+                <div class="sa-zone-compare" style="margin-top:10px;">${relation}</div>
+            </div>
+        `;
+    } else {
+        html += '<div class="sa-empty">暂无同阵容其他玩家数据</div>';
+    }
+
+    content.innerHTML = html;
+}
+
+// 渲染分数分布弹窗（总分 + 各区）
+function renderBracketModal() {
+    const tabsEl = document.getElementById('bracketTabs');
+    const contentEl = document.getElementById('bracketContent');
+    const subEl = document.getElementById('bracketSub');
+
+    subEl.textContent = `(第${currentDifficulty}段位)`;
+
+    // Tab栏：总分 + 各区
+    let tabsHtml = '<button class="team-tab active" data-br="total">总分</button>';
+    zonesData.forEach((zone, i) => {
+        tabsHtml += `<button class="team-tab" data-br="${i}">${zone.name}</button>`;
+    });
+    tabsEl.innerHTML = tabsHtml;
+    renderBracketContent('total');
+
+    tabsEl.querySelectorAll('.team-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabsEl.querySelectorAll('.team-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderBracketContent(tab.dataset.br);
+        });
+    });
+}
+
+function renderBracketContent(key) {
+    const contentEl = document.getElementById('bracketContent');
+    let scores;
+    if (key === 'total') {
+        scores = rawRankings.map(r => r.score || 0).filter(s => s > 0);
+    } else {
+        const zoneId = zonesData[parseInt(key)]?.id;
+        scores = rawRankings
+            .map(r => r.zones ? (r.zones.find(z => z.id === zoneId) || {}).score : 0)
+            .filter(s => s > 0);
+    }
+
+    if (scores.length === 0) {
+        contentEl.innerHTML = '<div class="bracket-empty">暂无数据</div>';
+        return;
+    }
+
+    const max = Math.max(...scores);
+    const min = Math.min(...scores);
+    const bucketCount = 10;
+    const step = Math.ceil((max - min) / bucketCount / 1000000) * 1000000 || 1000000;
+    const buckets = [];
+    for (let s = min; s <= max; s += step) {
+        const count = scores.filter(sc => sc >= s && sc < s + step).length;
+        if (count > 0) buckets.push({ from: s, to: s + step, count });
+    }
+    const maxCount = Math.max(...buckets.map(b => b.count));
+
+    let html = '<div class="bracket-title">' + (key === 'total' ? '总分' : zonesData[parseInt(key)]?.name || '') + '分布（' + formatNumber(scores.length) + ' 人）</div>';
+    html += '<div class="bracket-list">';
+    buckets.forEach(b => {
+        const pct = Math.round((b.count / maxCount) * 100);
+        const label = formatNumber(b.from) + ' - ' + formatNumber(b.to);
+        html += `
+            <div class="bracket-row">
+                <div class="bracket-label">${label}</div>
+                <div class="bracket-bar-wrap"><div class="bracket-bar" style="width:${Math.max(pct, 3)}%"></div></div>
+                <div class="bracket-count">${b.count}</div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    contentEl.innerHTML = html;
+}
+
 // 保存zones数据
 let zonesData = [];
 // 保存原始排行榜数据（用于排序）
@@ -387,6 +1341,14 @@ let wzSortAsc = false;
 let ppcSortAsc = false;
 // 各区角色位筛选：wzCharFilters[区索引][角色位索引] = '' | '3' | '4' | '5' | '6'
 let wzCharFilters = [];
+// 榜单搜索关键词
+let wzSearchQuery = '';
+// 排名变化对比基线
+let wzPrevSnapshot = null;
+const WZ_SNAPSHOT_INTERVAL = 30 * 60 * 1000; // 30分钟基线
+const WZ_SNAPSHOT_VERSION = 3;
+// 是否在浏览历史周（自动刷新仅刷新本周）
+let wzViewingHistorical = false;
 
 // 保存PPC boss数据
 let ppcBossesData = [];
@@ -436,7 +1398,8 @@ function populateWeekSelect(selectId, minWeek, maxWeek, selectedWeek) {
 // 加载战区数据
 async function loadWarzoneData() {
     try {
-        const weekPath = currentWeek || 'current';
+        const isCurrentWeek = currentWeek === null;
+        const weekPath = isCurrentWeek ? 'current' : currentWeek;
         const url = `${API_CONFIG.warzone}/${weekPath}/${currentDifficulty}`;
         const response = await fetchWithHeaders(url);
         const result = await response.json();
@@ -475,6 +1438,13 @@ async function loadWarzoneData() {
 
             // 渲染排行榜
             if (rankings) {
+                // 排名变化快照对比（仅本周数据参与对比，历史周不显示差值）
+                if (isCurrentWeek) {
+                    updateWzSnapshot(currentDifficulty, warzone.activity, rankings);
+                    recordWzCurve(currentDifficulty, warzone.activity, rankings);
+                } else {
+                    wzPrevSnapshot = null;
+                }
                 rawRankings = rankings;
                 wzSortKey = null;
                 wzSortAsc = false;
@@ -622,6 +1592,12 @@ function updatePlayerInfo(player, characters) {
     document.getElementById('followSetBtn').onclick = () => {
         addFollow(player.id, player.name, player.portrait);
         alert('已关注');
+    };
+    document.getElementById('historyBtn').onclick = () => {
+        loadPlayerHistory(player.id);
+    };
+    document.getElementById('curveBtn').onclick = () => {
+        renderPlayerCurveModal(player.id, player.name);
     };
 
     // 角色列表
@@ -790,6 +1766,98 @@ function initModal() {
     });
     charModal.addEventListener('click', (e) => {
         if (e.target === charModal) charModal.style.display = 'none';
+    });
+
+    // 阵容参考弹窗
+    const teamModal = document.getElementById('teamModal');
+    document.getElementById('teamModalClose').addEventListener('click', () => {
+        teamModal.style.display = 'none';
+    });
+    teamModal.addEventListener('click', (e) => {
+        if (e.target === teamModal) teamModal.style.display = 'none';
+    });
+    // 模式Tab（最强/最常用）- 仅绑定带 data-tab 的
+    teamModal.querySelectorAll('.team-tab[data-tab]').forEach(tab => {
+        tab.addEventListener('click', () => {
+            teamModal.querySelectorAll('.team-tab[data-tab]').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderTeamModal(tab.dataset.tab);
+        });
+    });
+
+    // 分数分布弹窗
+    const bracketModal = document.getElementById('bracketModal');
+    document.getElementById('bracketModalClose').addEventListener('click', () => {
+        bracketModal.style.display = 'none';
+    });
+    bracketModal.addEventListener('click', (e) => {
+        if (e.target === bracketModal) bracketModal.style.display = 'none';
+    });
+
+    // 阵容排行弹窗
+    const rankingModal = document.getElementById('rankingModal');
+    document.getElementById('rankingModalClose').addEventListener('click', () => {
+        rankingModal.style.display = 'none';
+    });
+    rankingModal.addEventListener('click', (e) => {
+        if (e.target === rankingModal) rankingModal.style.display = 'none';
+    });
+
+    // 阵容排行搜索
+    const rankingSearchInput = document.getElementById('rankingSearchInput');
+    if (rankingSearchInput) {
+        rankingSearchInput.addEventListener('input', () => {
+            const activeTab = document.querySelector('#rankingZoneTabs .team-tab.active');
+            const zi = activeTab ? parseInt(activeTab.dataset.rankingZoneTab) : 0;
+            renderRankingZone(zi, rankingSearchInput.value.trim().toLowerCase());
+        });
+    }
+
+    // 战区详情弹窗
+    const zoneModal = document.getElementById('zoneModal');
+    document.getElementById('zoneModalClose').addEventListener('click', () => {
+        zoneModal.style.display = 'none';
+    });
+    zoneModal.addEventListener('click', (e) => {
+        if (e.target === zoneModal) zoneModal.style.display = 'none';
+    });
+
+    // 历史战绩弹窗
+    const historyModal = document.getElementById('historyModal');
+    document.getElementById('historyModalClose').addEventListener('click', () => {
+        historyModal.style.display = 'none';
+        if (historyCancelled !== null) historyCancelled = true;
+    });
+    historyModal.addEventListener('click', (e) => {
+        if (e.target === historyModal) {
+            historyModal.style.display = 'none';
+            if (historyCancelled !== null) historyCancelled = true;
+        }
+    });
+
+    // 玩家本周走势弹窗
+    const curveModal = document.getElementById('curveModal');
+    document.getElementById('curveModalClose').addEventListener('click', () => {
+        curveModal.style.display = 'none';
+    });
+    curveModal.addEventListener('click', (e) => {
+        if (e.target === curveModal) curveModal.style.display = 'none';
+    });
+    curveModal.querySelectorAll('#curveTabs .team-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            curveModal.querySelectorAll('#curveTabs .team-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderCurveContent(tab.dataset.curveTab);
+        });
+    });
+
+    // 分数分析弹窗
+    const saModal = document.getElementById('saModal');
+    document.getElementById('saModalClose').addEventListener('click', () => {
+        saModal.style.display = 'none';
+    });
+    saModal.addEventListener('click', (e) => {
+        if (e.target === saModal) saModal.style.display = 'none';
     });
 }
 
@@ -1723,6 +2791,7 @@ function initNavigation() {
 
     // 战区周数下拉
     document.getElementById('weekSelect').addEventListener('change', (e) => {
+        wzViewingHistorical = parseInt(e.target.value) !== maxWeek;
         currentWeek = parseInt(e.target.value);
         loadWarzoneData();
     });
@@ -1797,6 +2866,7 @@ function initNavigation() {
 
     document.getElementById('refreshWzBtn').addEventListener('click', () => {
         lastWzRefresh = handleRefresh(document.getElementById('refreshWzBtn'), lastWzRefresh, () => {
+            wzViewingHistorical = false;
             currentWeek = null;
             loadWarzoneData();
         });
@@ -1807,6 +2877,41 @@ function initNavigation() {
             loadPpcData();
         });
     });
+
+    // 榜单搜索
+    const wzSearchInput = document.getElementById('wzSearchInput');
+    wzSearchInput.addEventListener('input', () => {
+        wzSearchQuery = wzSearchInput.value.trim();
+        renderRankings(rawRankings, zonesData);
+    });
+
+    // 分数分布弹窗
+    document.getElementById('wzBracketBtn').addEventListener('click', () => {
+        renderBracketModal();
+        document.getElementById('bracketModal').style.display = 'flex';
+    });
+
+    // 阵容参考
+    document.getElementById('wzTeamBtn').addEventListener('click', () => {
+        renderTeamModal('strong');
+        document.getElementById('teamModal').style.display = 'flex';
+    });
+
+    // 阵容排行
+    document.getElementById('wzRankingBtn').addEventListener('click', () => {
+        renderRankingModal();
+        document.getElementById('rankingModal').style.display = 'flex';
+    });
+
+    // 测试数据开关（预览图表）
+    const wzTestBtn = document.getElementById('wzTestBtn');
+    if (wzTestBtn) {
+        wzTestBtn.addEventListener('click', () => {
+            curveTestMode = !curveTestMode;
+            wzTestBtn.textContent = curveTestMode ? '真实数据' : '测试数据';
+            wzTestBtn.classList.toggle('bracket-btn-active', curveTestMode);
+        });
+    }
 
     // 我的页面
     document.getElementById('bindByIdBtn').addEventListener('click', () => {
@@ -2069,6 +3174,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     loadWarzoneData();
     loadPpcData();
+
+    // 每30分钟自动刷新本周榜单，对比排名变化（浏览历史周时跳过）
+    setInterval(() => {
+        if (!wzViewingHistorical) {
+            currentWeek = null;
+            currentPpcWeek = null;
+            loadWarzoneData();
+            loadPpcData();
+        }
+    }, 30 * 60 * 1000);
 
     // 恢复上次浏览的页面
     const savedPage = localStorage.getItem('currentPage');
