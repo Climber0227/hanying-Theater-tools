@@ -3164,10 +3164,57 @@ function handleImportFile(e) {
     reader.readAsText(file);
 }
 
+// 纷争战区宣传广告：随机漂动，鼠标悬停暂停，可关闭
+function initAdFloat() {
+    const ad = document.getElementById('adFloat');
+    if (!ad) return;
+    const closeBtn = document.getElementById('adCloseBtn');
+    let timer = null;
+    let flying = true;
+    let hidden = false;
+
+    const move = () => {
+        if (!flying || hidden) return;
+        const w = ad.offsetWidth || 220;
+        const h = ad.offsetHeight || 200;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const maxX = Math.max(vw - w - 16, 16);
+        const maxY = Math.max(vh - h - 16, 16);
+        ad.style.left = `${16 + Math.random() * Math.max(maxX - 16, 1)}px`;
+        ad.style.top = `${16 + Math.random() * Math.max(maxY - 16, 1)}px`;
+    };
+
+    ad.style.left = '16px';
+    ad.style.top = '16px';
+    timer = setInterval(move, 2500);
+
+    ad.addEventListener('mouseenter', () => {
+        flying = false;
+        if (timer) clearInterval(timer);
+    });
+    ad.addEventListener('mouseleave', () => {
+        if (hidden) return;
+        flying = true;
+        if (timer) clearInterval(timer);
+        timer = setInterval(move, 2500);
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hidden = true;
+            if (timer) clearInterval(timer);
+            ad.remove();
+        });
+    }
+}
+
 // 页面加载完成后获取数据
 document.addEventListener('DOMContentLoaded', async () => {
     initNavigation();
     initModal();
+    initAdFloat();
 
     // 初始化认证状态
     await AUTH.init();
