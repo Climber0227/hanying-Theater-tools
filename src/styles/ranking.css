@@ -369,6 +369,23 @@
     gap: 3px;
     z-index: 1;
 }
+.zone-sa-btn {
+    background: transparent;
+    color: var(--text-3);
+    border: 0.5px solid rgba(0, 0, 0, 0.12);
+    padding: 1px 7px;
+    border-radius: 5px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.zone-sa-btn:hover {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: var(--border);
+}
 .zone-actions .zone-sa-btn {
     margin-left: 0;
 }
