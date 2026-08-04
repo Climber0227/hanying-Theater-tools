@@ -946,7 +946,8 @@ function renderRankingZone(zoneIndex, query) {
             name: r.player.name,
             id: r.player.id,
             portrait: r.player.portrait,
-            score: zd.score || 0
+            score: zd.score || 0,
+            chars: zd.characters
         });
     });
 
@@ -967,11 +968,23 @@ function renderRankingZone(zoneIndex, query) {
         const list = t.players.map((p, i) => {
             const posClass = i === 0 ? ' team-rank-pos-top1' : i === 1 ? ' team-rank-pos-top2' : i === 2 ? ' team-rank-pos-top3' : '';
             const avatar = p.portrait ? `<img class="team-rank-avatar" src="${getImageUrl(p.portrait)}" onerror="this.style.display='none'">` : '';
+            const charHtml = (p.chars || []).map(c => {
+                const icon = c.icon ? getImageUrl(c.icon) : '';
+                const bp = c.bp || 0;
+                return `<span class="team-rank-char">
+                    ${icon ? `<img class="team-rank-char-icon" src="${icon}" onerror="this.style.display='none'">` : ''}
+                    <span class="team-rank-char-name">${c.characterName || ''}</span>
+                    <span class="team-rank-bp">${bp ? formatScoreCompact(bp) : '--'}</span>
+                </span>`;
+            }).join('');
             return `
                 <div class="team-rank-item" data-player-id="${p.id}">
                     <span class="team-rank-pos${posClass}">${i + 1}</span>
                     ${avatar}
-                    <span class="team-rank-name">${p.name}</span>
+                    <div class="team-rank-info">
+                        <span class="team-rank-name">${p.name}</span>
+                        <div class="team-rank-chars">${charHtml}</div>
+                    </div>
                     <span class="team-rank-score">${formatNumber(p.score)}</span>
                 </div>`;
         }).join('');
