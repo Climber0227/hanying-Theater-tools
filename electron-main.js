@@ -7,7 +7,7 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
-        backgroundColor: '#ebebf2',
+        backgroundColor: '#f5f5f7',
         autoHideMenuBar: true,
         webPreferences: {
             preload: path.join(__dirname, 'electron-preload.js'),
@@ -16,7 +16,12 @@ function createWindow() {
         }
     });
 
-    mainWindow.loadFile('index.html');
+    // 生产加载构建产物，开发加载 vite dev server
+    if (process.env.VITE_DEV_SERVER_URL) {
+        mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+    } else {
+        mainWindow.loadFile(path.join(__dirname, 'dist-web', 'index.html'));
+    }
 
     // 外部链接用默认浏览器打开
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
