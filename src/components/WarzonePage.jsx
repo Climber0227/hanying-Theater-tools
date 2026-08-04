@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { useWarzone } from '../hooks/useWarzone.js';
+import ZoneCards from './ZoneCards.jsx';
+import RankingPanel from './Ranking/RankingPanel.jsx';
 
 export default function WarzonePage() {
-    useEffect(() => {
-        // TODO M2: useWarzone 数据加载 + 排行榜
-    }, []);
+    const warzone = useWarzone();
     return (
-        <div>
-            <div className="m1-placeholder">M1 骨架 · 排行榜开发中（数据层已就绪）</div>
-        </div>
+        <>
+            <ZoneCards zones={warzone.zones} />
+            <RankingPanel warzone={warzone} />
+        </>
     );
 }
