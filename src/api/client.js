@@ -31,9 +31,9 @@ export async function loadPlayer(playerId) {
     return result.data;
 }
 
-export async function loadPpc(week) {
+export async function loadPpc(week, level) {
     const weekPath = week == null ? 'current' : week;
-    const result = await fetchJson(`${API_CONFIG.ppc}/${weekPath}`);
+    const result = await fetchJson(`${API_CONFIG.ppc}/${weekPath}/${level}?ranking=true`);
     if (result.status !== 'success' || !result.data) {
         throw new Error('API 返回数据格式错误');
     }

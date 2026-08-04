@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Nav from './components/Nav.jsx';
 import WarzonePage from './components/WarzonePage.jsx';
 import PlayerPage from './components/PlayerPage.jsx';
@@ -9,13 +9,20 @@ import './styles/app.css';
 
 export default function App() {
     const [page, setPage] = useState('warzone');
+    const [pendingPlayerId, setPendingPlayerId] = useState(null);
+
+    // 从任意页面打开玩家查询
+    const openPlayer = id => {
+        setPendingPlayerId(String(id));
+        setPage('player');
+    };
 
     return (
         <div className="container">
             <Nav current={page} onChange={setPage} />
-            {page === 'warzone' && <WarzonePage />}
-            {page === 'player' && <PlayerPage />}
-            {page === 'ppc' && <PpcPage />}
+            {page === 'warzone' && <WarzonePage onOpenPlayer={openPlayer} />}
+            {page === 'player' && <PlayerPage pendingPlayerId={pendingPlayerId} />}
+            {page === 'ppc' && <PpcPage onOpenPlayer={openPlayer} />}
             {page === 'mine' && <MinePage />}
             <AdFloat />
             <a

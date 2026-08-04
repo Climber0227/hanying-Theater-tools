@@ -6,6 +6,7 @@ import './styles/app.css';
 import './styles/ranking.css';
 import './styles/zone.css';
 import './styles/modals.css';
+import './styles/pages.css';
 
 createRoot(document.getElementById('root')).render(
     <React.StrictMode>

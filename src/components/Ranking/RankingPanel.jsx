@@ -10,7 +10,7 @@ import RankingModal from '../Modals/RankingModal.jsx';
 import SaModal from '../Modals/SaModal.jsx';
 import CurveModal from '../Modals/CurveModal.jsx';
 
-export default function RankingPanel({ warzone }) {
+export default function RankingPanel({ warzone, onOpenPlayer }) {
     const { difficulty, setDifficulty, week, setWeek, zones, rankings, meta, weekOptions, prevSnapshot, loading, error, refresh, currentWeek } = warzone;
     const rk = useRankings(rankings, zones);
 
@@ -63,7 +63,7 @@ export default function RankingPanel({ warzone }) {
                         onReset={rk.resetFilters}
                     />
                 }
-                onOpenPlayer={id => console.log('open player', id)}
+                onOpenPlayer={onOpenPlayer}
                 onOpenAnalysis={(ranking, zi) => setSaTarget({ ranking, zoneIndex: zi })}
                 onOpenTrend={(pid, zi) => setCurveTarget({ playerId: pid, playerName: null, zoneIndex: zi })}
             />
