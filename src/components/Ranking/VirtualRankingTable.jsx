@@ -56,6 +56,7 @@ export default function VirtualRankingTable({ rows, zones, prevSnapshot, header,
                     }}
                     defaultHeight={listHeight}
                     style={{ height: listHeight }}
+                    overscanCount={2}
                 />
             </div>
         </div>

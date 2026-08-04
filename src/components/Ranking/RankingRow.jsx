@@ -42,21 +42,21 @@ function TeamCompareTag({ zd, teamMax, zone }) {
 function CharList({ chars }) {
     return (chars || []).map((c, i) => (
         <div className="char-row" key={i}>
-            {c.icon && <img className="char-icon-sm" src={getImageUrl(c.icon)} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+            {c.icon && <img className="char-icon-sm" src={getImageUrl(c.icon)} alt="" decoding="async" onError={e => { e.currentTarget.style.display = 'none'; }} />}
             <span className="char-name-sm">{c.characterName}</span>
             {getQualityInfo(c.rank) && <span className={`rank-quality-sm quality-${c.rank}`}>{getQualityInfo(c.rank)}</span>}
             <span className="char-bp">{c.bp}</span>
-            {c.cubIcon && <img className="cub-icon-sm" src={getImageUrl(c.cubIcon)} alt="" title={c.cubName || ''} onError={e => { e.currentTarget.style.display = 'none'; }} />}
+            {c.cubIcon && <img className="cub-icon-sm" src={getImageUrl(c.cubIcon)} alt="" decoding="async" title={c.cubName || ''} onError={e => { e.currentTarget.style.display = 'none'; }} />}
         </div>
     ));
 }
 
-function ZoneCell({ zone, zd, delta, teamMax, onAnalysis, onTrend }) {
+const ZoneCell = memo(function ZoneCell({ zone, zd, delta, teamMax, playerId, zoneIndex, onOpenAnalysis, onOpenTrend }) {
     return (
         <div className="zone-detail">
             <div className="zone-actions">
-                <button className="zone-sa-btn" onClick={e => { e.stopPropagation(); onAnalysis(); }}>分析</button>
-                <button className="zone-sa-btn zone-trend-btn" onClick={e => { e.stopPropagation(); onTrend(); }}>趋势</button>
+                <button className="zone-sa-btn" onClick={e => { e.stopPropagation(); onOpenAnalysis(playerId, zoneIndex); }}>分析</button>
+                <button className="zone-sa-btn zone-trend-btn" onClick={e => { e.stopPropagation(); onOpenTrend(playerId, zoneIndex); }}>趋势</button>
             </div>
             <div className="zone-name-sm">{zone.name}</div>
             <div className="zone-score-val">
@@ -69,7 +69,7 @@ function ZoneCell({ zone, zd, delta, teamMax, onAnalysis, onTrend }) {
             <div className="zone-chars"><CharList chars={zd && zd.characters} /></div>
         </div>
     );
-}
+});
 
 const MEDALS = { 1: '冠军', 2: '亚军', 3: '季军' };
 
@@ -91,8 +91,8 @@ function RankingRowBase({ index, style, rows, zones, teamMax, totalMaxScore, pre
 
             <div className="player-info ranking-player" onClick={() => onOpenPlayer(r.player.id)}>
                 <div className="player-avatar-sm">
-                    {portraitUrl && <img src={portraitUrl} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
-                    {frameUrl && <img src={frameUrl} alt="" className="frame-sm" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+                    {portraitUrl && <img src={portraitUrl} alt="" decoding="async" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+                    {frameUrl && <img src={frameUrl} alt="" className="frame-sm" decoding="async" onError={e => { e.currentTarget.style.display = 'none'; }} />}
                 </div>
                 <div className="player-text">
                     <div className="player-name">{r.player.name}</div>
@@ -110,8 +110,10 @@ function RankingRowBase({ index, style, rows, zones, teamMax, totalMaxScore, pre
                         zd={zd}
                         delta={delta}
                         teamMax={teamMax}
-                        onAnalysis={() => onOpenAnalysis(r, zi)}
-                        onTrend={() => onOpenTrend(r.player.id, zi)}
+                        playerId={r.player.id}
+                        zoneIndex={zi}
+                        onOpenAnalysis={onOpenAnalysis}
+                        onOpenTrend={onOpenTrend}
                     />
                 );
             })}

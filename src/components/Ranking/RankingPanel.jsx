@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useRankings } from '../../hooks/useRankings.js';
 import RankingControls from './RankingControls.jsx';
 import RankingToolbar from './RankingToolbar.jsx';
@@ -17,6 +17,15 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
     const [modal, setModal] = useState(null); // 'bracket' | 'team' | 'ranking'
     const [saTarget, setSaTarget] = useState(null); // { ranking, zoneIndex }
     const [curveTarget, setCurveTarget] = useState(null); // { playerId, playerName, zoneIndex }
+
+    // 稳定回调（避免虚拟列表行全量重渲染）
+    const openAnalysis = useCallback((playerId, zi) => {
+        const ranking = (rankings || []).find(r => r && r.player && String(r.player.id) === String(playerId));
+        if (ranking) setSaTarget({ ranking, zoneIndex: zi });
+    }, [rankings]);
+    const openTrend = useCallback((pid, zi) => {
+        setCurveTarget({ playerId: pid, playerName: null, zoneIndex: zi });
+    }, []);
 
     if (error) {
         return <div className="team-empty">加载失败：{error}</div>;
@@ -64,8 +73,8 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
                     />
                 }
                 onOpenPlayer={onOpenPlayer}
-                onOpenAnalysis={(ranking, zi) => setSaTarget({ ranking, zoneIndex: zi })}
-                onOpenTrend={(pid, zi) => setCurveTarget({ playerId: pid, playerName: null, zoneIndex: zi })}
+                onOpenAnalysis={openAnalysis}
+                onOpenTrend={openTrend}
             />
 
             {modal === 'bracket' && (
