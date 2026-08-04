@@ -5,6 +5,7 @@ import './styles/theme.css';
 import './styles/app.css';
 import './styles/ranking.css';
 import './styles/zone.css';
+import './styles/modals.css';
 
 createRoot(document.getElementById('root')).render(
     <React.StrictMode>

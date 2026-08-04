@@ -1,0 +1,513 @@
+/* ========== 弹窗通用 ========== */
+.modal-wide {
+    max-width: 900px;
+}
+.team-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+}
+.history-sub {
+    font-size: 12px;
+    color: var(--text-3);
+    font-weight: 400;
+    margin-left: 6px;
+}
+.team-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+.team-tab {
+    background: transparent;
+    border: none;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.team-tab:hover {
+    color: var(--text);
+}
+.team-tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+}
+.team-zone-tabs {
+    margin-top: -8px;
+}
+
+/* ========== 分数分布 ========== */
+.bracket-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+}
+.bracket-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.bracket-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+}
+.bracket-label {
+    width: 180px;
+    flex-shrink: 0;
+    color: var(--text-2);
+    text-align: right;
+    white-space: nowrap;
+}
+.bracket-bar-wrap {
+    flex: 1;
+    background: var(--surface-3);
+    border-radius: 4px;
+    height: 18px;
+    overflow: hidden;
+}
+.bracket-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    min-width: 3px;
+}
+.bracket-count {
+    width: 40px;
+    flex-shrink: 0;
+    color: var(--text);
+    font-weight: 600;
+    text-align: right;
+}
+.bracket-empty {
+    color: var(--text-3);
+    font-size: 13px;
+    text-align: center;
+    padding: 10px;
+}
+
+/* ========== 阵容参考 ========== */
+.team-zone-block {
+    background: var(--surface-2);
+    border: 0.5px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 14px;
+}
+.team-zone-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+}
+.team-card {
+    position: relative;
+    background: var(--surface);
+    border: 0.5px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+.team-card:last-child { margin-bottom: 0; }
+.team-rank-badge {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--text);
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+.team-chars {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.team-char {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface-2);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+.team-char img {
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    object-fit: cover;
+}
+.team-meta {
+    margin-top: 8px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-3);
+}
+.team-score { color: var(--text); font-weight: 700; }
+.team-player { color: var(--text-2); }
+.team-card-common { padding-top: 16px; }
+.team-usage-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+}
+.team-usage-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 10px 10px 0 0;
+}
+.team-usage-pct { color: var(--accent); font-weight: 700; }
+.team-count { color: var(--text-3); }
+
+/* ========== 阵容排行 ========== */
+.ranking-search-full {
+    max-width: 100%;
+    margin-bottom: 10px;
+}
+.team-rank-card {
+    background: var(--surface-2);
+    border: 0.5px solid var(--border-soft);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+.team-rank-card:last-child { margin-bottom: 0; }
+.team-rank-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+}
+.team-rank-card-header:hover {
+    background: var(--surface-3);
+}
+.team-rank-toggle {
+    font-size: 13px;
+    color: var(--text-3);
+    width: 14px;
+    flex-shrink: 0;
+}
+.team-rank-chars-sm {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+.team-rank-char-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+.team-rank-char-sm img {
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.team-rank-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 1px 8px;
+    border-radius: 980px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.team-rank-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+    flex-shrink: 0;
+}
+.team-rank-max {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+.team-rank-body {
+    border-top: 0.5px solid var(--border-soft);
+    padding: 6px 8px;
+}
+.team-rank-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+.team-rank-item:hover {
+    background: var(--surface-3);
+}
+.team-rank-pos {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-2);
+    border-radius: 50%;
+    background: var(--surface-3);
+}
+.team-rank-pos.team-rank-pos-top1 {
+    background: linear-gradient(135deg, #ffe066 0%, #d4a017 60%, #b8860b 100%);
+    color: #fff;
+}
+.team-rank-pos.team-rank-pos-top2 {
+    background: linear-gradient(135deg, #e8e8e8 0%, #b8b8b8 60%, #8a8a8a 100%);
+    color: #fff;
+}
+.team-rank-pos.team-rank-pos-top3 {
+    background: linear-gradient(135deg, #f0a070 0%, #b87333 60%, #9a5b20 100%);
+    color: #fff;
+}
+.team-rank-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.team-rank-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.team-rank-info .team-rank-name {
+    flex: none;
+}
+.team-rank-chars {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.team-rank-char {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--text-2);
+    min-width: 0;
+}
+.team-rank-char-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.team-rank-char-name {
+    max-width: 50px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.team-rank-bp {
+    font-size: 10px;
+    color: var(--text-2);
+    background: var(--surface-3);
+    padding: 0 6px;
+    border-radius: 4px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.team-rank-name {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.team-rank-score {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ========== 单区分析 ========== */
+.sa-header {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 0.5px solid var(--border-soft);
+}
+.sa-player-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+.sa-zone-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    margin-left: 8px;
+}
+.sa-player-meta {
+    font-size: 12px;
+    color: var(--text-3);
+}
+.sa-zone {
+    background: var(--surface-2);
+    border: 0.5px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+.sa-zone:last-child { margin-bottom: 0; }
+.sa-zone-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+}
+.sa-zone-score {
+    color: var(--accent);
+    margin-left: 6px;
+}
+.sa-team {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.sa-char {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface);
+    border: 0.5px solid var(--border-soft);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+}
+.sa-char img {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    object-fit: cover;
+}
+.sa-char-bp {
+    font-size: 10px;
+    color: var(--text-3);
+}
+.sa-max-player {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 8px 10px;
+    background: var(--surface);
+    border-radius: 10px;
+}
+.sa-max-avatar img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.sa-max-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+}
+.sa-max-id {
+    font-size: 11px;
+    color: var(--text-3);
+}
+.sa-zone-compare {
+    margin-top: 10px;
+}
+.sa-empty {
+    color: var(--text-3);
+    font-size: 13px;
+    text-align: center;
+    padding: 16px;
+}
+
+/* ========== 趋势曲线 ========== */
+.curve-chart {
+    background: var(--surface-2);
+    border: 0.5px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+.curve-chart-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    font-variant-numeric: tabular-nums;
+}
+.curve-range {
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 600;
+}
+.curve-chart-axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+}
+.curve-tooltip-show {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 10px;
+    box-shadow: var(--shadow-md);
+    font-size: 12px;
+    white-space: nowrap;
+}
+.curve-tip-time {
+    color: var(--text-3);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+.curve-tip-score {
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}

@@ -4,12 +4,19 @@ import RankingControls from './RankingControls.jsx';
 import RankingToolbar from './RankingToolbar.jsx';
 import RankingHeader from './RankingHeader.jsx';
 import VirtualRankingTable from './VirtualRankingTable.jsx';
+import BracketModal from '../Modals/BracketModal.jsx';
+import TeamModal from '../Modals/TeamModal.jsx';
+import RankingModal from '../Modals/RankingModal.jsx';
+import SaModal from '../Modals/SaModal.jsx';
+import CurveModal from '../Modals/CurveModal.jsx';
 
 export default function RankingPanel({ warzone }) {
-    const { difficulty, setDifficulty, week, setWeek, zones, rankings, meta, weekOptions, prevSnapshot, loading, error, refresh } = warzone;
+    const { difficulty, setDifficulty, week, setWeek, zones, rankings, meta, weekOptions, prevSnapshot, loading, error, refresh, currentWeek } = warzone;
     const rk = useRankings(rankings, zones);
 
     const [modal, setModal] = useState(null); // 'bracket' | 'team' | 'ranking'
+    const [saTarget, setSaTarget] = useState(null); // { ranking, zoneIndex }
+    const [curveTarget, setCurveTarget] = useState(null); // { playerId, playerName, zoneIndex }
 
     if (error) {
         return <div className="team-empty">加载失败：{error}</div>;
@@ -57,9 +64,39 @@ export default function RankingPanel({ warzone }) {
                     />
                 }
                 onOpenPlayer={id => console.log('open player', id)}
-                onOpenAnalysis={(ranking, zi) => console.log('analysis', ranking.player.id, zi)}
-                onOpenTrend={(pid, zi) => console.log('trend', pid, zi)}
+                onOpenAnalysis={(ranking, zi) => setSaTarget({ ranking, zoneIndex: zi })}
+                onOpenTrend={(pid, zi) => setCurveTarget({ playerId: pid, playerName: null, zoneIndex: zi })}
             />
+
+            {modal === 'bracket' && (
+                <BracketModal rankings={rankings} zones={zones} difficulty={difficulty} onClose={() => setModal(null)} />
+            )}
+            {modal === 'team' && (
+                <TeamModal rankings={rankings} zones={zones} onClose={() => setModal(null)} />
+            )}
+            {modal === 'ranking' && (
+                <RankingModal rankings={rankings} zones={zones} onClose={() => setModal(null)} />
+            )}
+            {saTarget && (
+                <SaModal
+                    ranking={saTarget.ranking}
+                    zoneIndex={saTarget.zoneIndex}
+                    rankings={rankings}
+                    zones={zones}
+                    onClose={() => setSaTarget(null)}
+                />
+            )}
+            {curveTarget && (
+                <CurveModal
+                    playerId={curveTarget.playerId}
+                    playerName={curveTarget.playerName}
+                    zoneIndex={curveTarget.zoneIndex}
+                    difficulty={difficulty}
+                    currentWeek={currentWeek}
+                    zones={zones}
+                    onClose={() => setCurveTarget(null)}
+                />
+            )}
         </div>
     );
 }
