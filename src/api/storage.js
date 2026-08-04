@@ -1,0 +1,82 @@
+// localStorage 存储封装（迁移自 js/main.js：快照 / 曲线 / 历史 / 关注）
+
+const CURVE_PREFIX = 'huaxu_wz_curve_';
+const SNAP_PREFIX = 'huaxu_wz_snap_';
+const HISTORY_KEY = 'huaxu_search_history';
+const FOLLOWS_KEY = 'huaxu_follows';
+
+// ========== 趋势曲线采样 ==========
+export function recordCurveSample(difficulty, activity, rankings) {
+    try {
+        const key = `${CURVE_PREFIX}${difficulty}_${activity}`;
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(CURVE_PREFIX) && !k.endsWith(`_${activity}`)) {
+                localStorage.removeItem(k);
+            }
+        }
+        let data = null;
+        try { data = JSON.parse(localStorage.getItem(key)); } catch { /* 忽略损坏 */ }
+        if (!data || !data.samples) data = { samples: [] };
+
+        const sample = { t: Date.now(), p: {} };
+        (rankings || []).forEach(r => {
+            sample.p[String(r.player.id)] = {
+                n: r.player.name,
+                z: (r.zones || []).map(z => z.score || 0),
+                t: r.score || 0
+            };
+        });
+
+        const last = data.samples[data.samples.length - 1];
+        if (last) {
+            if (Date.now() - last.t < 60 * 1000) return;
+            if (JSON.stringify(last.p) === JSON.stringify(sample.p)) return;
+        }
+        data.samples.push(sample);
+        if (data.samples.length > 200) data.samples = data.samples.slice(-200);
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch { /* 忽略 */ }
+}
+
+export function getPlayerCurve(playerId, difficulty, activity) {
+    const key = `${CURVE_PREFIX}${difficulty}_${activity}`;
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(key)); } catch { return []; }
+    if (!data || !data.samples) return [];
+    return data.samples.map(s => {
+        const p = s.p[String(playerId)];
+        return p ? { t: s.t, zones: p.z, total: p.t } : null;
+    }).filter(Boolean);
+}
+
+// ========== 30 分钟排名快照 ==========
+export const WZ_SNAPSHOT_VERSION = 3;
+export const WZ_SNAPSHOT_INTERVAL = 30 * 60 * 1000;
+
+export function loadWzSnapshot(difficulty) {
+    try {
+        const raw = localStorage.getItem(`${SNAP_PREFIX}${difficulty}`);
+        return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+}
+
+export function saveWzSnapshot(difficulty, snapshot) {
+    try {
+        localStorage.setItem(`${SNAP_PREFIX}${difficulty}`, JSON.stringify(snapshot));
+    } catch { /* 忽略 */ }
+}
+
+// ========== 查询历史 / 关注 ==========
+export function getSearchHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; }
+}
+export function saveSearchHistory(list) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+}
+export function getFollows() {
+    try { return JSON.parse(localStorage.getItem(FOLLOWS_KEY)) || []; } catch { return []; }
+}
+export function saveFollows(list) {
+    localStorage.setItem(FOLLOWS_KEY, JSON.stringify(list));
+}

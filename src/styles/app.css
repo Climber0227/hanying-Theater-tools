@@ -1,0 +1,150 @@
+/* ========== 导航 ========== */
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    background: var(--nav-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 0.5px solid var(--border-soft);
+    border-radius: 14px;
+    padding: 6px;
+    box-shadow: var(--shadow-sm);
+}
+
+.nav-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-3);
+    white-space: nowrap;
+    padding-left: 10px;
+}
+
+.nav-btns {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex: 1;
+    padding-right: 8px;
+}
+
+.nav-btn {
+    background: transparent;
+    color: var(--text-2);
+    border: none;
+    padding: 8px 22px;
+    border-radius: 980px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: -0.01em;
+}
+
+.nav-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.nav-btn.active {
+    background: var(--accent);
+    color: var(--accent-text);
+    box-shadow: 0 2px 12px var(--focus-ring);
+}
+
+/* ========== 占位 ========== */
+.m1-placeholder {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-2);
+    font-size: 14px;
+    border: 0.5px solid var(--border-soft);
+    box-shadow: var(--shadow-table);
+}
+
+/* ========== 反馈入口 ========== */
+.corner-feedback {
+    position: fixed;
+    right: 14px;
+    bottom: 12px;
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.4);
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.65);
+    padding: 3px 12px;
+    border-radius: 980px;
+    border: 0.5px solid rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 100;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+}
+.corner-feedback:hover {
+    color: var(--accent);
+    background: rgba(255, 255, 255, 0.9);
+    border-color: var(--accent);
+}
+
+/* ========== 浮动广告 ========== */
+.ad-float {
+    position: fixed;
+    width: 340px;
+    z-index: 999;
+    cursor: grab;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1.5px solid rgba(0, 0, 0, 0.28);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.3);
+    animation: ad-flash 1.6s ease-in-out infinite;
+    transition: left 2s cubic-bezier(0.4, 0, 0.2, 1), top 2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ad-float img {
+    display: block;
+    width: 100%;
+    height: auto;
+    user-select: none;
+    pointer-events: none;
+}
+.ad-close {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ad-close:hover {
+    background: rgba(255, 60, 60, 0.9);
+}
+.ad-float:hover {
+    animation-play-state: paused;
+    cursor: move;
+}
+@keyframes ad-flash {
+    0%, 100% {
+        border-color: rgba(0, 0, 0, 0.28);
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.45), 0 10px 34px rgba(0, 0, 0, 0.3);
+        transform: scale(1);
+    }
+    50% {
+        border-color: rgba(0, 0, 0, 0.55);
+        box-shadow: 0 0 28px rgba(255, 255, 255, 0.95), 0 0 56px rgba(255, 255, 255, 0.5), 0 10px 34px rgba(0, 0, 0, 0.3);
+        transform: scale(1.03);
+    }
+}
