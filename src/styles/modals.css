@@ -511,3 +511,43 @@
     color: var(--text);
     font-variant-numeric: tabular-nums;
 }
+
+/* shadcn 风格 Chart Tooltip */
+.chart-tooltip {
+    min-width: 128px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+    font-size: 12px;
+    display: grid;
+    gap: 6px;
+}
+.chart-tooltip-label {
+    font-weight: 500;
+    color: var(--text-2);
+    font-size: 11px;
+}
+.chart-tooltip-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.chart-tooltip-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--accent);
+    flex-shrink: 0;
+}
+.chart-tooltip-name {
+    color: var(--text-2);
+    font-size: 12px;
+}
+.chart-tooltip-value {
+    margin-left: auto;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}

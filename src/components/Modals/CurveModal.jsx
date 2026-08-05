@@ -112,15 +112,20 @@ export default function CurveModal({ playerId, playerName, zoneIndex, difficulty
                                 domain={['auto', 'auto']}
                             />
                             <Tooltip
+                                cursor={{ stroke: 'rgba(0,0,0,0.25)', strokeDasharray: '4 4' }}
                                 content={({ active, payload, label }) => {
                                     if (!active || !payload || !payload.length) return null;
                                     const p = payload[0].payload;
                                     return (
-                                        <div className="curve-tooltip-show">
-                                            <div className="curve-tip-time">
+                                        <div className="chart-tooltip">
+                                            <div className="chart-tooltip-label">
                                                 {mode === 'today' ? `今日 ${label}` : `${label} ${fmtTime(p.time)}`}
                                             </div>
-                                            <div className="curve-tip-score">{formatNumber(p.score)}</div>
+                                            <div className="chart-tooltip-row">
+                                                <span className="chart-tooltip-indicator" />
+                                                <span className="chart-tooltip-name">分数</span>
+                                                <span className="chart-tooltip-value">{formatNumber(p.score)}</span>
+                                            </div>
                                         </div>
                                     );
                                 }}
@@ -132,7 +137,7 @@ export default function CurveModal({ playerId, playerName, zoneIndex, difficulty
                                 strokeWidth={2.5}
                                 fill="url(#curveFill)"
                                 dot={{ r: 3, fill: '#fff', stroke: '#1d1d1f', strokeWidth: 2 }}
-                                activeDot={{ r: 5 }}
+                                activeDot={{ r: 5, fill: '#1d1d1f', stroke: '#fff', strokeWidth: 2 }}
                             />
                         </AreaChart>
                     </ResponsiveContainer>
