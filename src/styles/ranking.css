@@ -388,6 +388,12 @@
 }
 .zone-actions .zone-sa-btn {
     margin-left: 0;
+    opacity: 0.35;
+    transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.ranking-row:hover .zone-actions .zone-sa-btn,
+.zone-actions:hover .zone-sa-btn {
+    opacity: 1;
 }
 .zone-score-val {
     font-size: 14px;
@@ -598,4 +604,28 @@
     gap: 12px;
     margin-bottom: 14px;
     flex-wrap: wrap;
+}
+
+/* ========== 加载骨架屏 ========== */
+.skeleton-table {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 24px;
+}
+.skeleton-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.skeleton {
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.045) 25%, rgba(0, 0, 0, 0.1) 37%, rgba(0, 0, 0, 0.045) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 6px;
+    height: 14px;
+}
+@keyframes shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
 }

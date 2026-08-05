@@ -86,6 +86,9 @@ export default function CurveModal({ playerId, playerName, zoneIndex, difficulty
                         )}
                     </span>
                 </div>
+                <div className="chart-legend">
+                    <span className="chart-legend-item"><span className="chart-legend-dot" />分数</span>
+                </div>
                 {chartData.length >= 2 ? (
                     <ResponsiveContainer width="100%" height={160}>
                         <AreaChart data={chartData} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
@@ -138,6 +141,8 @@ export default function CurveModal({ playerId, playerName, zoneIndex, difficulty
                                 fill="url(#curveFill)"
                                 dot={{ r: 3, fill: '#fff', stroke: '#1d1d1f', strokeWidth: 2 }}
                                 activeDot={{ r: 5, fill: '#1d1d1f', stroke: '#fff', strokeWidth: 2 }}
+                                animationDuration={700}
+                                animationEasing="ease-out"
                             />
                         </AreaChart>
                     </ResponsiveContainer>

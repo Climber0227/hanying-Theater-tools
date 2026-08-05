@@ -56,27 +56,43 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
                 onTeam={() => setModal('team')}
                 onRanking={() => setModal('ranking')}
             />
-            <VirtualRankingTable
-                rows={rk.filtered}
-                zones={zones}
-                prevSnapshot={prevSnapshot}
-                header={
-                    <RankingHeader
-                        zones={zones}
-                        charFilters={rk.charFilters}
-                        setCharFilter={rk.setCharFilter}
-                        setZoneQuick={rk.setZoneQuick}
-                        sortKey={rk.sortKey}
-                        sortAsc={rk.sortAsc}
-                        toggleSort={rk.toggleSort}
-                        onReset={rk.resetFilters}
-                    />
-                }
-                onOpenPlayer={onOpenPlayer}
-                onOpenAnalysis={openAnalysis}
-                onOpenTrend={openTrend}
-            />
-
+            {loading ? (
+                <div className="ranking-table" style={{ height: 'auto' }}>
+                    <div className="skeleton-table">
+                        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+                            <div className="skeleton-row" key={i}>
+                                <div className="skeleton" style={{ width: 56, flexShrink: 0 }} />
+                                <div className="skeleton" style={{ width: 180, flexShrink: 0 }} />
+                                <div className="skeleton" style={{ flex: 1 }} />
+                                <div className="skeleton" style={{ flex: 1 }} />
+                                <div className="skeleton" style={{ flex: 1 }} />
+                                <div className="skeleton" style={{ width: 120, flexShrink: 0 }} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <VirtualRankingTable
+                    rows={rk.filtered}
+                    zones={zones}
+                    prevSnapshot={prevSnapshot}
+                    header={
+                        <RankingHeader
+                            zones={zones}
+                            charFilters={rk.charFilters}
+                            setCharFilter={rk.setCharFilter}
+                            setZoneQuick={rk.setZoneQuick}
+                            sortKey={rk.sortKey}
+                            sortAsc={rk.sortAsc}
+                            toggleSort={rk.toggleSort}
+                            onReset={rk.resetFilters}
+                        />
+                    }
+                    onOpenPlayer={onOpenPlayer}
+                    onOpenAnalysis={openAnalysis}
+                    onOpenTrend={openTrend}
+                />
+            )}
             {modal === 'bracket' && (
                 <BracketModal rankings={rankings} zones={zones} difficulty={difficulty} onClose={() => setModal(null)} />
             )}

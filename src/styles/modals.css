@@ -1,3 +1,16 @@
+.modal {
+    animation: modal-fade 0.18s ease;
+}
+.modal-content {
+    animation: modal-pop 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modal-fade {
+    from { opacity: 0; }
+}
+@keyframes modal-pop {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+}
+
 /* ========== 弹窗通用 ========== */
 .modal-wide {
     max-width: 900px;
@@ -550,4 +563,26 @@
     font-weight: 700;
     color: var(--text);
     font-variant-numeric: tabular-nums;
+}
+
+/* shadcn 风格图例 */
+.chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+.chart-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-2);
+}
+.chart-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--accent);
+    flex-shrink: 0;
 }
