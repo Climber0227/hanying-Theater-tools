@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 
-function getMonsterTag(desc) {
-    if (!desc) return '';
-    if (desc.includes('单体')) return '单怪';
-    if (desc.includes('双体')) return '双怪';
-    if (desc.includes('群体')) return '群怪';
+// 机制名：description 冒号前（如 困兽犹斗/祸不单行）
+function getMechanicName(zone) {
+    if (!zone || !zone.description) return '';
+    const idx = zone.description.indexOf('：');
+    if (idx > 0) return zone.description.slice(0, idx);
     return '';
 }
 
-// 战区卡片 + 详情弹窗
+// 战区卡片：区名 + 机制名 + 混合区增益 + 详情弹窗
 export default function ZoneCards({ zones }) {
     const [detailZone, setDetailZone] = useState(null);
 
@@ -17,16 +17,16 @@ export default function ZoneCards({ zones }) {
     return (
         <section className="zones-container">
             {zones.map((zone, i) => {
-                const monsterTag = getMonsterTag(zone.description);
                 const isMixed = zone.buffs && zone.buffs.length >= 2;
+                const mechanic = getMechanicName(zone);
                 return (
                     <div className={`zone-card${isMixed ? ' zone-card-mixed' : ''}`} key={zone.id || i}>
                         <div className="zone-card-info">
                             <div className="zone-name">
                                 {zone.name}
-                                {monsterTag && <span className="zone-tag">{monsterTag}</span>}
+                                {mechanic && <span className="zone-tag">{mechanic}</span>}
                             </div>
-                            {isMixed && (
+                            {isMixed && zone.buffs && (
                                 <div className="zone-card-sub">
                                     {zone.buffs.map((b, bi) => <span className="zone-sub-chip" key={bi}>{b.name}</span>)}
                                 </div>
@@ -46,7 +46,7 @@ export default function ZoneCards({ zones }) {
                         <div className="zone-detail-header">
                             <div className="zone-detail-name">
                                 {detailZone.name}
-                                {getMonsterTag(detailZone.description) && <span className="zone-tag">{getMonsterTag(detailZone.description)}</span>}
+                                {getMechanicName(detailZone) && <span className="zone-tag">{getMechanicName(detailZone)}</span>}
                             </div>
                             <div className="zone-detail-desc">{detailZone.description}</div>
                         </div>
