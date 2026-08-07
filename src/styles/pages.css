@@ -825,3 +825,143 @@
 .score-table tr:hover td {
     background: var(--surface-2);
 }
+
+/* ========== 分数录入 ========== */
+.score-input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.score-input-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--surface-2);
+    border: 0.5px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+.score-input-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+}
+.score-input-field {
+    background: var(--surface);
+    color: var(--text);
+    border: 0.5px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+.score-input-field:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+    border-color: var(--accent);
+}
+.wz-evaluation {
+    margin: 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.eval-tag {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 980px;
+    font-size: 13px;
+    font-weight: 700;
+}
+.eval-level-0 { color: var(--text-2); background: var(--surface-3); }
+.eval-level-1 { color: #007aff; background: rgba(0,122,255,0.1); }
+.eval-level-2 { color: #af52de; background: rgba(175,82,222,0.1); }
+.eval-level-3 { color: #ff3b30; background: rgba(255,59,48,0.1); }
+.eval-level-4 { color: #ff2d55; background: rgba(255,45,85,0.1); }
+.eval-level-5 { color: #ff9500; background: rgba(255,149,0,0.1); }
+.eval-level-6 { color: #ff6b00; background: linear-gradient(135deg, rgba(255,107,0,0.12), rgba(255,45,0,0.12)); }
+.eval-desc {
+    font-size: 12px;
+    color: var(--text-3);
+}
+.score-history-title {
+    font-size: 13px;
+    color: var(--text-2);
+    margin: 14px 0 8px;
+    font-weight: 600;
+}
+.score-total {
+    font-weight: 700;
+    color: var(--accent);
+}
+.score-delete {
+    background: transparent;
+    color: var(--text-3);
+    border: none;
+    font-size: 12px;
+    cursor: pointer;
+}
+.score-delete:hover {
+    color: #ff3b30;
+}
+
+/* ========== 登录 ========== */
+.login-input-row {
+    margin-bottom: 12px;
+}
+.login-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    background: var(--surface-2);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+}
+.login-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.login-input::placeholder {
+    color: var(--text-3);
+}
+.login-hint {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-3);
+    text-align: center;
+}
+.login-error {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #ff3b30;
+    text-align: center;
+    min-height: 20px;
+}
+.logged-in-info {
+    text-align: center;
+}
+.logged-in-user {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+.logged-in-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+}
+.logged-in-id {
+    font-size: 13px;
+    color: var(--text-3);
+}
+.logged-in-status {
+    font-size: 13px;
+    color: #34c759;
+    margin-bottom: 16px;
+}
