@@ -954,10 +954,10 @@
     border: 0.5px solid var(--border-soft);
     box-shadow: var(--shadow-table);
     padding: 24px 28px;
-    max-width: 820px;
 }
 .tl-header {
     padding: 8px 0 28px;
+    text-align: center;
 }
 .tl-h2 {
     font-size: 22px;
@@ -985,7 +985,7 @@
     align-self: flex-start;
     display: flex;
     align-items: center;
-    width: 120px;
+    width: 170px;
     flex-shrink: 0;
     padding-top: 4px;
 }
@@ -1023,6 +1023,7 @@
     position: relative;
     width: 100%;
     min-width: 0;
+    flex: 1;
     background: var(--surface-2);
     border: 0.5px solid var(--border-soft);
     border-radius: 14px;
