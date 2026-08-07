@@ -98,6 +98,8 @@ function CurveChart({ title, data, zones, mode, hasData }) {
     const py = v => PAD_TOP + (1 - v / maxV) * (H - PAD_TOP - PAD_BOTTOM);
     const chartW = W - PAD_X * 2;
     const chartH = H - PAD_TOP - PAD_BOTTOM;
+    const gap = chartW / (n - 1);
+    const hitW = Math.min(gap * 0.75, 46); // 列式热区宽度（viewBox 单位）
 
     const series = (zones || []).map((z, si) => ({
         z,
@@ -197,21 +199,26 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                         </text>
                     ))}
 
+                    {/* 列式热区（整列可 hover，无需精准指向数据点） */}
+                    {data.map((d, i) => (
+                        <rect
+                            key={`hit-${i}`}
+                            x={px(i) - hitW / 2}
+                            y={PAD_TOP}
+                            width={hitW}
+                            height={chartH}
+                            fill="transparent"
+                            onMouseEnter={() => setHovered(i)}
+                            onMouseLeave={() => setHovered(null)}
+                        />
+                    ))}
+
                     {/* 数据点（逐个弹出：缩放 + 淡入） */}
                     {series.map(s => data.map((d, i) => {
                         const v = d['z' + s.si];
                         if (v == null) return null;
                         return (
                             <g key={`dot-${s.si}-${i}`}>
-                                {/* 隐形热区 */}
-                                <circle
-                                    cx={px(i)}
-                                    cy={py(v)}
-                                    r="14"
-                                    fill="transparent"
-                                    onMouseEnter={() => setHovered(i)}
-                                    onMouseLeave={() => setHovered(null)}
-                                />
                                 <circle
                                     cx={px(i)}
                                     cy={py(v)}
@@ -231,6 +238,19 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                             </g>
                         );
                     }))}
+
+                    {/* Hover 竖线指示 */}
+                    {hovered != null && (
+                        <line
+                            x1={hoverX}
+                            y1={PAD_TOP}
+                            x2={hoverX}
+                            y2={H - PAD_BOTTOM}
+                            stroke="rgba(0,0,0,0.14)"
+                            strokeWidth="1"
+                            strokeDasharray="3 3"
+                        />
+                    )}
 
                     {/* Hover 提示卡片 */}
                     {hovered != null && (
