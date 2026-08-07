@@ -72,6 +72,9 @@ export function uploadCurveSample(difficulty, activity, rankings) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
+        }).then(r => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
         }).catch(() => { /* 离线/本地环境忽略 */ });
     } catch { /* 忽略 */ }
 }
