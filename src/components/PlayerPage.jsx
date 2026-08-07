@@ -210,7 +210,6 @@ export default function PlayerPage({ pendingPlayerId }) {
                 <HistoryModal
                     playerId={player.id}
                     playerName={player.name}
-                    difficulty="16"
                     weekOptions={weekOptions}
                     onClose={() => setShowHistory(false)}
                 />

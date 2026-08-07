@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Modal from './Modal.jsx';
 import { fetchJson } from '../../api/client.js';
-import { API_CONFIG, DIFFICULTY_OPTIONS, getDifficultyShort, getImageUrl } from '../../api/config.js';
+import { API_CONFIG, getDifficultyShort, getImageUrl } from '../../api/config.js';
 import { formatNumber, extractZoneElement, getQualityInfo } from '../../utils/format.js';
 
 const MAX_WEEKS = 100;
@@ -53,12 +53,10 @@ function HistoryRow({ row }) {
 }
 
 // 历史战绩：自动识别段位（段位范围 + 每周命中即停），周范围下拉选择（最多 100 周）
-export default function HistoryModal({ playerId, playerName, difficulty, weekOptions, onClose }) {
+export default function HistoryModal({ playerId, playerName, weekOptions, onClose }) {
     const [rows, setRows] = useState([]);
     const [progress, setProgress] = useState('');
     const [searching, setSearching] = useState(false);
-    const [topDiff, setTopDiff] = useState(String(difficulty));
-    const [bottomDiff, setBottomDiff] = useState(String(Math.max(1, Number(difficulty) - 2)));
     const [fromWeek, setFromWeek] = useState(null);
     const [toWeek, setToWeek] = useState(null);
     const [rangeError, setRangeError] = useState('');
@@ -66,15 +64,6 @@ export default function HistoryModal({ playerId, playerName, difficulty, weekOpt
 
     const minWeek = weekOptions.min;
     const maxWeek = weekOptions.max;
-
-    // 段位范围（从高到低）
-    const diffs = useMemo(() => {
-        const lo = Math.max(1, Math.min(Number(topDiff), Number(bottomDiff)));
-        const hi = Math.max(Number(topDiff), Number(bottomDiff));
-        const arr = [];
-        for (let d = hi; d >= lo; d--) arr.push(String(d));
-        return arr;
-    }, [topDiff, bottomDiff]);
 
     // 周下拉选项（降序，最新在前）
     const weekOptionsList = useMemo(() => {
@@ -124,21 +113,22 @@ export default function HistoryModal({ playerId, playerName, difficulty, weekOpt
 
         // 段位链式搜索：每周段位只可能 晋级(+1)/保级(0)/掉级(-1)
         // 从上周命中段位 d 的邻域 [d, d+1, d-1] 依次查，命中即停
-        const lo = Math.max(1, Math.min(Number(topDiff), Number(bottomDiff)));
-        const hi = Math.max(Number(topDiff), Number(bottomDiff));
-        const neighbors = d => [d, d + 1, d - 1].filter(x => x >= lo && x <= hi).map(String);
+        const neighbors = d => [d, d + 1, d - 1].filter(x => x >= 1 && x <= 16).map(String);
         const memKey = `history_last_diff_${playerId}`;
         let hitD = null;
 
-        // 起始候选：记忆的最近段位及其邻域优先；无记忆则从范围最高段位降序
+        // 起始候选：记忆的最近段位及其邻域优先；无记忆则从最高段位（传奇）降序探测
         let initCandidates = [];
         try {
             const m = Number(localStorage.getItem(memKey));
-            if (m && m >= lo && m <= hi) {
-                initCandidates = [m, m + 1, m - 1].filter(x => x >= lo && x <= hi).map(String);
+            if (m >= 1 && m <= 16) {
+                initCandidates = [m, m + 1, m - 1].filter(x => x >= 1 && x <= 16).map(String);
             }
         } catch { /* 忽略 */ }
-        if (initCandidates.length === 0) initCandidates = diffs;
+        if (initCandidates.length === 0) {
+            initCandidates = [];
+            for (let d = 16; d >= 1; d--) initCandidates.push(String(d));
+        }
         let firstWeek = true;
 
         for (let w = t; w >= f; w--) {
@@ -191,28 +181,6 @@ export default function HistoryModal({ playerId, playerName, difficulty, weekOpt
             wide
         >
             <div className="history-config">
-                <span className="history-config-label">段位</span>
-                <select
-                    value={topDiff}
-                    onChange={e => setTopDiff(e.target.value)}
-                    disabled={searching}
-                    title="最高段位"
-                >
-                    {DIFFICULTY_OPTIONS.map(o => (
-                        <option key={o.value} value={o.value}>{o.value} {getDifficultyShort(o.value)}</option>
-                    ))}
-                </select>
-                <span className="history-config-label">~</span>
-                <select
-                    value={bottomDiff}
-                    onChange={e => setBottomDiff(e.target.value)}
-                    disabled={searching}
-                    title="最低段位"
-                >
-                    {DIFFICULTY_OPTIONS.map(o => (
-                        <option key={o.value} value={o.value}>{o.value} {getDifficultyShort(o.value)}</option>
-                    ))}
-                </select>
                 <span className="history-config-label">周</span>
                 <select
                     className="history-week-select"
@@ -237,7 +205,7 @@ export default function HistoryModal({ playerId, playerName, difficulty, weekOpt
                     {searching ? '查询中…' : '查询'}
                 </button>
             </div>
-            <div className="history-tip">段位范围越宽查询越多（每段位一榜），建议 2~3 个相邻段位</div>
+            <div className="history-tip">段位自动识别：每周只查保级/晋级/掉级三个段位，命中即停</div>
             {rangeError && <div className="history-empty">{rangeError}</div>}
             {searching && <div className="history-loading">{progress}</div>}
             {!searching && rows.length === 0 && progress && <div className="history-empty">{progress}</div>}
