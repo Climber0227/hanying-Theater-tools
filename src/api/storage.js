@@ -6,6 +6,7 @@ const HISTORY_KEY = 'huaxu_search_history';
 const FOLLOWS_KEY = 'huaxu_follows';
 
 // ========== 趋势曲线采样 ==========
+// 返回 true 表示本次确实写入了新采样（用于判断是否需要上传后端）
 export function recordCurveSample(difficulty, activity, rankings) {
     try {
         const key = `${CURVE_PREFIX}${difficulty}_${activity}`;
@@ -30,13 +31,15 @@ export function recordCurveSample(difficulty, activity, rankings) {
 
         const last = data.samples[data.samples.length - 1];
         if (last) {
-            if (Date.now() - last.t < 60 * 1000) return;
-            if (JSON.stringify(last.p) === JSON.stringify(sample.p)) return;
+            if (Date.now() - last.t < 60 * 1000) return false;
+            if (JSON.stringify(last.p) === JSON.stringify(sample.p)) return false;
         }
         data.samples.push(sample);
         if (data.samples.length > 200) data.samples = data.samples.slice(-200);
         localStorage.setItem(key, JSON.stringify(data));
+        return true;
     } catch { /* 忽略 */ }
+    return false;
 }
 
 export function getPlayerCurve(playerId, difficulty, activity) {
@@ -48,6 +51,29 @@ export function getPlayerCurve(playerId, difficulty, activity) {
         const p = s.p[String(playerId)];
         return p ? { t: s.t, zones: p.z, total: p.t } : null;
     }).filter(Boolean);
+}
+
+// ========== 趋势曲线上传（后端共享） ==========
+// 前端采样后 fire-and-forget 上传到 /api/trends；失败静默（本地兜底仍在）
+export function uploadCurveSample(difficulty, activity, rankings) {
+    try {
+        const url = '/api/trends';
+        const body = {
+            week: activity,
+            difficulty,
+            samples: (rankings || []).map(r => ({
+                playerId: r.player && r.player.id,
+                name: r.player && r.player.name,
+                zones: (r.zones || []).map(z => z.score || 0),
+                total: r.score || 0
+            }))
+        };
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        }).catch(() => { /* 离线/本地环境忽略 */ });
+    } catch { /* 忽略 */ }
 }
 
 // ========== 30 分钟排名快照 ==========

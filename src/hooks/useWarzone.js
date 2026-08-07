@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { loadWarzone } from '../api/client.js';
 import {
     recordCurveSample,
+    uploadCurveSample,
     loadWzSnapshot,
     saveWzSnapshot,
     WZ_SNAPSHOT_VERSION,
@@ -56,7 +57,8 @@ export function useWarzone() {
                 });
 
                 if (week === null && list) {
-                    recordCurveSample(difficulty, curWeek, list);
+                    const sampled = recordCurveSample(difficulty, curWeek, list);
+                    if (sampled) uploadCurveSample(difficulty, curWeek, list);
                     // 排名变化快照（30 分钟基线）
                     const prev = loadWzSnapshot(difficulty);
                     if (prev && prev.version === WZ_SNAPSHOT_VERSION && prev.activity === curWeek) {

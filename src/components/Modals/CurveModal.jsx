@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
 } from 'recharts';
@@ -14,12 +14,34 @@ function dayLabel(ts) {
 }
 
 // 玩家趋势曲线（Recharts）：今日按时 / 本周按天
+// 数据源：后端共享优先（/api/curve），本地 localStorage 采样兜底
 export default function CurveModal({ playerId, playerName, zoneIndex, difficulty, currentWeek, zones, onClose, onSwitchZone }) {
     const [mode, setMode] = useState('today');
     const [zoneIdx, setZoneIdx] = useState(zoneIndex || 0);
+    const [serverSamples, setServerSamples] = useState(null); // null = 加载中/无服务端数据
     const zone = (zones || [])[zoneIdx];
 
-    const samples = getPlayerCurve(playerId, difficulty, currentWeek);
+    // 服务端曲线（异步加载，成功后自动切换数据源）
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const resp = await fetch(`/api/curve?player=${playerId}&difficulty=${difficulty}&week=${currentWeek}`);
+                const result = await resp.json();
+                if (!cancelled && result.status === 'success' && Array.isArray(result.samples) && result.samples.length > 0) {
+                    setServerSamples(result.samples);
+                } else if (!cancelled) {
+                    setServerSamples([]);
+                }
+            } catch {
+                if (!cancelled) setServerSamples([]);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [playerId, difficulty, currentWeek]);
+
+    const localSamples = getPlayerCurve(playerId, difficulty, currentWeek);
+    const samples = serverSamples && serverSamples.length > 0 ? serverSamples : localSamples;
 
     // 数据准备
     const now = new Date();
