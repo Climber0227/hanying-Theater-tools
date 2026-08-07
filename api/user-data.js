@@ -9,7 +9,7 @@ const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
 const supabaseKey = (process.env.SUPABASE_SERVICE_KEY || '').replace(/[\r\n\s]/g, '');
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const ALLOWED_KEYS = ['bind', 'history', 'follows', 'wz_scores', 'ppc_scores'];
+const ALLOWED_KEYS = ['bind', 'history', 'follows', 'wz_scores', 'ppc_scores', 'kuro_token', 'kuro_phone'];
 
 // 从 Authorization header 提取 token
 function getToken(req) {
