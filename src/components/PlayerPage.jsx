@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { loadPlayer } from '../api/client.js';
+import { loadPlayer, fetchJson } from '../api/client.js';
 import { API_CONFIG, getImageUrl } from '../api/config.js';
 import { getSearchHistory, saveSearchHistory, getFollows, saveFollows } from '../api/storage.js';
 import { formatNumber, getQualityInfo } from '../utils/format.js';
@@ -40,16 +40,13 @@ export default function PlayerPage({ pendingPlayerId }) {
     const [charDetail, setCharDetail] = useState(null); // { charId }
     const [showHistory, setShowHistory] = useState(false);
     const [weekOptions, setWeekOptions] = useState({ min: null, max: null });
-    const queryingRef = useRef(false);
+    const queryingRef = useRef(null); // AbortController：查询新玩家时取消旧请求
 
-    // 轻量获取周范围（历史战绩用）
+    // 轻量获取周范围（历史战绩用）；与排行榜页同 URL，走内存缓存避免重复请求
     useEffect(() => {
         (async () => {
             try {
-                const resp = await fetch(`${API_CONFIG.warzone}/current/16`, {
-                    headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' }
-                });
-                const result = await resp.json();
+                const result = await fetchJson(`${API_CONFIG.warzone}/current/16`);
                 if (result.data && result.data.activities) {
                     setWeekOptions({ min: result.data.activities.min, max: result.data.activities.max });
                 }
@@ -62,11 +59,14 @@ export default function PlayerPage({ pendingPlayerId }) {
     useEffect(() => { refreshHistory(); }, [refreshHistory]);
 
     const query = useCallback(async id => {
-        if (!id || queryingRef.current) return;
-        queryingRef.current = true;
+        if (!id) return;
+        if (queryingRef.current) queryingRef.current.abort();
+        queryingRef.current = new AbortController();
+        const signal = queryingRef.current.signal;
         setError('');
         try {
-            const data = await loadPlayer(id);
+            const data = await loadPlayer(id, signal);
+            if (signal.aborted) return;
             setPlayer(data.player);
             setCharacters(data.characters || []);
             // 记历史
@@ -75,9 +75,7 @@ export default function PlayerPage({ pendingPlayerId }) {
             saveSearchHistory(h.slice(0, 20));
             refreshHistory();
         } catch (e) {
-            setError('未找到该玩家');
-        } finally {
-            queryingRef.current = false;
+            if (!signal.aborted) setError('未找到该玩家');
         }
     }, [refreshHistory]);
 

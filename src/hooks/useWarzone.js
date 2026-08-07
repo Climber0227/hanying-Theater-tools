@@ -21,8 +21,13 @@ export function useWarzone() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const currentWeekRef = useRef(null);
+    const forceRef = useRef(false);
 
     const refresh = useCallback(() => setTick(t => t + 1), []);
+    const refreshForce = useCallback(() => {
+        forceRef.current = true;
+        setTick(t => t + 1);
+    }, []);
 
     // 30 分钟自动刷新（仅本周数据参与）
     useEffect(() => {
@@ -36,7 +41,8 @@ export function useWarzone() {
             setLoading(true);
             setError(null);
             try {
-                const { warzone, rankings: list, activities } = await loadWarzone(difficulty, week);
+                const { warzone, rankings: list, activities } = await loadWarzone(difficulty, week, forceRef.current);
+                forceRef.current = false;
                 if (cancelled) return;
                 if (activities) setWeekOptions({ min: activities.min, max: activities.max });
                 const curWeek = week === null ? warzone.activity : week;
@@ -101,6 +107,7 @@ export function useWarzone() {
         loading,
         error,
         refresh,
+        refreshForce,
         currentWeek: currentWeekRef.current
     };
 }

@@ -15,7 +15,7 @@ const CurveModal = lazy(() => import('../Modals/CurveModal.jsx'));
 const MODAL_FALLBACK = null;
 
 export default function RankingPanel({ warzone, onOpenPlayer }) {
-    const { difficulty, setDifficulty, week, setWeek, zones, rankings, meta, weekOptions, prevSnapshot, loading, error, refresh, currentWeek } = warzone;
+    const { difficulty, setDifficulty, week, setWeek, zones, rankings, meta, weekOptions, prevSnapshot, loading, error, refresh, refreshForce, currentWeek } = warzone;
     const rk = useRankings(rankings, zones);
 
     const [modal, setModal] = useState(null); // 'bracket' | 'team' | 'ranking'
@@ -47,7 +47,7 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
             />
             <h2>
                 排行榜 <span className="top-label">TOP 100</span>
-                <button className="refresh-btn" onClick={refresh} disabled={loading}>刷新</button>
+                <button className="refresh-btn" onClick={refreshForce} disabled={loading}>刷新</button>
                 {loading && <span className="top-label">加载中…</span>}
             </h2>
             <div className="filter-hint">

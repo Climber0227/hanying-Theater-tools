@@ -66,3 +66,15 @@ export function getMondayStart(now = new Date()) {
     const day = now.getDay() || 7;
     return new Date(now.getFullYear(), now.getMonth(), now.getDate() - (day - 1)).getTime();
 }
+
+// 战区属性提取：从 buffs/weathers 描述中找 "XX属性" 关键词
+export function extractZoneElement(zone) {
+    if (!zone) return '';
+    const text = [
+        zone.buffDescription || '',
+        ...(zone.buffs || []).map(b => b.description || ''),
+        ...(zone.weathers || []).map(w => w.description || '')
+    ].join(' ');
+    const m = text.match(/(物理|火|雷|冰|暗|光)属性/);
+    return m ? m[1] : '';
+}

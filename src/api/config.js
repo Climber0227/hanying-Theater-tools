@@ -36,3 +36,9 @@ export function getDifficultyLabel(value) {
     const opt = DIFFICULTY_OPTIONS.find(o => o.value === String(value));
     return opt ? opt.label : String(value);
 }
+
+// 难度短名（label 冒号前）：16 → 传奇
+export function getDifficultyShort(value) {
+    const opt = DIFFICULTY_OPTIONS.find(o => o.value === String(value));
+    return opt ? opt.label.split(' ')[0] : String(value);
+}

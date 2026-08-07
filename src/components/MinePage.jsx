@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { loadPlayer } from '../api/client.js';
+import { loadPlayer, fetchJson } from '../api/client.js';
 import { API_CONFIG, getImageUrl } from '../api/config.js';
 import { getFollows, saveFollows } from '../api/storage.js';
 import { auth } from '../api/auth.js';
@@ -278,14 +278,11 @@ export default function MinePage() {
     const [wzWeek, setWzWeek] = useState(null);
     const [ppcWeek, setPpcWeek] = useState(null);
 
-    // 轻量加载当前战区/幻痛数据（区名/怪名）
+    // 轻量加载当前战区/幻痛数据（区名/怪名）；走内存缓存避免重复请求
     useEffect(() => {
         (async () => {
             try {
-                const resp = await fetch(`${API_CONFIG.warzone}/current/16`, {
-                    headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' }
-                });
-                const result = await resp.json();
+                const result = await fetchJson(`${API_CONFIG.warzone}/current/16`);
                 if (result.data && result.data.warzone) {
                     setWzWeek(result.data.warzone.activity);
                     setWzZones(result.data.warzone.area.zones.map(z => ({
@@ -296,10 +293,7 @@ export default function MinePage() {
         })();
         (async () => {
             try {
-                const resp = await fetch(`${API_CONFIG.ppc}/current/4?ranking=true`, {
-                    headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' }
-                });
-                const result = await resp.json();
+                const result = await fetchJson(`${API_CONFIG.ppc}/current/4?ranking=true`);
                 if (result.data && result.data.ppc) {
                     setPpcWeek(result.data.ppc.activity);
                     setPpcBosses((result.data.ppc.bosses || []).map(b => ({ name: b.name })));
