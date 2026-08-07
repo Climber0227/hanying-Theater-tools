@@ -515,7 +515,8 @@ function WebLoginBlock({ onAuthChange }) {
 
 // 库街区绑定 + 一键同步分数（支持云端恢复绑定）
 function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
-    const [phone, setPhone] = useState(getKuroPhone());
+    const [phone, setPhone] = useState('');
+    const [boundPhone, setBoundPhone] = useState(getKuroPhone());
     const [code, setCode] = useState('');
     const [countdown, setCountdown] = useState(0);
     const [token, setToken] = useState(getKuroToken());
@@ -539,7 +540,11 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
         if (cloudToken) {
             localStorage.removeItem(KURO_AUTO_SYNC_KEY);
             changeToken(cloudToken);
-            if (getKuroPhone()) setPhone(getKuroPhone());
+            const cloudPhone = getKuroPhone();
+            if (cloudPhone) {
+                setPhone(cloudPhone);
+                setBoundPhone(cloudPhone);
+            }
             setMsg('已自动恢复库街区绑定，正在同步…');
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -683,6 +688,7 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
     const doUnbind = () => {
         clearKuroToken();
         clearKuroPhone();
+        setBoundPhone('');
         if (auth.isLoggedIn()) {
             auth.removeCloud('kuro_token');
             auth.removeCloud('kuro_phone');
@@ -708,8 +714,10 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
             <div className="account-block-desc">绑定后每周点「同步分数」，一键拉取游戏内战区 / 幻痛数据</div>
             {!token ? (
                 <div className="account-form">
-                    {phone && (
-                        <div className="kuro-bound-hint">该账号已绑定 {phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')}，收验证码即可重新验证</div>
+                    {boundPhone && (
+                        <div className="kuro-bound-hint">
+                            该账号已绑定 {boundPhone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')}，收验证码即可重新验证（如需换绑请修改手机号）
+                        </div>
                     )}
                     <div className="login-input-row">
                         <input
