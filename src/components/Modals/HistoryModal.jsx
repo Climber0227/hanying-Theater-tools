@@ -4,7 +4,7 @@ import { fetchJson } from '../../api/client.js';
 import { API_CONFIG, getDifficultyShort, getImageUrl } from '../../api/config.js';
 import { formatNumber, extractZoneElement, getQualityInfo } from '../../utils/format.js';
 
-const MAX_WEEKS = 100;
+const MAX_WEEKS = 20;
 const BATCH_DELAY = 150; // 周间隔（限速）
 
 // 单条历史战绩行：周/段位/排名/总分 + 三区（属性、分数、角色）
