@@ -58,6 +58,12 @@ module.exports = async function handler(req, res) {
             console.error('Trends insert error:', error);
             return res.status(500).json({ error: '入库失败' });
         }
+        // 只保留当前周数据（对齐本地换周清空策略），删除其他周
+        try {
+            await supabase.from('wz_curve_samples').delete().neq('week', week);
+        } catch (e) {
+            console.error('Trends cleanup error:', e.message);
+        }
         return res.status(200).json({ status: 'success', count: rows.length });
     } catch (err) {
         console.error('Trends error:', err.message);
