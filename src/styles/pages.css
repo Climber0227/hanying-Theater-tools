@@ -804,6 +804,127 @@
     text-align: center;
     padding: 20px;
 }
+.history-config {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 0 14px;
+}
+.history-config select {
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    max-width: 130px;
+}
+.history-config-label {
+    color: var(--text-2);
+    font-size: 13px;
+}
+.history-week-select {
+    max-width: 96px;
+}
+.history-tip {
+    color: var(--text-3);
+    font-size: 12px;
+    padding: 0 0 8px;
+}
+.history-week-select {
+    max-width: 96px;
+}
+.history-summary {
+    color: var(--text-2);
+    font-size: 13px;
+    padding: 0 0 10px;
+}
+.history-list {
+    max-height: 420px;
+    overflow-y: auto;
+}
+.history-row {
+    border-bottom: 0.5px solid var(--border-soft);
+    padding: 10px 0;
+}
+.history-row:last-child {
+    border-bottom: none;
+}
+.history-row-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.history-week {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+}
+.element-tag {
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: var(--text-2);
+    white-space: nowrap;
+}
+.history-rank {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-2);
+}
+.history-rank-top {
+    color: #ff9f0a;
+}
+.history-score {
+    margin-left: auto;
+    font-weight: 600;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+.history-zones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+.history-zone {
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 8px;
+    min-width: 0;
+}
+.history-zone-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+.history-zone-name {
+    font-size: 12px;
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.history-zone-score {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 6px;
+}
+.history-zone-chars {
+    display: flex;
+    gap: 4px;
+}
+@media (max-width: 480px) {
+    .history-zones {
+        grid-template-columns: 1fr;
+    }
+}
 .score-table {
     width: 100%;
     border-collapse: collapse;
