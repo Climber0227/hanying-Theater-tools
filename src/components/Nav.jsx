@@ -4,7 +4,8 @@ const PAGES = [
     { key: 'warzone', label: '战区数据' },
     { key: 'player', label: '玩家查询' },
     { key: 'ppc', label: '幻痛囚笼' },
-    { key: 'mine', label: '我的' }
+    { key: 'mine', label: '我的' },
+    { key: 'changelog', label: '更新日志' }
 ];
 
 // 建站起始时间

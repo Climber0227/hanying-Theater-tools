@@ -8,6 +8,7 @@ import './styles/app.css';
 const PlayerPage = lazy(() => import('./components/PlayerPage.jsx'));
 const PpcPage = lazy(() => import('./components/PpcPage.jsx'));
 const MinePage = lazy(() => import('./components/MinePage.jsx'));
+const ChangelogPage = lazy(() => import('./components/ChangelogPage.jsx'));
 
 const PAGE_FALLBACK = <div className="m1-placeholder">加载中…</div>;
 
@@ -29,6 +30,7 @@ export default function App() {
                 {page === 'player' && <PlayerPage pendingPlayerId={pendingPlayerId} />}
                 {page === 'ppc' && <PpcPage onOpenPlayer={openPlayer} />}
                 {page === 'mine' && <MinePage />}
+                {page === 'changelog' && <ChangelogPage />}
             </Suspense>
             <AdFloat />
             <a
