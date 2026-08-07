@@ -23,6 +23,35 @@
     padding-left: 10px;
 }
 
+.nav-stats strong {
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+}
+
+.nav-stats a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.stats-divider {
+    color: var(--text-3);
+    opacity: 0.6;
+}
+
+@media (max-width: 860px) {
+    .nav-stats {
+        font-size: 11px;
+        gap: 6px;
+    }
+}
+
+@media (max-width: 560px) {
+    .nav-stats {
+        flex-wrap: wrap;
+        row-gap: 2px;
+    }
+}
+
 .nav-btns {
     display: flex;
     gap: 6px;
