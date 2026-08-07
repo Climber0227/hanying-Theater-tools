@@ -1,8 +1,10 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { loadPlayer } from '../api/client.js';
-import { getImageUrl } from '../api/config.js';
+import { API_CONFIG, getImageUrl } from '../api/config.js';
 import { getSearchHistory, saveSearchHistory, getFollows, saveFollows } from '../api/storage.js';
 import { formatNumber, getQualityInfo } from '../utils/format.js';
+import CharacterModal from './Modals/CharacterModal.jsx';
+import HistoryModal from './Modals/HistoryModal.jsx';
 
 const QUALITY_MAP = { 1: 'B', 2: 'A', 3: 'S', 4: 'SS', 5: 'SSS', 6: 'SSS+' };
 
@@ -35,7 +37,25 @@ export default function PlayerPage({ pendingPlayerId }) {
     const [characters, setCharacters] = useState([]);
     const [error, setError] = useState('');
     const [follows, setFollows] = useState(getFollows());
+    const [charDetail, setCharDetail] = useState(null); // { charId }
+    const [showHistory, setShowHistory] = useState(false);
+    const [weekOptions, setWeekOptions] = useState({ min: null, max: null });
     const queryingRef = useRef(false);
+
+    // 轻量获取周范围（历史战绩用）
+    useEffect(() => {
+        (async () => {
+            try {
+                const resp = await fetch(`${API_CONFIG.warzone}/current/16`, {
+                    headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' }
+                });
+                const result = await resp.json();
+                if (result.data && result.data.activities) {
+                    setWeekOptions({ min: result.data.activities.min, max: result.data.activities.max });
+                }
+            } catch { /* 忽略 */ }
+        })();
+    }, []);
 
     const refreshHistory = useCallback(() => setHistory(getSearchHistory()), []);
 
@@ -141,7 +161,7 @@ export default function PlayerPage({ pendingPlayerId }) {
                             <button className="bind-set-btn" onClick={() => toggleFollow(player.id, player.name, player.portrait)}>
                                 {follows.some(f => String(f.id) === String(player.id)) ? '已关注' : '关注'}
                             </button>
-                            <button className="bind-set-btn follow-set-btn" onClick={() => alert('历史战绩功能迁移中')}>历史战绩</button>
+                            <button className="bind-set-btn follow-set-btn" onClick={() => setShowHistory(true)}>历史战绩</button>
                         </div>
                     </div>
                 </div>
@@ -152,7 +172,7 @@ export default function PlayerPage({ pendingPlayerId }) {
                     <h3>角色列表 <span>({acquiredChars.length})</span></h3>
                     <div className="characters-grid">
                         {acquiredChars.map(c => (
-                            <CharacterCard key={c.id} c={c} onClick={() => alert(`角色详情迁移中：${c.characterName}`)} />
+                            <CharacterCard key={c.id} c={c} onClick={() => setCharDetail({ charId: c.id })} />
                         ))}
                     </div>
                 </div>
@@ -180,6 +200,23 @@ export default function PlayerPage({ pendingPlayerId }) {
                     ))}
                 </div>
             </div>
+
+            {charDetail && player && (
+                <CharacterModal
+                    playerId={player.id}
+                    charId={charDetail.charId}
+                    onClose={() => setCharDetail(null)}
+                />
+            )}
+            {showHistory && player && (
+                <HistoryModal
+                    playerId={player.id}
+                    playerName={player.name}
+                    difficulty="16"
+                    weekOptions={weekOptions}
+                    onClose={() => setShowHistory(false)}
+                />
+            )}
         </div>
     );
 }
