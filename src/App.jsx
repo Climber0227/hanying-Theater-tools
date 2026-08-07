@@ -13,18 +13,33 @@ const ChangelogPage = lazy(() => import('./components/ChangelogPage.jsx'));
 const PAGE_FALLBACK = <div className="m1-placeholder">加载中…</div>;
 
 export default function App() {
-    const [page, setPage] = useState('warzone');
+    // 页面状态持久化：URL hash（刷新/分享保留当前页）
+    const [page, setPage] = useState(() => {
+        const h = window.location.hash.replace(/^#\/?/, '');
+        return ['warzone', 'player', 'ppc', 'mine', 'changelog'].includes(h) ? h : 'warzone';
+    });
     const [pendingPlayerId, setPendingPlayerId] = useState(null);
+
+    const changePage = useCallback(next => {
+        setPage(next);
+        try {
+            if (next === 'warzone') {
+                if (window.location.hash) history.replaceState(null, '', window.location.pathname + window.location.search);
+            } else {
+                history.replaceState(null, '', `#/${next}`);
+            }
+        } catch { /* 忽略 */ }
+    }, []);
 
     // 从任意页面打开玩家查询
     const openPlayer = useCallback(id => {
         setPendingPlayerId(String(id));
-        setPage('player');
-    }, []);
+        changePage('player');
+    }, [changePage]);
 
     return (
         <div className="container">
-            <Nav current={page} onChange={setPage} />
+            <Nav current={page} onChange={changePage} />
             {page === 'warzone' && <WarzonePage onOpenPlayer={openPlayer} />}
             <Suspense fallback={PAGE_FALLBACK}>
                 {page === 'player' && <PlayerPage pendingPlayerId={pendingPlayerId} />}

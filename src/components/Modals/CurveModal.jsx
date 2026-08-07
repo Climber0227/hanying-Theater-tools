@@ -5,6 +5,7 @@ import { formatNumber, fmtTime, getMondayStart } from '../../utils/format.js';
 
 const WEEK_NAMES = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 const ZONE_COLORS = ['#0a84ff', '#ff9f0a', '#bf5af2'];
+const TOTAL_COLOR = '#64748b';
 
 const W = 800;
 const H = 380;
@@ -60,9 +61,22 @@ function splitPoints(points) {
 }
 
 // 单张多区曲线图（SVG 自绘：平滑曲线 + 入场动画 + 常驻跟随 tooltip）
-function CurveChart({ title, data, zones, mode, hasData }) {
+// showTotal=true 时额外渲染总分线（d.total），xLabelFn 可自定义 X 轴标签
+// compact=true 为小尺寸版（并排时用）：更小 viewBox + 相对更粗线条，减少锯齿
+export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTotal, compact }) {
     const [phase, setPhase] = useState(0); // 0 隐藏 → 1 区域 → 2 折线 → 3 数据点
     const [hover, setHover] = useState(null); // { i, x, y } 列索引 + 鼠标 viewBox 坐标
+
+    const W = compact ? 420 : 800;
+    const H = compact ? 280 : 440;
+    const PAD_X = compact ? 36 : 60;
+    const PAD_TOP = 4;
+    const TOP_BAND = compact ? 36 : 56;           // 顶部总分条带
+    const CHART_TOP = TOP_BAND + 8;               // 三区图表起点
+    const PAD_BOTTOM = compact ? 34 : 52;
+    const LINE_W = compact ? 3 : 2.5;
+    const TOTAL_W = compact ? 3.5 : 3;
+    const FONT_SIZE = compact ? 11 : 12;
 
     useEffect(() => {
         setPhase(0);
@@ -75,6 +89,11 @@ function CurveChart({ title, data, zones, mode, hasData }) {
         return () => timers.forEach(clearTimeout);
     }, [data]);
 
+    const xLabel = d => {
+        if (xLabelFn) return xLabelFn(d);
+        return mode === 'today' ? fmtTime(d.time) : dayLabel(d.time);
+    };
+
     if (!hasData) {
         return (
             <div className="curve-chart">
@@ -86,6 +105,12 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                             {z.name}
                         </span>
                     ))}
+                    {showTotal && (
+                        <span className="chart-legend-item">
+                            <span className="chart-legend-dot" style={{ background: TOTAL_COLOR }} />
+                            总分
+                        </span>
+                    )}
                 </div>
                 <div className="team-empty">暂无数据，数据会随榜单每 30 分钟自动刷新时记录</div>
             </div>
@@ -93,14 +118,22 @@ function CurveChart({ title, data, zones, mode, hasData }) {
     }
 
     const n = data.length;
-    const maxV = Math.max(...data.flatMap(d => [d.z0, d.z1, d.z2].filter(v => v != null))) * 1.08;
+    // 双刻度：三区共用自适应刻度（放大细微差异），总分独立刻度（顶部区域）
+    const zoneValues = data.flatMap(d => [d.z0, d.z1, d.z2].filter(v => v != null));
+    const zMin = zoneValues.length ? Math.min(...zoneValues) : 0;
+    const zMax = zoneValues.length ? Math.max(...zoneValues) : 1;
+    const zSpan = (zMax - zMin) || 1;
+    const totalValues = showTotal ? data.map(d => d.total).filter(v => v != null && v > 0) : [];
+    const tMax = totalValues.length ? Math.max(...totalValues) : 1;
     const px = i => PAD_X + (i / (n - 1)) * (W - PAD_X * 2);
-    const py = v => PAD_TOP + (1 - v / maxV) * (H - PAD_TOP - PAD_BOTTOM);
+    // 总分独立刻度：顶部条带（6 ~ TOP_BAND-8）；三区刻度：条带下方全高（CHART_TOP ~ H-PAD_BOTTOM）
+    const pyTotal = v => 6 + (1 - v / tMax) * (TOP_BAND - 14);
+    const pyZone = v => CHART_TOP + (1 - (v - zMin) / zSpan) * (H - CHART_TOP - PAD_BOTTOM);
     const chartW = W - PAD_X * 2;
-    const chartH = H - PAD_TOP - PAD_BOTTOM;
+    const chartH = H - CHART_TOP - PAD_BOTTOM;
     const gap = chartW / (n - 1);
     const tipW = 132;
-    const tipH = 36 + (zones || []).length * 18;
+    const tipH = 36 + ((zones || []).length + (showTotal ? 1 : 0)) * 18;
 
     const series = (zones || []).map((z, si) => ({
         z,
@@ -108,9 +141,17 @@ function CurveChart({ title, data, zones, mode, hasData }) {
         color: ZONE_COLORS[si],
         segs: splitPoints(data.map(d => {
             const v = d['z' + si];
-            return v != null ? { x: px(d._i), y: py(v) } : null;
+            return v != null ? { x: px(d._i), y: pyZone(v) } : null;
         }))
     }));
+
+    const totalSeries = showTotal ? {
+        color: TOTAL_COLOR,
+        segs: splitPoints(data.map(d => {
+            const v = d.total;
+            return v != null && v > 0 ? { x: px(d._i), y: pyTotal(v) } : null;
+        }))
+    } : null;
 
     // 常驻跟随：鼠标在图上移动 → 吸附最近列 + 卡片贴鼠标
     const onMove = e => {
@@ -149,6 +190,13 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                         </span>
                     );
                 })}
+                {totalSeries && (
+                    <span className="chart-legend-item">
+                        <span className="chart-legend-dot" style={{ background: TOTAL_COLOR }} />
+                        总分
+                        {data[n - 1].total != null && <b className="chart-legend-value">{formatNumber(data[n - 1].total)}</b>}
+                    </span>
+                )}
             </div>
 
             <div className="curve-svg-wrap">
@@ -165,6 +213,19 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                         </pattern>
                     </defs>
                     <rect width={W} height={H} fill={`url(#grid-${title})`} />
+
+                    {/* 总分条带分隔线 */}
+                    {totalSeries && (
+                        <line
+                            x1={PAD_X}
+                            y1={CHART_TOP - 4}
+                            x2={W - PAD_X}
+                            y2={CHART_TOP - 4}
+                            stroke="rgba(0,0,0,0.12)"
+                            strokeWidth="1"
+                            strokeDasharray="2 3"
+                        />
+                    )}
 
                     {/* 区域填充（上浮淡入） */}
                     {series.map(s => s.segs.length > 0 && (
@@ -203,6 +264,24 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                             }}
                         />
                     )))}
+                    {totalSeries && totalSeries.segs.map((seg, si) => (
+                        <path
+                            key={`tline-${si}`}
+                            d={smoothPath(seg)}
+                            fill="none"
+                            stroke={totalSeries.color}
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeDasharray="7 4"
+                            pathLength="1"
+                            style={{
+                                opacity: phase >= 2 ? 1 : 0,
+                                strokeDashoffset: phase >= 2 ? 0 : 1,
+                                transition: 'opacity 0.6s ease-out, stroke-dashoffset 1.6s ease-out',
+                                transitionDelay: `${700 + series.length * 220}ms`
+                            }}
+                        />
+                    ))}
 
                     {/* X 轴标签 */}
                     {data.map((d, i) => (
@@ -219,10 +298,9 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                                 transitionDelay: phase >= 3 ? `${1000 + i * 40}ms` : '0ms'
                             }}
                         >
-                            {mode === 'today' ? fmtTime(d.time) : dayLabel(d.time)}
+                            {xLabel(d)}
                         </text>
                     ))}
-
                     {/* 数据点（逐个弹出：缩放 + 淡入） */}
                     {series.map(s => data.map((d, i) => {
                         const v = d['z' + s.si];
@@ -232,7 +310,7 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                             <circle
                                 key={`dot-${s.si}-${i}`}
                                 cx={px(i)}
-                                cy={py(v)}
+                                cy={pyZone(v)}
                                 r={active ? 6 : 3}
                                 fill="#fff"
                                 stroke={s.color}
@@ -248,13 +326,37 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                             />
                         );
                     }))}
+                    {totalSeries && data.map((d, i) => {
+                        const v = d.total;
+                        if (v == null || v <= 0) return null;
+                        const active = hover != null && hover.i === i;
+                        return (
+                            <circle
+                                key={`tdot-${i}`}
+                                cx={px(i)}
+                                cy={pyTotal(v)}
+                                r={active ? 6 : 3.5}
+                                fill="#fff"
+                                stroke={totalSeries.color}
+                                strokeWidth="2.5"
+                                style={{
+                                    opacity: phase >= 3 ? 1 : 0,
+                                    transform: phase >= 3 ? 'scale(1)' : 'scale(0)',
+                                    transformBox: 'fill-box',
+                                    transformOrigin: 'center',
+                                    transition: 'opacity 0.5s ease-out, transform 0.5s ease-out, r 0.25s ease',
+                                    transitionDelay: phase >= 3 ? `${1300 + i * 60}ms` : '0ms'
+                                }}
+                            />
+                        );
+                    })}
 
                     {/* 常驻跟随卡片 */}
                     {hover != null && (
                         <g>
                             <line
                                 x1={hoverX}
-                                y1={PAD_TOP}
+                                y1={CHART_TOP}
                                 x2={hoverX}
                                 y2={H - PAD_BOTTOM}
                                 stroke="rgba(0,0,0,0.14)"
@@ -272,7 +374,7 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                                 className="curve-tip-shadow"
                             />
                             <text x={tipX + tipW / 2} y={tipY + 16} textAnchor="middle" fill="#1f2937" fontSize="12" fontWeight="600">
-                                {mode === 'today' ? `今日 ${fmtTime(data[hover.i].time)}` : `${dayLabel(data[hover.i].time)} ${fmtTime(data[hover.i].time)}`}
+                                {xLabel(data[hover.i])}
                             </text>
                             {(zones || []).map((z, si) => {
                                 const v = data[hover.i]['z' + si];
@@ -289,6 +391,17 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                                     </text>
                                 ) : null;
                             })}
+                            {totalSeries && data[hover.i].total != null && (
+                                <text
+                                    x={tipX + 12}
+                                    y={tipY + 34 + (zones || []).length * 18}
+                                    fill={TOTAL_COLOR}
+                                    fontSize="11"
+                                    fontWeight="700"
+                                >
+                                    总分  {formatNumber(data[hover.i].total)}
+                                </text>
+                            )}
                         </g>
                     )}
                 </svg>

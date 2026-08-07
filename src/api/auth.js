@@ -13,8 +13,13 @@ const STORAGE_KEYS = {
     history: 'player_search_history',
     follows: 'player_follows',
     wz_scores: 'my_wz_scores',
-    ppc_scores: 'my_ppc_scores'
+    ppc_scores: 'my_ppc_scores',
+    kuro_token: 'kurobbs_token',
+    kuro_phone: 'kurobbs_phone'
 };
+
+// 纯字符串字段（非 JSON 结构），云端存取不做 JSON 包装
+const STRING_KEYS = new Set(['kuro_token', 'kuro_phone']);
 
 export const auth = {
     token: null,
@@ -45,7 +50,7 @@ export const auth = {
     },
 
     async login(playerId, password) {
-        if (!playerId || !password) throw new Error('请输入游戏ID和密码');
+        if (!playerId || !password) throw new Error('请输入用户名和密码');
         if (!AUTH_API) throw new Error('本地开发环境不支持登录');
         const resp = await fetch(AUTH_API, {
             method: 'POST',
@@ -61,9 +66,9 @@ export const auth = {
     },
 
     async register(playerId, password) {
-        if (!playerId || !password) throw new Error('请输入游戏ID和密码');
+        if (!playerId || !password) throw new Error('请输入用户名和密码');
         if (!AUTH_API) throw new Error('本地开发环境不支持注册');
-        if (password.length < 4) throw new Error('密码至少4个字符');
+        if (!/^.{6,20}$/.test(password)) throw new Error('密码需为6-20位');
         const resp = await fetch(AUTH_API, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -76,8 +81,60 @@ export const auth = {
         return result.data;
     },
 
-    logout() {
+    // 用库街区登录网站账号（设备已有有效库街区绑定）
+    async loginWithKuro(kuroToken, phone) {
+        if (!AUTH_API) throw new Error('本地开发环境不支持');
+        const resp = await fetch(AUTH_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'kuro_login', token: kuroToken, phone })
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || '登录失败');
+        this._saveSession(result.data);
+        await this._pullFromCloud();
+        await this._pushToCloud();
+        return result.data;
+    },
+
+    // 找回密码 Step1：获取账号绑定的库街区手机号
+    async getResetPhone(username) {
+        if (!AUTH_API) throw new Error('本地开发环境不支持');
+        const resp = await fetch(AUTH_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'reset_phone', username })
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || '请求失败');
+        return result.data.phone;
+    },
+
+    // 找回密码 Step2：验证码验证 + 重置密码
+    async resetPassword(username, phone, code, newPassword) {
+        if (!AUTH_API) throw new Error('本地开发环境不支持');
+        const resp = await fetch(AUTH_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'reset', username, phone, code, newPassword })
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || '重置失败');
+        return result;
+    },
+
+    async logout() {
+        const token = this.token;
         this._clearLocal();
+        if (token && USER_DATA_API) {
+            try {
+                await fetch(AUTH_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'logout', token })
+                });
+            } catch { /* 服务端注销失败不阻断本地登出 */ }
+        }
     },
 
     _saveSession(data) {
@@ -109,7 +166,8 @@ export const auth = {
             if (result.status !== 'success' || !result.data) return;
             Object.entries(STORAGE_KEYS).forEach(([cloudKey, storageKey]) => {
                 if (result.data[cloudKey] != null) {
-                    localStorage.setItem(storageKey, JSON.stringify(result.data[cloudKey]));
+                    const v = result.data[cloudKey];
+                    localStorage.setItem(storageKey, STRING_KEYS.has(cloudKey) ? v : JSON.stringify(v));
                 }
             });
         } catch { /* 忽略 */ }
@@ -121,13 +179,14 @@ export const auth = {
             try {
                 const raw = localStorage.getItem(storageKey);
                 if (!raw) continue;
+                const payload = STRING_KEYS.has(cloudKey) ? raw : JSON.parse(raw);
                 await fetch(USER_DATA_API, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${this.token}`
                     },
-                    body: JSON.stringify({ key: cloudKey, data: JSON.parse(raw) })
+                    body: JSON.stringify({ key: cloudKey, data: payload })
                 });
             } catch { /* 忽略 */ }
         }
@@ -143,6 +202,23 @@ export const auth = {
                     'Authorization': `Bearer ${this.token}`
                 },
                 body: JSON.stringify({ key, data })
+            });
+            return resp.ok;
+        } catch {
+            return false;
+        }
+    },
+
+    async removeCloud(key) {
+        if (!this.token || !USER_DATA_API) return false;
+        try {
+            const resp = await fetch(USER_DATA_API, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({ key })
             });
             return resp.ok;
         } catch {

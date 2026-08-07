@@ -348,6 +348,16 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+.team-rank-char-rank {
+    font-style: normal;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(72, 128, 255, 0.12);
+    border-radius: 3px;
+    padding: 0 3px;
+    flex-shrink: 0;
+}
 .team-rank-bp {
     font-size: 10px;
     color: var(--text-2);
