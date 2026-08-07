@@ -59,14 +59,14 @@ function splitPoints(points) {
     return segs;
 }
 
-// 单张多区曲线图（SVG 自绘：平滑曲线 + 入场动画 + hover 提示）
+// 单张多区曲线图（SVG 自绘：平滑曲线 + 入场动画 + 常驻跟随 tooltip）
 function CurveChart({ title, data, zones, mode, hasData }) {
     const [phase, setPhase] = useState(0); // 0 隐藏 → 1 区域 → 2 折线 → 3 数据点
-    const [hovered, setHovered] = useState(null);
+    const [hover, setHover] = useState(null); // { i, x, y } 列索引 + 鼠标 viewBox 坐标
 
     useEffect(() => {
         setPhase(0);
-        setHovered(null);
+        setHover(null);
         const timers = [
             setTimeout(() => setPhase(1), 100),
             setTimeout(() => setPhase(2), 400),
@@ -99,7 +99,8 @@ function CurveChart({ title, data, zones, mode, hasData }) {
     const chartW = W - PAD_X * 2;
     const chartH = H - PAD_TOP - PAD_BOTTOM;
     const gap = chartW / (n - 1);
-    const hitW = Math.min(gap * 0.75, 46); // 列式热区宽度（viewBox 单位）
+    const tipW = 132;
+    const tipH = 36 + (zones || []).length * 18;
 
     const series = (zones || []).map((z, si) => ({
         z,
@@ -111,10 +112,27 @@ function CurveChart({ title, data, zones, mode, hasData }) {
         }))
     }));
 
-    // hover 列坐标（用于 tooltip 定位）
-    const hoverX = hovered != null ? px(hovered) : 0;
-    const tipW = 128;
-    const tipX = Math.min(Math.max(hoverX - tipW / 2, PAD_X - 10), W - PAD_X - tipW + 10);
+    // 常驻跟随：鼠标在图上移动 → 吸附最近列 + 卡片贴鼠标
+    const onMove = e => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const vx = ((e.clientX - rect.left) / rect.width) * W;
+        const vy = ((e.clientY - rect.top) / rect.height) * H;
+        const i = Math.round((vx - PAD_X) / gap);
+        if (i >= 0 && i < n) setHover({ i, x: vx, y: vy });
+        else setHover(null);
+    };
+    const onLeave = () => setHover(null);
+
+    const hoverX = hover != null ? px(hover.i) : 0;
+    // 卡片位置：默认鼠标右上（+14, -tipH-12），越界自动翻转
+    let tipX = hover != null ? hover.x + 14 : 0;
+    let tipY = hover != null ? hover.y - tipH - 12 : 0;
+    if (hover != null) {
+        if (tipX + tipW > W - 8) tipX = hover.x - tipW - 14;
+        if (tipY < 8) tipY = hover.y + 14;
+        tipX = Math.max(4, Math.min(tipX, W - tipW - 4));
+        tipY = Math.max(4, tipY);
+    }
 
     return (
         <div className="curve-chart">
@@ -134,7 +152,13 @@ function CurveChart({ title, data, zones, mode, hasData }) {
             </div>
 
             <div className="curve-svg-wrap">
-                <svg viewBox={`0 0 ${W} ${H}`} className="curve-svg" preserveAspectRatio="xMidYMid meet">
+                <svg
+                    viewBox={`0 0 ${W} ${H}`}
+                    className="curve-svg"
+                    preserveAspectRatio="xMidYMid meet"
+                    onMouseMove={onMove}
+                    onMouseLeave={onLeave}
+                >
                     <defs>
                         <pattern id={`grid-${title}`} width="48" height="34" patternUnits="userSpaceOnUse">
                             <path d="M 48 0 L 0 0 0 34" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="1" />
@@ -199,82 +223,64 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                         </text>
                     ))}
 
-                    {/* 列式热区（整列可 hover，无需精准指向数据点） */}
-                    {data.map((d, i) => (
-                        <rect
-                            key={`hit-${i}`}
-                            x={px(i) - hitW / 2}
-                            y={PAD_TOP}
-                            width={hitW}
-                            height={chartH}
-                            fill="transparent"
-                            onMouseEnter={() => setHovered(i)}
-                            onMouseLeave={() => setHovered(null)}
-                        />
-                    ))}
-
                     {/* 数据点（逐个弹出：缩放 + 淡入） */}
                     {series.map(s => data.map((d, i) => {
                         const v = d['z' + s.si];
                         if (v == null) return null;
+                        const active = hover != null && hover.i === i;
                         return (
-                            <g key={`dot-${s.si}-${i}`}>
-                                <circle
-                                    cx={px(i)}
-                                    cy={py(v)}
-                                    r={hovered === i ? 5.5 : 3}
-                                    fill="#fff"
-                                    stroke={s.color}
-                                    strokeWidth="2.5"
-                                    style={{
-                                        opacity: phase >= 3 ? 1 : 0,
-                                        transform: phase >= 3 ? 'scale(1)' : 'scale(0)',
-                                        transformBox: 'fill-box',
-                                        transformOrigin: 'center',
-                                        transition: 'opacity 0.5s ease-out, transform 0.5s ease-out, r 0.25s ease',
-                                        transitionDelay: phase >= 3 ? `${1200 + i * 60 + s.si * 80}ms` : '0ms'
-                                    }}
-                                />
-                            </g>
+                            <circle
+                                key={`dot-${s.si}-${i}`}
+                                cx={px(i)}
+                                cy={py(v)}
+                                r={active ? 6 : 3}
+                                fill="#fff"
+                                stroke={s.color}
+                                strokeWidth="2.5"
+                                style={{
+                                    opacity: phase >= 3 ? 1 : 0,
+                                    transform: phase >= 3 ? 'scale(1)' : 'scale(0)',
+                                    transformBox: 'fill-box',
+                                    transformOrigin: 'center',
+                                    transition: 'opacity 0.5s ease-out, transform 0.5s ease-out, r 0.25s ease',
+                                    transitionDelay: phase >= 3 ? `${1200 + i * 60 + s.si * 80}ms` : '0ms'
+                                }}
+                            />
                         );
                     }))}
 
-                    {/* Hover 竖线指示 */}
-                    {hovered != null && (
-                        <line
-                            x1={hoverX}
-                            y1={PAD_TOP}
-                            x2={hoverX}
-                            y2={H - PAD_BOTTOM}
-                            stroke="rgba(0,0,0,0.14)"
-                            strokeWidth="1"
-                            strokeDasharray="3 3"
-                        />
-                    )}
-
-                    {/* Hover 提示卡片 */}
-                    {hovered != null && (
+                    {/* 常驻跟随卡片 */}
+                    {hover != null && (
                         <g>
+                            <line
+                                x1={hoverX}
+                                y1={PAD_TOP}
+                                x2={hoverX}
+                                y2={H - PAD_BOTTOM}
+                                stroke="rgba(0,0,0,0.14)"
+                                strokeWidth="1"
+                                strokeDasharray="3 3"
+                            />
                             <rect
                                 x={tipX}
-                                y={8}
+                                y={tipY}
                                 width={tipW}
-                                height={34 + (zones || []).length * 18}
+                                height={tipH}
                                 fill="#fff"
                                 stroke="rgba(0,0,0,0.08)"
                                 rx="8"
                                 className="curve-tip-shadow"
                             />
-                            <text x={tipX + tipW / 2} y={24} textAnchor="middle" fill="#1f2937" fontSize="12" fontWeight="600">
-                                {mode === 'today' ? `今日 ${fmtTime(data[hovered].time)}` : `${dayLabel(data[hovered].time)} ${fmtTime(data[hovered].time)}`}
+                            <text x={tipX + tipW / 2} y={tipY + 16} textAnchor="middle" fill="#1f2937" fontSize="12" fontWeight="600">
+                                {mode === 'today' ? `今日 ${fmtTime(data[hover.i].time)}` : `${dayLabel(data[hover.i].time)} ${fmtTime(data[hover.i].time)}`}
                             </text>
                             {(zones || []).map((z, si) => {
-                                const v = data[hovered]['z' + si];
+                                const v = data[hover.i]['z' + si];
                                 return v != null ? (
                                     <text
                                         key={`tip-${si}`}
                                         x={tipX + 12}
-                                        y={42 + si * 18}
+                                        y={tipY + 34 + si * 18}
                                         fill={ZONE_COLORS[si]}
                                         fontSize="11"
                                         fontWeight="500"
