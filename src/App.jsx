@@ -1,11 +1,15 @@
-import React, { useCallback, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useState } from 'react';
 import Nav from './components/Nav.jsx';
 import WarzonePage from './components/WarzonePage.jsx';
-import PlayerPage from './components/PlayerPage.jsx';
-import PpcPage from './components/PpcPage.jsx';
-import MinePage from './components/MinePage.jsx';
 import AdFloat from './components/AdFloat.jsx';
 import './styles/app.css';
+
+// 页面懒加载（首屏只加载排行榜核心）
+const PlayerPage = lazy(() => import('./components/PlayerPage.jsx'));
+const PpcPage = lazy(() => import('./components/PpcPage.jsx'));
+const MinePage = lazy(() => import('./components/MinePage.jsx'));
+
+const PAGE_FALLBACK = <div className="m1-placeholder">加载中…</div>;
 
 export default function App() {
     const [page, setPage] = useState('warzone');
@@ -21,9 +25,11 @@ export default function App() {
         <div className="container">
             <Nav current={page} onChange={setPage} />
             {page === 'warzone' && <WarzonePage onOpenPlayer={openPlayer} />}
-            {page === 'player' && <PlayerPage pendingPlayerId={pendingPlayerId} />}
-            {page === 'ppc' && <PpcPage onOpenPlayer={openPlayer} />}
-            {page === 'mine' && <MinePage />}
+            <Suspense fallback={PAGE_FALLBACK}>
+                {page === 'player' && <PlayerPage pendingPlayerId={pendingPlayerId} />}
+                {page === 'ppc' && <PpcPage onOpenPlayer={openPlayer} />}
+                {page === 'mine' && <MinePage />}
+            </Suspense>
             <AdFloat />
             <a
                 className="corner-feedback"

@@ -1,14 +1,18 @@
-import React, { useCallback, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useState } from 'react';
 import { useRankings } from '../../hooks/useRankings.js';
 import RankingControls from './RankingControls.jsx';
 import RankingToolbar from './RankingToolbar.jsx';
 import RankingHeader from './RankingHeader.jsx';
 import VirtualRankingTable from './VirtualRankingTable.jsx';
-import BracketModal from '../Modals/BracketModal.jsx';
-import TeamModal from '../Modals/TeamModal.jsx';
-import RankingModal from '../Modals/RankingModal.jsx';
-import SaModal from '../Modals/SaModal.jsx';
-import CurveModal from '../Modals/CurveModal.jsx';
+
+// 弹窗懒加载（含 Recharts 的大依赖按需加载）
+const BracketModal = lazy(() => import('../Modals/BracketModal.jsx'));
+const TeamModal = lazy(() => import('../Modals/TeamModal.jsx'));
+const RankingModal = lazy(() => import('../Modals/RankingModal.jsx'));
+const SaModal = lazy(() => import('../Modals/SaModal.jsx'));
+const CurveModal = lazy(() => import('../Modals/CurveModal.jsx'));
+
+const MODAL_FALLBACK = null;
 
 export default function RankingPanel({ warzone, onOpenPlayer }) {
     const { difficulty, setDifficulty, week, setWeek, zones, rankings, meta, weekOptions, prevSnapshot, loading, error, refresh, currentWeek } = warzone;
@@ -93,35 +97,37 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
                     onOpenTrend={openTrend}
                 />
             )}
-            {modal === 'bracket' && (
-                <BracketModal rankings={rankings} zones={zones} difficulty={difficulty} onClose={() => setModal(null)} />
-            )}
-            {modal === 'team' && (
-                <TeamModal rankings={rankings} zones={zones} onClose={() => setModal(null)} />
-            )}
-            {modal === 'ranking' && (
-                <RankingModal rankings={rankings} zones={zones} onClose={() => setModal(null)} />
-            )}
-            {saTarget && (
-                <SaModal
-                    ranking={saTarget.ranking}
-                    zoneIndex={saTarget.zoneIndex}
-                    rankings={rankings}
-                    zones={zones}
-                    onClose={() => setSaTarget(null)}
-                />
-            )}
-            {curveTarget && (
-                <CurveModal
-                    playerId={curveTarget.playerId}
-                    playerName={curveTarget.playerName}
-                    zoneIndex={curveTarget.zoneIndex}
-                    difficulty={difficulty}
-                    currentWeek={currentWeek}
-                    zones={zones}
-                    onClose={() => setCurveTarget(null)}
-                />
-            )}
+            <Suspense fallback={MODAL_FALLBACK}>
+                {modal === 'bracket' && (
+                    <BracketModal rankings={rankings} zones={zones} difficulty={difficulty} onClose={() => setModal(null)} />
+                )}
+                {modal === 'team' && (
+                    <TeamModal rankings={rankings} zones={zones} onClose={() => setModal(null)} />
+                )}
+                {modal === 'ranking' && (
+                    <RankingModal rankings={rankings} zones={zones} onClose={() => setModal(null)} />
+                )}
+                {saTarget && (
+                    <SaModal
+                        ranking={saTarget.ranking}
+                        zoneIndex={saTarget.zoneIndex}
+                        rankings={rankings}
+                        zones={zones}
+                        onClose={() => setSaTarget(null)}
+                    />
+                )}
+                {curveTarget && (
+                    <CurveModal
+                        playerId={curveTarget.playerId}
+                        playerName={curveTarget.playerName}
+                        zoneIndex={curveTarget.zoneIndex}
+                        difficulty={difficulty}
+                        currentWeek={currentWeek}
+                        zones={zones}
+                        onClose={() => setCurveTarget(null)}
+                    />
+                )}
+            </Suspense>
         </div>
     );
 }
