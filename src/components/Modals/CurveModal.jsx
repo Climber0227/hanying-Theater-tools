@@ -68,9 +68,9 @@ function CurveChart({ title, data, zones, mode, hasData }) {
         setPhase(0);
         setHovered(null);
         const timers = [
-            setTimeout(() => setPhase(1), 150),
-            setTimeout(() => setPhase(2), 500),
-            setTimeout(() => setPhase(3), 900)
+            setTimeout(() => setPhase(1), 100),
+            setTimeout(() => setPhase(2), 400),
+            setTimeout(() => setPhase(3), 800)
         ];
         return () => timers.forEach(clearTimeout);
     }, [data]);
@@ -140,15 +140,21 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                     </defs>
                     <rect width={W} height={H} fill={`url(#grid-${title})`} />
 
-                    {/* 区域填充（延迟渐入） */}
+                    {/* 区域填充（上浮淡入） */}
                     {series.map(s => s.segs.length > 0 && (
                         <path
                             key={`area-${s.si}`}
                             d={smoothPath(s.segs[0]) + ` L ${s.segs[s.segs.length - 1][s.segs[s.segs.length - 1].length - 1].x},${H - PAD_BOTTOM} L ${s.segs[0][0].x},${H - PAD_BOTTOM} Z`}
                             fill={s.color}
                             fillOpacity="0.07"
-                            className="curve-fade"
-                            style={{ transitionDelay: `${s.si * 180}ms` }}
+                            style={{
+                                opacity: phase >= 1 ? 1 : 0,
+                                transform: phase >= 1 ? 'scale(1)' : 'scale(0.96)',
+                                transformBox: 'fill-box',
+                                transformOrigin: 'center bottom',
+                                transition: 'opacity 0.8s ease-out, transform 1.4s ease-out',
+                                transitionDelay: `${s.si * 180}ms`
+                            }}
                         />
                     ))}
 
@@ -162,11 +168,11 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                             strokeWidth="2.5"
                             strokeLinecap="round"
                             pathLength="1"
-                            className="curve-fade"
                             style={{
+                                opacity: phase >= 2 ? 1 : 0,
                                 strokeDasharray: 1,
                                 strokeDashoffset: phase >= 2 ? 0 : 1,
-                                transition: 'stroke-dashoffset 1.4s ease-out',
+                                transition: 'opacity 0.6s ease-out, stroke-dashoffset 1.6s ease-out',
                                 transitionDelay: `${600 + s.si * 220}ms`
                             }}
                         />
@@ -181,14 +187,17 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                             textAnchor="middle"
                             fill="#9ca3af"
                             fontSize="12"
-                            className="curve-fade"
-                            style={{ transitionDelay: `${900 + i * 40}ms` }}
+                            style={{
+                                opacity: phase >= 3 ? 1 : 0,
+                                transition: 'opacity 0.5s ease-out',
+                                transitionDelay: phase >= 3 ? `${1000 + i * 40}ms` : '0ms'
+                            }}
                         >
                             {mode === 'today' ? fmtTime(d.time) : dayLabel(d.time)}
                         </text>
                     ))}
 
-                    {/* 数据点（逐个弹出） */}
+                    {/* 数据点（逐个弹出：缩放 + 淡入） */}
                     {series.map(s => data.map((d, i) => {
                         const v = d['z' + s.si];
                         if (v == null) return null;
@@ -210,11 +219,13 @@ function CurveChart({ title, data, zones, mode, hasData }) {
                                     fill="#fff"
                                     stroke={s.color}
                                     strokeWidth="2.5"
-                                    className="curve-fade"
                                     style={{
-                                        transition: 'r 0.25s ease, opacity 0.6s ease',
                                         opacity: phase >= 3 ? 1 : 0,
-                                        transitionDelay: phase >= 3 ? `${1200 + i * 50 + s.si * 60}ms` : '0ms'
+                                        transform: phase >= 3 ? 'scale(1)' : 'scale(0)',
+                                        transformBox: 'fill-box',
+                                        transformOrigin: 'center',
+                                        transition: 'opacity 0.5s ease-out, transform 0.5s ease-out, r 0.25s ease',
+                                        transitionDelay: phase >= 3 ? `${1200 + i * 60 + s.si * 80}ms` : '0ms'
                                     }}
                                 />
                             </g>
