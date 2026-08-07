@@ -514,7 +514,7 @@ function WebLoginBlock({ onAuthChange }) {
 }
 
 // 库街区绑定 + 一键同步分数（支持云端恢复绑定）
-function KuroBlock({ onSyncData, onBoundChange, authReady }) {
+function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
     const [phone, setPhone] = useState(getKuroPhone());
     const [code, setCode] = useState('');
     const [countdown, setCountdown] = useState(0);
@@ -532,8 +532,9 @@ function KuroBlock({ onSyncData, onBoundChange, authReady }) {
     };
 
     // 网站账号登录完成后，自动从云端恢复库街区绑定（token 由 pullFromCloud 写入本地）
+    // authTick：登录/登出后重新检查（手机端登录后才拉到云端 token）
     useEffect(() => {
-        if (!authReady || token) return;
+        if (token) return;
         const cloudToken = getKuroToken();
         if (cloudToken) {
             localStorage.removeItem(KURO_AUTO_SYNC_KEY);
@@ -542,7 +543,7 @@ function KuroBlock({ onSyncData, onBoundChange, authReady }) {
             setMsg('已自动恢复库街区绑定，正在同步…');
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [authReady]);
+    }, [authReady, authTick]);
 
     // 拉取战区/囚笼数据并直接保存（auto=true 为自动同步，静默失败、成功记录时间）
     const fetchScores = async (auto = false) => {
@@ -1151,13 +1152,13 @@ function WeekScoreCard({ area, ppc, roleId, serverId }) {
 }
 
 // 账号卡片：左网站账号，右库街区，底部说明
-function AccountSection({ onSyncData, onAuthChange, onBoundChange, authReady }) {
+function AccountSection({ onSyncData, onAuthChange, onBoundChange, authReady, authTick }) {
     return (
         <div className="mine-section" id="mine-account">
             <div className="mine-section-header"><h3><span className="step-badge">1</span>账号 · 库街区</h3></div>
             <div className="account-grid">
                 <WebLoginBlock onAuthChange={onAuthChange} />
-                <KuroBlock onSyncData={onSyncData} onBoundChange={onBoundChange} authReady={authReady} />
+                <KuroBlock onSyncData={onSyncData} onBoundChange={onBoundChange} authReady={authReady} authTick={authTick} />
             </div>
             <div className="account-intro">
                 <span>· 登录网站账号：分数保存自动同步云端，换设备登录即可查看历史</span>
@@ -1270,6 +1271,7 @@ export default function MinePage() {
     });
     const [user, setUser] = useState(null);
     const [authReady, setAuthReady] = useState(false);
+    const [authTick, setAuthTick] = useState(0);
     const [kuroBound, setKuroBound] = useState(!!getKuroToken());
     const [weekSaved, setWeekSaved] = useState(false);
 
@@ -1413,7 +1415,13 @@ export default function MinePage() {
         <div>
             <SetupGuide loggedIn={!!user} kuroBound={kuroBound} weekSaved={weekSaved} />
 
-            <AccountSection onSyncData={saveSyncedScores} onAuthChange={setUser} onBoundChange={setKuroBound} authReady={authReady} />
+            <AccountSection
+                onSyncData={saveSyncedScores}
+                onAuthChange={u => { setUser(u); setAuthTick(t => t + 1); }}
+                onBoundChange={setKuroBound}
+                authReady={authReady}
+                authTick={authTick}
+            />
 
             <WeekScoreCard area={syncData ? syncData.area : null} ppc={syncData ? syncData.ppc : null} />
 
