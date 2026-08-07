@@ -480,6 +480,10 @@
     border: 0.5px solid var(--border-soft);
     border-radius: 12px;
     padding: 12px 14px;
+    margin-bottom: 12px;
+}
+.curve-chart:last-child {
+    margin-bottom: 0;
 }
 .curve-chart-title {
     font-size: 13px;
@@ -496,6 +500,32 @@
     font-size: 12px;
     color: var(--text-2);
     font-weight: 600;
+}
+.curve-svg-wrap {
+    width: 100%;
+    margin-top: 6px;
+}
+.curve-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.curve-fade {
+    opacity: 0;
+    animation: curve-fade-in 0.6s ease forwards;
+}
+@keyframes curve-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.curve-tip-shadow {
+    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.12));
+}
+.chart-legend-value {
+    color: var(--text);
+    font-weight: 700;
+    margin-left: 4px;
+    font-variant-numeric: tabular-nums;
 }
 .curve-chart-axis {
     display: flex;
