@@ -2208,3 +2208,26 @@
 .score-total-rank.danger {
     color: #ff3b30;
 }
+
+/* ========== 玩家查询页移动端 ========== */
+@media (max-width: 560px) {
+    .search-box { gap: 8px; }
+    .search-box input { min-height: 44px; font-size: 14px; flex: 1; }
+    .search-box button { min-height: 44px; font-size: 14px; padding: 0 16px; }
+    .history-item, .follow-item { padding: 10px 8px; gap: 10px; }
+    .history-avatar, .follow-avatar { width: 32px; height: 32px; }
+    .history-name, .follow-name { font-size: 12px; }
+    .history-id, .follow-id { font-size: 10px; }
+    .player-profile { flex-direction: row; gap: 12px; padding: 12px; }
+    .player-avatar { width: 64px; height: 64px; }
+    .player-avatar img { width: 64px; height: 64px; }
+    .player-actions { flex-wrap: wrap; }
+    .player-actions .bind-set-btn { min-height: 40px; }
+    .characters-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .character-card { flex-direction: column; text-align: center; padding: 10px 6px; gap: 6px; }
+    .character-icon { width: 56px; height: 56px; }
+    .character-name { font-size: 12px; }
+    .character-stats { justify-content: center; font-size: 10px; }
+    .follow-actions { flex-wrap: wrap; }
+    .follow-actions .bind-set-btn, .follow-actions .follow-view, .follow-actions .follow-remove { min-height: 40px; font-size: 12px; }
+}
