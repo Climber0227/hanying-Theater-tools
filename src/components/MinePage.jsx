@@ -99,7 +99,7 @@ function SetupGuide({ loggedIn, kuroBound, weekSaved }) {
     );
 }
 
-// 周区间日期标签：由保存时刻推算所在周的周一~周日（M.D~M.D）
+// 周区间日期标签：由保存时刻推算所在周的周一~周日（同年 Y.M.D~M.D，跨年两端带年）
 function weekRangeLabel(ts) {
     if (!ts) return '';
     try {
@@ -109,8 +109,11 @@ function weekRangeLabel(ts) {
         mon.setDate(d.getDate() - offset);
         const sun = new Date(mon);
         sun.setDate(mon.getDate() + 6);
-        const fmt = x => `${x.getMonth() + 1}.${x.getDate()}`;
-        return `${fmt(mon)}~${fmt(sun)}`;
+        const start = `${mon.getFullYear()}.${mon.getMonth() + 1}.${mon.getDate()}`;
+        const end = sun.getFullYear() === mon.getFullYear()
+            ? `${sun.getMonth() + 1}.${sun.getDate()}`
+            : `${sun.getFullYear()}.${sun.getMonth() + 1}.${sun.getDate()}`;
+        return `${start}~${end}`;
     } catch { return ''; }
 }
 
