@@ -117,12 +117,16 @@ function weekRangeLabel(ts) {
     } catch { return ''; }
 }
 
-// 从完整区数据提取机制标签：怪数量按机制名映射（困兽犹斗=单怪/祸不单行=双怪/其他=群怪）
+// 从完整区数据提取区元信息：机制标签（怪数量按机制名映射：困兽犹斗=单怪/祸不单行=双怪/其他=群怪）
+// + 子区名（如熵钟异数区可选打猩红冰原/岩流深壑，分数取高者；buffs 中与区名不同者为子区名）
 function extractZoneTags(full) {
     const desc = (full && full.description) || '';
     const mech = desc.split('：')[0].split(':')[0];
     const monster = mech === '困兽犹斗' ? '单怪' : mech === '祸不单行' ? '双怪' : mech ? '群怪' : '';
-    return { mech, monster };
+    const subZones = ((full && full.buffs) || [])
+        .map(b => b.name)
+        .filter(n => n && n !== (full && full.name));
+    return { mech, monster, subZones };
 }
 
 function ScoreTable({ rows, columns, renderCell, onDelete, groupCol, onTeam, renderTotalRank, tip }) {
@@ -309,11 +313,16 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                     renderCell={s => s.zones.map((z, i) => (
                         <td key={i}>
                             <div className="score-cell">
-                                <span className="score-cell-zone">{z.name}</span>
+                                <span className="score-cell-head">
+                                    <span className="score-cell-zone">
+                                        {z.name}
+                                        {z.subZones && z.subZones.length > 0 && (
+                                            <span className="score-cell-sub">（{z.subZones.join('/')}）</span>
+                                        )}
+                                    </span>
+                                    {z.monster && <em className="score-cell-mech" title={z.mech || ''}>{z.monster}</em>}
+                                </span>
                                 <span className="score-cell-val">{formatNumber(z.score)}</span>
-                                {z.monster && (
-                                    <em className="score-cell-mech" title={z.mech || ''}>{z.monster}</em>
-                                )}
                                 {z.teamRank
                                     ? <em className="score-cell-rank">#{z.teamRank.rank}/{z.teamRank.total}</em>
                                     : <em className="score-cell-rank off">未上榜</em>}

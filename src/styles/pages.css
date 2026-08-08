@@ -2244,6 +2244,26 @@
     color: var(--text-2);
     white-space: nowrap;
 }
+.score-cell-sub {
+    font-style: normal;
+    font-weight: 500;
+    color: var(--text-3);
+}
+.score-cell-head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+.score-cell-mech {
+    font-style: normal;
+    font-size: 9px;
+    color: var(--accent);
+    background: rgba(72, 128, 255, 0.08);
+    border-radius: 4px;
+    padding: 0 4px;
+    white-space: nowrap;
+}
 .score-cell-val {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
