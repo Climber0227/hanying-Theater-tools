@@ -1115,17 +1115,21 @@ function WeekScoreCard({ area, ppc, roleId, serverId }) {
                             {(areaInfo.stageFightInfoList || []).map((s, i) => (
                                 <div className="week-zone" key={i}>
                                     <div className="week-zone-head">
-                                        <span className="week-zone-name">{s.stageName}</span>
-                                        {s.description ? <span className="week-zone-mech">{s.description}</span> : null}
-                                        <div className="week-zone-tags">
-                                            {s.totalNum ? <span className="week-zone-wave">挑战 {s.totalNum} 次</span> : null}
-                                            {s.npcGroup ? <span className="week-zone-wave">波次 {s.npcGroup}</span> : null}
+                                        <div className="week-zone-top">
+                                            <span className="week-zone-name">{s.stageName}</span>
+                                            {s.description ? <span className="week-zone-mech">{s.description}</span> : null}
+                                            <span className="week-zone-score">{formatNumber(s.point || 0)}</span>
                                         </div>
-                                        <span className="week-zone-score">{formatNumber(s.point || 0)}</span>
-                                        {(s.areaBuffFightInfoList || []).length > 0 && (
-                                            <button className="week-team-btn" onClick={() => setActiveStage(s)}>阵容</button>
-                                        )}
-                                        <button className="week-team-btn week-compare-btn" onClick={() => setCompareStage(s)}>对比榜单</button>
+                                        <div className="week-zone-foot">
+                                            <div className="week-zone-tags">
+                                                {s.totalNum ? <span className="week-zone-wave">挑战 {s.totalNum} 次</span> : null}
+                                                {s.npcGroup ? <span className="week-zone-wave">波次 {s.npcGroup}</span> : null}
+                                            </div>
+                                            {(s.areaBuffFightInfoList || []).length > 0 && (
+                                                <button className="week-team-btn" onClick={() => setActiveStage(s)}>阵容</button>
+                                            )}
+                                            <button className="week-team-btn week-compare-btn" onClick={() => setCompareStage(s)}>对比榜单</button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -1149,8 +1153,10 @@ function WeekScoreCard({ area, ppc, roleId, serverId }) {
                             {(ppcInfo.bossFightInfoList || []).map((b, i) => (
                                 <div className="week-zone" key={i}>
                                     <div className="week-zone-head">
-                                        <span className="week-zone-name">{(b.boss && b.boss.name) || `Boss${i + 1}`}</span>
-                                        <span className="week-zone-score">{formatNumber(b.totalPoint || 0)}</span>
+                                        <div className="week-zone-top">
+                                            <span className="week-zone-name">{(b.boss && b.boss.name) || `Boss${i + 1}`}</span>
+                                            <span className="week-zone-score">{formatNumber(b.totalPoint || 0)}</span>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

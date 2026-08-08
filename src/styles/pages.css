@@ -568,7 +568,24 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     margin-bottom: 6px;
+}
+.week-zone-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+.week-zone-top .week-zone-score {
+    margin-left: auto;
+}
+.week-zone-foot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
 .week-zone-name {
     font-size: 13px;
@@ -595,7 +612,6 @@
 .week-zone-tags {
     display: flex;
     gap: 6px;
-    margin-left: auto;
 }
 .week-team-btn {
     flex-shrink: 0;
@@ -2310,7 +2326,10 @@
     .week-card-stats { gap: 16px; padding: 8px 0 10px; }
     .week-stat-num { font-size: 22px; }
     .week-zone { padding: 8px 10px; }
-    .week-zone-head { flex-wrap: wrap; gap: 6px; }
+    .week-zone-head { flex-direction: column; align-items: stretch; gap: 6px; }
+    .week-zone-top { justify-content: space-between; }
+    .week-zone-top .week-zone-score { margin-left: 0; }
+    .week-zone-foot { justify-content: space-between; flex-wrap: wrap; }
     .week-zone-name { font-size: 12px; }
     .week-zone-mech { font-size: 10px; padding: 1px 6px; }
     .week-zone-wave { font-size: 10px; padding: 1px 6px; }
