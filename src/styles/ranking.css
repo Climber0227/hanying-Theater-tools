@@ -671,4 +671,46 @@
     .mobile-zone-score .score-delta-same { font-size: 9px; }
     .zone-actions { position: static; opacity: 1; visibility: visible; }
     .ranking-row:hover .zone-actions .zone-sa-btn { opacity: 1; }
+
+    /* 表头 → 折叠筛选面板 */
+    .mobile-filter { padding: 8px 12px; border-bottom: 0.5px solid var(--border-soft); }
+    .mobile-filter-toggle {
+        width: 100%;
+        min-height: 40px;
+        border: none;
+        background: transparent;
+        color: var(--text-2);
+        font-size: 13px;
+        font-weight: 600;
+        text-align: left;
+        cursor: pointer;
+        border-radius: 8px;
+    }
+    .mobile-filter-toggle:hover { background: var(--row-hover); }
+    .mobile-filter-body { display: flex; flex-direction: column; gap: 10px; padding: 8px 0 4px; }
+    .mobile-filter-zone { border: 0.5px solid var(--border-soft); border-radius: 10px; padding: 8px; }
+    .mobile-filter-zone-name { font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+    .mobile-filter-zone .char-slot-filters { display: flex; gap: 6px; margin-bottom: 6px; }
+    .mobile-filter-zone .char-slot-select { flex: 1; font-size: 12px; min-height: 36px; }
+    .mobile-filter-zone .zone-quick-filters { display: flex; gap: 6px; }
+    .mobile-filter-zone .zone-quick-btn { flex: 1; min-height: 36px; }
+    .mobile-filter .reset-filter-btn { width: 100%; min-height: 40px; font-size: 13px; }
+
+    /* 控制区纵向堆叠 */
+    .ranking-head { flex-direction: column; gap: 6px; }
+    .ranking-controls { flex-wrap: wrap; }
+    .ranking-controls select { flex: 1 1 45%; min-height: 40px; font-size: 13px; }
+    .ranking-controls .date-range { width: 100%; font-size: 11px; }
+    .ranking-meta { font-size: 11px; flex-wrap: wrap; }
+
+    /* 工具栏压缩 */
+    .ranking-toolbar { flex-wrap: wrap; gap: 6px; }
+    .ranking-toolbar input { flex: 1 1 100%; min-height: 40px; font-size: 13px; }
+    .ranking-toolbar button { min-height: 40px; font-size: 12px; padding: 0 12px; }
+
+    /* 标题行 */
+    .rankings h2 { font-size: 15px; }
+    .refresh-btn { min-height: 40px; }
+
+    .filter-hint { font-size: 11px; }
 }

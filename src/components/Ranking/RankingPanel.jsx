@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { useRankings } from '../../hooks/useRankings.js';
+import useMediaQuery, { MOBILE_QUERY } from '../../hooks/useMediaQuery.js';
 import { computeTeamMaxScores } from '../../utils/ranking.js';
 import RankingControls from './RankingControls.jsx';
 import RankingToolbar from './RankingToolbar.jsx';
@@ -19,6 +20,7 @@ const MODAL_FALLBACK = null;
 export default function RankingPanel({ warzone, onOpenPlayer }) {
     const { difficulty, setDifficulty, week, setWeek, zones, rankings, meta, weekOptions, prevSnapshot, loading, error, refresh, refreshForce, currentWeek } = warzone;
     const rk = useRankings(rankings, zones);
+    const isMobile = useMediaQuery(MOBILE_QUERY);
 
     const [modal, setModal] = useState(null); // 'bracket' | 'team' | 'ranking'
     const [saTarget, setSaTarget] = useState(null); // { ranking, zoneIndex }
@@ -100,6 +102,7 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
                             sortAsc={rk.sortAsc}
                             toggleSort={rk.toggleSort}
                             onReset={rk.resetFilters}
+                            isMobile={isMobile}
                         />
                     }
                     onOpenPlayer={onOpenPlayer}
