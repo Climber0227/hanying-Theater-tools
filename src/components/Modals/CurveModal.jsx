@@ -444,7 +444,19 @@ export default function CurveModal({ playerId, playerName, difficulty, currentWe
     }, [playerId, difficulty, currentWeek]);
 
     const localSamples = useMemo(() => getPlayerCurve(playerId, difficulty, currentWeek), [playerId, difficulty, currentWeek]);
-    const samples = (serverSamples && serverSamples.length > 0 ? serverSamples : localSamples) || [];
+    // 数据源合并：服务端优先、本地补充（避免服务端采样不全时覆盖本地更完整的历史）
+    const samples = useMemo(() => {
+        const seen = new Set();
+        const list = [];
+        for (const s of [...(serverSamples || []), ...localSamples]) {
+            if (!s || s.t == null) continue;
+            if (seen.has(s.t)) continue;
+            seen.add(s.t);
+            list.push(s);
+        }
+        list.sort((a, b) => a.t - b.t);
+        return list;
+    }, [serverSamples, localSamples]);
 
     // 今日（按小时）
     const todayData = useMemo(() => {
