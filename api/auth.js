@@ -117,7 +117,19 @@ module.exports = async function handler(req, res) {
                 .eq('data_key', 'kuro_phone')
                 .eq('data', phone)
                 .single();
-            if (!bindRow) {
+            let playerId = bindRow ? bindRow.player_id : null;
+            if (!playerId) {
+                // 兜底：按 token 反查（云端可能只有 token 记录）
+                const { data: byToken } = await supabase
+                    .from('user_data')
+                    .select('player_id')
+                    .eq('data_key', 'kuro_token')
+                    .eq('data', kuroToken)
+                    .single();
+                playerId = byToken ? byToken.player_id : null;
+            }
+            if (!playerId) {
+                console.error('[kuro_login] 反查失败 phone=' + phone + ' tokenLen=' + String(kuroToken || '').length);
                 return res.status(404).json({ error: '云端未找到该库街区账号与网站账号的绑定关系。请先登录网站账号，并在「我的」页重新绑定一次库街区（绑定即自动关联）' });
             }
             // 3. 签发 session

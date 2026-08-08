@@ -537,9 +537,12 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
     useEffect(() => {
         const localToken = getKuroToken();
         const localPhone = getKuroPhone();
+        console.log('[kuro诊断] authTick变化', { loggedIn: auth.isLoggedIn(), localToken: !!localToken, localPhone });
         if (auth.isLoggedIn() && localToken && localPhone) {
-            auth.syncToCloud('kuro_token', localToken);
-            auth.syncToCloud('kuro_phone', localPhone);
+            Promise.all([
+                auth.syncToCloud('kuro_token', localToken),
+                auth.syncToCloud('kuro_phone', localPhone)
+            ]).then(r => console.log('[kuro诊断] 云端推送结果', r));
         }
         if (!token && localToken) {
             localStorage.removeItem(KURO_AUTO_SYNC_KEY);
