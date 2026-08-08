@@ -126,23 +126,23 @@ module.exports = async function handler(req, res) {
             if (!kuroResp || (kuroResp.code !== 0 && kuroResp.code !== 200)) {
                 return res.status(401).json({ error: '库街区凭证已失效，请重新绑定' });
             }
-            // 2. 按手机号反查网站账号
-            const { data: bindRow } = await supabase
+            // 2. 反查网站账号（token 优先：token 唯一不会多行；phone 兜底：limit(1) 防多条匹配）
+            let playerId = null;
+            const { data: byToken } = await supabase
                 .from('user_data')
                 .select('player_id')
-                .eq('data_key', 'kuro_phone')
-                .eq('data', phone)
-                .single();
-            let playerId = bindRow ? bindRow.player_id : null;
+                .eq('data_key', 'kuro_token')
+                .eq('data', kuroToken)
+                .limit(1);
+            if (byToken && byToken[0]) playerId = byToken[0].player_id;
             if (!playerId) {
-                // 兜底：按 token 反查（云端可能只有 token 记录）
-                const { data: byToken } = await supabase
+                const { data: rows } = await supabase
                     .from('user_data')
                     .select('player_id')
-                    .eq('data_key', 'kuro_token')
-                    .eq('data', kuroToken)
-                    .single();
-                playerId = byToken ? byToken.player_id : null;
+                    .eq('data_key', 'kuro_phone')
+                    .eq('data', phone)
+                    .limit(1);
+                if (rows && rows[0]) playerId = rows[0].player_id;
             }
             if (!playerId) {
                 console.error('[kuro_login] 反查失败 phone=' + phone + ' tokenLen=' + String(kuroToken || '').length);
