@@ -1,5 +1,6 @@
-import React, { lazy, Suspense, useCallback, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { useRankings } from '../../hooks/useRankings.js';
+import { computeTeamMaxScores } from '../../utils/ranking.js';
 import RankingControls from './RankingControls.jsx';
 import RankingToolbar from './RankingToolbar.jsx';
 import RankingHeader from './RankingHeader.jsx';
@@ -11,6 +12,7 @@ const TeamModal = lazy(() => import('../Modals/TeamModal.jsx'));
 const RankingModal = lazy(() => import('../Modals/RankingModal.jsx'));
 const SaModal = lazy(() => import('../Modals/SaModal.jsx'));
 const CurveModal = lazy(() => import('../Modals/CurveModal.jsx'));
+const PlayerRankModal = lazy(() => import('../Modals/PlayerRankModal.jsx'));
 
 const MODAL_FALLBACK = null;
 
@@ -21,6 +23,9 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
     const [modal, setModal] = useState(null); // 'bracket' | 'team' | 'ranking'
     const [saTarget, setSaTarget] = useState(null); // { ranking, zoneIndex }
     const [curveTarget, setCurveTarget] = useState(null); // { playerId, playerName, zoneIndex }
+    const [playerRankTarget, setPlayerRankTarget] = useState(null); // { ranking }（手机端行点击）
+
+    const teamMax = useMemo(() => computeTeamMaxScores(rk.filtered, zones), [rk.filtered, zones]);
 
     // 稳定回调（避免虚拟列表行全量重渲染）
     const openAnalysis = useCallback((playerId, zi) => {
@@ -29,6 +34,11 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
     }, [rankings]);
     const openTrend = useCallback((pid, zi) => {
         setCurveTarget({ playerId: pid, playerName: null, zoneIndex: zi });
+    }, []);
+
+    // 手机端行点击 → PlayerRankModal
+    const openMobileRow = useCallback(ranking => {
+        setPlayerRankTarget(ranking);
     }, []);
 
     if (error) {
@@ -95,6 +105,7 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
                     onOpenPlayer={onOpenPlayer}
                     onOpenAnalysis={openAnalysis}
                     onOpenTrend={openTrend}
+                    onOpenMobileRow={openMobileRow}
                 />
             )}
             <Suspense fallback={MODAL_FALLBACK}>
@@ -125,6 +136,18 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
                         currentWeek={currentWeek}
                         zones={zones}
                         onClose={() => setCurveTarget(null)}
+                    />
+                )}
+                {playerRankTarget && (
+                    <PlayerRankModal
+                        ranking={playerRankTarget}
+                        zones={zones}
+                        prevSnapshot={prevSnapshot}
+                        teamMax={teamMax}
+                        onClose={() => setPlayerRankTarget(null)}
+                        onOpenPlayer={onOpenPlayer}
+                        onOpenAnalysis={openAnalysis}
+                        onOpenTrend={openTrend}
                     />
                 )}
             </Suspense>

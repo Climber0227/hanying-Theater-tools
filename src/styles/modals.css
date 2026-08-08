@@ -626,3 +626,41 @@
     background: var(--accent);
     flex-shrink: 0;
 }
+
+/* ========== PlayerRankModal ========== */
+.prm-header { display: flex; align-items: center; gap: 12px; padding: 4px 0 12px; }
+.prm-avatar { width: 48px; height: 48px; }
+.prm-avatar img { width: 48px; height: 48px; }
+.prm-avatar .frame-sm { width: 54px; height: 54px; }
+.prm-total { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.prm-total-label { font-size: 12px; color: var(--text-3); }
+.prm-total-val { font-size: 18px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.prm-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.prm-tab {
+    flex: 1;
+    min-height: 40px;
+    border: 0.5px solid var(--border-soft);
+    background: var(--surface);
+    color: var(--text-2);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.prm-tab.active { background: var(--accent); color: var(--accent-text); }
+.prm-zone { margin-bottom: 12px; }
+.prm-chars { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.prm-compare { margin: 4px 0 10px; }
+.prm-actions { display: flex; gap: 8px; }
+.prm-actions .zone-sa-btn { position: static; opacity: 1; visibility: visible; margin: 0; }
+.prm-goto {
+    width: 100%;
+    min-height: 44px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
