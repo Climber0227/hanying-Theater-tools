@@ -20,6 +20,7 @@ function dayLabel(ts) {
 
 // 采样 → 图表行（三区单独字段，0 分视为缺失）
 function toRow(s) {
+    if (!s) return { time: 0, z0: null, z1: null, z2: null };
     const r = { time: s.t, z0: null, z1: null, z2: null };
     (s.zones || []).forEach((v, i) => {
         if (i < 3 && v > 0) r['z' + i] = v;
@@ -90,6 +91,7 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
     }, [data]);
 
     const xLabel = d => {
+        if (!d) return '';
         if (xLabelFn) return xLabelFn(d);
         return mode === 'today' ? fmtTime(d.time) : dayLabel(d.time);
     };
@@ -352,38 +354,43 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
                     })}
 
                     {/* 常驻跟随卡片 */}
-                    {hover != null && (
-                        <g>
-                            <line
-                                x1={hoverX}
-                                y1={CHART_TOP}
-                                x2={hoverX}
-                                y2={H - PAD_BOTTOM}
-                                stroke="rgba(0,0,0,0.14)"
-                                strokeWidth="1"
-                                strokeDasharray="3 3"
-                            />
-                            <rect
-                                x={tipX}
-                                y={tipY}
-                                width={tipW}
-                                height={tipH}
-                                fill="#fff"
-                                stroke="rgba(0,0,0,0.08)"
-                                rx="8"
-                                className="curve-tip-shadow"
-                            />
-                            <text x={tipX + tipW / 2} y={tipY + 16} textAnchor="middle" fill="#1f2937" fontSize="12" fontWeight="600">
-                                {xLabel(data[hover.i])}
-                            </text>
-                            {(zones || []).map((z, si) => {
-                                const v = data[hover.i]['z' + si];
-                                return v != null ? (
-                                    <text
-                                        key={`tip-${si}`}
-                                        x={tipX + 12}
-                                        y={tipY + 34 + si * 18}
-                                        fill={ZONE_COLORS[si]}
+                    {hover != null && (() => {
+                        // 安全索引：数据源切换瞬间 hover 可能越界，防御性裁剪
+                        const hi = hover.i >= 0 && hover.i < data.length ? hover.i : -1;
+                        if (hi < 0) return null;
+                        const hd = data[hi];
+                        return (
+                            <g>
+                                <line
+                                    x1={hoverX}
+                                    y1={CHART_TOP}
+                                    x2={hoverX}
+                                    y2={H - PAD_BOTTOM}
+                                    stroke="rgba(0,0,0,0.14)"
+                                    strokeWidth="1"
+                                    strokeDasharray="3 3"
+                                />
+                                <rect
+                                    x={tipX}
+                                    y={tipY}
+                                    width={tipW}
+                                    height={tipH}
+                                    fill="#fff"
+                                    stroke="rgba(0,0,0,0.08)"
+                                    rx="8"
+                                    className="curve-tip-shadow"
+                                />
+                                <text x={tipX + tipW / 2} y={tipY + 16} textAnchor="middle" fill="#1f2937" fontSize="12" fontWeight="600">
+                                    {xLabel(hd)}
+                                </text>
+                                {(zones || []).map((z, si) => {
+                                    const v = hd['z' + si];
+                                    return v != null ? (
+                                        <text
+                                            key={`tip-${si}`}
+                                            x={tipX + 12}
+                                            y={tipY + 34 + si * 18}
+                                            fill={ZONE_COLORS[si]}
                                         fontSize="11"
                                         fontWeight="500"
                                     >
@@ -391,7 +398,7 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
                                     </text>
                                 ) : null;
                             })}
-                            {totalSeries && data[hover.i].total != null && (
+                            {totalSeries && hd.total != null && (
                                 <text
                                     x={tipX + 12}
                                     y={tipY + 34 + (zones || []).length * 18}
@@ -399,11 +406,12 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
                                     fontSize="11"
                                     fontWeight="700"
                                 >
-                                    总分  {formatNumber(data[hover.i].total)}
+                                    总分  {formatNumber(hd.total)}
                                 </text>
                             )}
-                        </g>
-                    )}
+                            </g>
+                        );
+                    })()}
                 </svg>
             </div>
         </div>
@@ -436,7 +444,7 @@ export default function CurveModal({ playerId, playerName, difficulty, currentWe
     }, [playerId, difficulty, currentWeek]);
 
     const localSamples = useMemo(() => getPlayerCurve(playerId, difficulty, currentWeek), [playerId, difficulty, currentWeek]);
-    const samples = serverSamples && serverSamples.length > 0 ? serverSamples : localSamples;
+    const samples = (serverSamples && serverSamples.length > 0 ? serverSamples : localSamples) || [];
 
     // 今日（按小时）
     const todayData = useMemo(() => {
@@ -444,7 +452,7 @@ export default function CurveModal({ playerId, playerName, difficulty, currentWe
         const startT = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
         const endT = startT + 24 * 3600 * 1000;
         return samples
-            .filter(s => s.t >= startT && s.t < endT)
+            .filter(s => s && s.t >= startT && s.t < endT)
             .map(s => ({ ...toRow(s), label: fmtTime(s.t) }))
             .sort((a, b) => a.time - b.time)
             .map((d, i) => ({ ...d, _i: i }));
@@ -455,7 +463,7 @@ export default function CurveModal({ playerId, playerName, difficulty, currentWe
         const startT = getMondayStart(new Date());
         const byDay = {};
         samples
-            .filter(s => s.t >= startT)
+            .filter(s => s && s.t >= startT)
             .forEach(s => {
                 const d = new Date(s.t);
                 const dayKey = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();

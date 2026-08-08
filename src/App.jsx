@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useCallback, useState } from 'react';
 import Nav from './components/Nav.jsx';
 import WarzonePage from './components/WarzonePage.jsx';
 import AdFloat from './components/AdFloat.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import './styles/app.css';
 
 // 页面懒加载（首屏只加载排行榜核心）
@@ -38,24 +39,26 @@ export default function App() {
     }, [changePage]);
 
     return (
-        <div className="container">
-            <Nav current={page} onChange={changePage} />
-            {page === 'warzone' && <WarzonePage onOpenPlayer={openPlayer} />}
-            <Suspense fallback={PAGE_FALLBACK}>
-                {page === 'player' && <PlayerPage pendingPlayerId={pendingPlayerId} />}
-                {page === 'ppc' && <PpcPage onOpenPlayer={openPlayer} />}
-                {page === 'mine' && <MinePage />}
-                {page === 'changelog' && <ChangelogPage />}
-            </Suspense>
-            <AdFloat />
-            <a
-                className="corner-feedback"
-                href="https://wpa.qq.com/msgrd?v=3&uin=2813509189&site=qq&menu=yes"
-                target="_blank"
-                rel="noreferrer"
-            >
-                反馈bug联系作者QQ：2813509189
-            </a>
-        </div>
+        <ErrorBoundary>
+            <div className="container">
+                <Nav current={page} onChange={changePage} />
+                {page === 'warzone' && <WarzonePage onOpenPlayer={openPlayer} />}
+                <Suspense fallback={PAGE_FALLBACK}>
+                    {page === 'player' && <PlayerPage pendingPlayerId={pendingPlayerId} />}
+                    {page === 'ppc' && <PpcPage onOpenPlayer={openPlayer} />}
+                    {page === 'mine' && <MinePage />}
+                    {page === 'changelog' && <ChangelogPage />}
+                </Suspense>
+                <AdFloat />
+                <a
+                    className="corner-feedback"
+                    href="https://wpa.qq.com/msgrd?v=3&uin=2813509189&site=qq&menu=yes"
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    反馈bug联系作者QQ：2813509189
+                </a>
+            </div>
+        </ErrorBoundary>
     );
 }
