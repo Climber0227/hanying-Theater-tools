@@ -1185,10 +1185,10 @@ function AccountSection({ onSyncData, onAuthChange, onBoundChange, authReady, au
         </div>
     );
 }
-// 忘记密码弹窗（库街区验证码验证身份 → 重置）
+// 忘记密码弹窗（库街区验证码验证身份 → 重置；手机号脱敏展示，发码走后端）
 function ForgotPasswordModal({ show, onClose }) {
     const [username, setUsername] = useState('');
-    const [phone, setPhone] = useState('');
+    const [phoneMasked, setPhoneMasked] = useState('');
     const [code, setCode] = useState('');
     const [newPw, setNewPw] = useState('');
     const [countdown, setCountdown] = useState(0);
@@ -1196,15 +1196,15 @@ function ForgotPasswordModal({ show, onClose }) {
     const [msg, setMsg] = useState('');
 
     if (!show) return null;
-    const step = phone ? 1 : 0;
+    const step = phoneMasked ? 1 : 0;
 
     const lookUp = async () => {
         setMsg('');
         setBusy('查询中…');
         try {
-            const p = await auth.getResetPhone(username.trim());
-            setPhone(p);
-            setMsg(`该账号已绑定库街区 ${p.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')}`);
+            const masked = await auth.getResetPhone(username.trim());
+            setPhoneMasked(masked);
+            setMsg(`该账号已绑定库街区 ${masked}`);
         } catch (e) {
             setMsg(e.message);
         }
@@ -1216,7 +1216,7 @@ function ForgotPasswordModal({ show, onClose }) {
         try {
             const geeTestData = await showGeetestCaptcha();
             setMsg('正在发送验证码…');
-            await sendSmsCode(phone, geeTestData);
+            await auth.sendResetCode(username.trim(), geeTestData);
             setMsg('验证码已发送，请查收短信');
             let n = 60;
             setCountdown(n);
@@ -1235,7 +1235,7 @@ function ForgotPasswordModal({ show, onClose }) {
         if (!/^.{6,20}$/.test(newPw)) return setMsg('新密码需为6-20位');
         setBusy('重置中…');
         try {
-            await auth.resetPassword(username.trim(), phone, code.trim(), newPw);
+            await auth.resetPassword(username.trim(), code.trim(), newPw);
             setMsg('密码已重置，请重新登录');
             setTimeout(() => onClose(), 1500);
         } catch (e) {

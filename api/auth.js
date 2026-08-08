@@ -114,7 +114,7 @@ module.exports = async function handler(req, res) {
         }
     }
 
-    // 找回密码 Step1：返回账号绑定的库街区手机号（脱敏）
+    // 找回密码 Step1：返回账号绑定的库街区手机号（脱敏，不泄露完整号码）
     if (action === 'reset_phone') {
         const username = String((req.body || {}).username || '').trim();
         if (!isValidUsername(username)) {
@@ -124,12 +124,40 @@ module.exports = async function handler(req, res) {
         if (!phone) {
             return res.status(404).json({ error: '该账号未绑定库街区，无法自助找回，请联系站长' });
         }
-        return res.status(200).json({ status: 'success', data: { phone } });
+        return res.status(200).json({ status: 'success', data: { phone: maskPhone(phone) } });
+    }
+
+    // 找回密码：后端代发验证码（极验结果由前端产生，后端用云端绑定手机号发码，前端无需完整号码）
+    if (action === 'send_reset_code') {
+        const { username, geeTestData } = req.body || {};
+        const uname = String(username || '').trim();
+        if (!isValidUsername(uname)) {
+            return res.status(400).json({ error: '用户名格式不正确' });
+        }
+        if (!geeTestData || typeof geeTestData !== 'string' || geeTestData.length > 4000) {
+            return res.status(400).json({ error: '缺少验证信息' });
+        }
+        try {
+            const boundPhone = await getKuroPhone(uname);
+            if (!boundPhone) {
+                return res.status(404).json({ error: '该账号未绑定库街区，无法自助找回，请联系站长' });
+            }
+            const kuroResp = await kuroPost('/user/getSmsCodeForH5', {
+                data: { mobile: boundPhone, geeTestData }
+            });
+            if (!kuroResp || (kuroResp.code !== 0 && kuroResp.code !== 200)) {
+                return res.status(400).json({ error: (kuroResp && kuroResp.msg) || '验证码发送失败' });
+            }
+            return res.status(200).json({ status: 'success' });
+        } catch (error) {
+            console.error('Send reset code error:', error.message);
+            return res.status(500).json({ error: '验证码发送失败' });
+        }
     }
 
     // 找回密码 Step2：库街区验证码验证通过后重置密码，并清空所有 session
     if (action === 'reset') {
-        const { username, phone, code, newPassword } = req.body || {};
+        const { username, code, newPassword } = req.body || {};
         const uname = String(username || '').trim();
         if (!isValidUsername(uname)) {
             return res.status(400).json({ error: '用户名格式不正确' });
@@ -138,10 +166,10 @@ module.exports = async function handler(req, res) {
             return res.status(400).json({ error: '密码需为6-20位' });
         }
         try {
-            // 账号绑定的手机号必须匹配
+            // 用云端绑定的手机号验证（前端不传手机号，防止被篡改）
             const boundPhone = await getKuroPhone(uname);
-            if (!boundPhone || boundPhone !== String(phone || '')) {
-                return res.status(400).json({ error: '手机号与账号绑定不一致' });
+            if (!boundPhone) {
+                return res.status(404).json({ error: '该账号未绑定库街区，无法自助找回，请联系站长' });
             }
             // 库街区验证码验证（sdkLogin 成功 = 短信持有者 = 本人）
             let devcode = '';
@@ -189,12 +217,12 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        // 查询用户是否存在
+        // 查询用户是否存在（maybeSingle：无记录不报错，避免重复数据导致登录失败）
         const { data: existingUser } = await supabase
             .from('users')
             .select('player_id, password_hash, player_name, login_fail_count, locked_until')
             .eq('player_id', trimmedId)
-            .single();
+            .maybeSingle();
 
         // 注册：用户必须不存在（用户名即身份，无需绑定游戏ID）
         if (action === 'register') {

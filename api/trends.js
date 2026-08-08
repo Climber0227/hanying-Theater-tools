@@ -36,8 +36,10 @@ module.exports = async function handler(req, res) {
         const playerId = String(s.playerId || s.player_id || '');
         if (!/^\d{1,12}$/.test(playerId)) continue;
         const zones = Array.isArray(s.zones) ? s.zones.slice(0, 3).map(Number) : [];
-        const total = Number(s.total) || null;
-        if (zones.length !== 3) continue;
+        const total = Number(s.total) || 0;
+        // 数值范围校验（防注入超大/负数污染趋势）
+        if (zones.length !== 3 || zones.some(v => !Number.isFinite(v) || v < 0 || v > 100000000)) continue;
+        if (!Number.isFinite(total) || total < 0 || total > 300000000) continue;
         rows.push({
             week,
             sampled_at: now,

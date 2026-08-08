@@ -84,7 +84,7 @@ export const auth = {
         return result.data;
     },
 
-    // 找回密码 Step1：获取账号绑定的库街区手机号
+    // 找回密码 Step1：获取账号绑定的库街区手机号（脱敏）
     async getResetPhone(username) {
         if (!AUTH_API) throw new Error('本地开发环境不支持');
         const resp = await fetch(AUTH_API, {
@@ -97,13 +97,26 @@ export const auth = {
         return result.data.phone;
     },
 
-    // 找回密码 Step2：验证码验证 + 重置密码
-    async resetPassword(username, phone, code, newPassword) {
+    // 找回密码：后端代发验证码（极验由浏览器完成，号码不经过前端）
+    async sendResetCode(username, geeTestData) {
         if (!AUTH_API) throw new Error('本地开发环境不支持');
         const resp = await fetch(AUTH_API, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'reset', username, phone, code, newPassword })
+            body: JSON.stringify({ action: 'send_reset_code', username, geeTestData })
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || '发送失败');
+        return result;
+    },
+
+    // 找回密码 Step2：验证码验证 + 重置密码
+    async resetPassword(username, code, newPassword) {
+        if (!AUTH_API) throw new Error('本地开发环境不支持');
+        const resp = await fetch(AUTH_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'reset', username, code, newPassword })
         });
         const result = await resp.json();
         if (!resp.ok) throw new Error(result.error || '重置失败');
