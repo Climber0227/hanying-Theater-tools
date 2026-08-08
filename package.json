@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "check:mobile": "node scripts/mobile-check.mjs",
     "electron:win": "electron-builder --win",
     "electron:mac": "electron-builder --mac",
     "electron:linux": "electron-builder --linux"
@@ -41,6 +42,7 @@
     "@vitejs/plugin-react": "^6.0.5",
     "electron": "^35.0.0",
     "electron-builder": "^26.0.0",
+    "playwright": "^1.62.1",
     "vite": "^8.2.0"
   },
   "dependencies": {
