@@ -117,14 +117,12 @@ function weekRangeLabel(ts) {
     } catch { return ''; }
 }
 
-// 从完整区数据提取机制标签（机制名 + 怪数量 + 首个天气；保存与旧记录补齐共用）
+// 从完整区数据提取机制标签：怪数量按机制名映射（困兽犹斗=单怪/祸不单行=双怪/其他=群怪）
 function extractZoneTags(full) {
     const desc = (full && full.description) || '';
     const mech = desc.split('：')[0].split(':')[0];
-    const m = desc.match(/刷新\s*(\d+)\s*只/);
-    const monster = m ? (parseInt(m[1]) >= 3 ? '群怪' : parseInt(m[1]) === 2 ? '双怪' : '单怪') : '';
-    const weather = (full && full.weathers && full.weathers[0]) ? full.weathers[0].name : '';
-    return { mech, monster, weather };
+    const monster = mech === '困兽犹斗' ? '单怪' : mech === '祸不单行' ? '双怪' : mech ? '群怪' : '';
+    return { mech, monster };
 }
 
 function ScoreTable({ rows, columns, renderCell, onDelete, groupCol, onTeam, renderTotalRank, tip }) {
@@ -244,7 +242,7 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
 
     // 旧记录机制标签补齐：历史数据保存时无 mech/weather 字段，按记录周请求 API 补标签并写回
     useEffect(() => {
-        const needsBackfill = scores.filter(s => (s.zones || []).some(z => !z.mech && !z.monster && !z.weather));
+        const needsBackfill = scores.filter(s => (s.zones || []).some(z => !z.monster));
         if (needsBackfill.length === 0) return;
         let cancelled = false;
         (async () => {
@@ -313,10 +311,8 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                             <div className="score-cell">
                                 <span className="score-cell-zone">{z.name}</span>
                                 <span className="score-cell-val">{formatNumber(z.score)}</span>
-                                {(z.mech || z.monster || z.weather) && (
-                                    <em className="score-cell-mech">
-                                        {[z.mech, z.monster, z.weather].filter(Boolean).join(' · ')}
-                                    </em>
+                                {z.monster && (
+                                    <em className="score-cell-mech" title={z.mech || ''}>{z.monster}</em>
                                 )}
                                 {z.teamRank
                                     ? <em className="score-cell-rank">#{z.teamRank.rank}/{z.teamRank.total}</em>
