@@ -39,7 +39,7 @@ function isValidUsername(name) {
     return /^[A-Za-z0-9]{2,20}$/.test(name);
 }
 
-// 调库街区接口（后端，无 CORS 限制）
+// 调库街区接口（后端，无 CORS 限制；带 8s 超时，避免 Vercel 函数超时被杀）
 async function kuroPost(path, { token, data = {}, source = 'h5' } = {}) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let devcode = '';
@@ -50,12 +50,19 @@ async function kuroPost(path, { token, data = {}, source = 'h5' } = {}) {
         'devcode': devcode
     };
     if (token) headers['token'] = token;
-    const resp = await fetch(`https://api.kurobbs.com${path}`, {
-        method: 'POST',
-        headers,
-        body: new URLSearchParams(data).toString()
-    });
-    return resp.json();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+        const resp = await fetch(`https://api.kurobbs.com${path}`, {
+            method: 'POST',
+            headers,
+            body: new URLSearchParams(data).toString(),
+            signal: controller.signal
+        });
+        return resp.json();
+    } finally {
+        clearTimeout(timer);
+    }
 }
 
 // 查询账号云端绑定的库街区手机号
