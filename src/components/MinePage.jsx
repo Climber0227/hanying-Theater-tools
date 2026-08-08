@@ -510,17 +510,30 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
         onBoundChange && onBoundChange(!!t);
     };
 
-    // 登录状态变化：已登录 → 把本地库街区绑定推送到云端账号（自动关联，覆盖修复前未推送场景）
-    // 未登录且本地有云端恢复的 token → 恢复绑定
+    // 登录状态变化：
+    // 1. 本地绑定属于其他账号 → 清除（防串号）
+    // 2. 属于当前账号（或首次归属）→ 推送云端 + 恢复绑定
     useEffect(() => {
         const localToken = getKuroToken();
         const localPhone = getKuroPhone();
-        console.log('[kuro诊断] authTick变化', { loggedIn: auth.isLoggedIn(), localToken: !!localToken, localPhone });
-        if (auth.isLoggedIn() && localToken && localPhone) {
-            Promise.all([
-                auth.syncToCloud('kuro_token', localToken),
-                auth.syncToCloud('kuro_phone', localPhone)
-            ]).then(r => console.log('[kuro诊断] 云端推送结果', r));
+        const boundUser = localStorage.getItem('kurobbs_bound_user');
+        const curUser = auth.isLoggedIn() ? auth.playerId : null;
+
+        if (localToken && curUser && boundUser && boundUser !== curUser) {
+            // 设备绑定属于其他账号：作废
+            clearKuroToken();
+            clearKuroPhone();
+            localStorage.removeItem('kurobbs_bound_user');
+            setPhone('');
+            setBoundPhone('');
+            changeToken('');
+            setMsg('该设备的库街区绑定属于其他账号，已清除，请重新绑定');
+            return;
+        }
+        if (curUser && localToken && localPhone) {
+            if (!boundUser) localStorage.setItem('kurobbs_bound_user', curUser);
+            auth.syncToCloud('kuro_token', localToken);
+            auth.syncToCloud('kuro_phone', localPhone);
         }
         if (!token && localToken) {
             localStorage.removeItem(KURO_AUTO_SYNC_KEY);
@@ -652,6 +665,7 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
             await kuroLogin(phone, code);
             setKuroPhone(phone);
             if (auth.isLoggedIn()) {
+                localStorage.setItem('kurobbs_bound_user', auth.playerId);
                 auth.syncToCloud('kuro_token', getKuroToken());
                 auth.syncToCloud('kuro_phone', phone);
             }
@@ -672,6 +686,7 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
     const doUnbind = () => {
         clearKuroToken();
         clearKuroPhone();
+        localStorage.removeItem('kurobbs_bound_user');
         setBoundPhone('');
         if (auth.isLoggedIn()) {
             auth.removeCloud('kuro_token');

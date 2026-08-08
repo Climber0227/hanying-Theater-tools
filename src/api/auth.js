@@ -21,6 +21,9 @@ const STORAGE_KEYS = {
 // 纯字符串字段（非 JSON 结构），云端存取不做 JSON 包装
 const STRING_KEYS = new Set(['kuro_token', 'kuro_phone']);
 
+// 登录自动推送排除库街区绑定（绑定归属由主动绑定动作决定，防止换账号串号）
+const PUSH_EXCLUDE = new Set(['kuro_token', 'kuro_phone']);
+
 export const auth = {
     token: null,
     playerId: null,
@@ -152,6 +155,10 @@ export const auth = {
                 if (result.data[cloudKey] != null) {
                     const v = result.data[cloudKey];
                     localStorage.setItem(storageKey, STRING_KEYS.has(cloudKey) ? v : JSON.stringify(v));
+                    // 云端拉到的库街区绑定归属当前登录账号
+                    if (cloudKey === 'kuro_token' && this.playerId) {
+                        localStorage.setItem('kurobbs_bound_user', this.playerId);
+                    }
                 }
             });
         } catch { /* 忽略 */ }
@@ -160,6 +167,7 @@ export const auth = {
     async _pushToCloud() {
         if (!this.token || !USER_DATA_API) return;
         for (const [cloudKey, storageKey] of Object.entries(STORAGE_KEYS)) {
+            if (PUSH_EXCLUDE.has(cloudKey)) continue; // 库街区绑定只在主动绑定时推送
             try {
                 const raw = localStorage.getItem(storageKey);
                 if (!raw) continue;
