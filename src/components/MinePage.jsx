@@ -99,6 +99,21 @@ function SetupGuide({ loggedIn, kuroBound, weekSaved }) {
     );
 }
 
+// 周区间日期标签：由保存时刻推算所在周的周一~周日（M.D~M.D）
+function weekRangeLabel(ts) {
+    if (!ts) return '';
+    try {
+        const d = new Date(ts);
+        const offset = (d.getDay() + 6) % 7;
+        const mon = new Date(d);
+        mon.setDate(d.getDate() - offset);
+        const sun = new Date(mon);
+        sun.setDate(mon.getDate() + 6);
+        const fmt = x => `${x.getMonth() + 1}.${x.getDate()}`;
+        return `${fmt(mon)}~${fmt(sun)}`;
+    } catch { return ''; }
+}
+
 function ScoreTable({ rows, columns, renderCell, onDelete, groupCol, onTeam, renderTotalRank, tip }) {
     if (rows.length === 0) return null;
     const hasTeam = s => (s.zones || []).some(z => (z.team || []).length > 0);
@@ -124,7 +139,7 @@ function ScoreTable({ rows, columns, renderCell, onDelete, groupCol, onTeam, ren
                     {rows.map(s => (
                         <tr key={s.week}>
                             {groupCol && <td>{s.groupName || '-'}{s.groupLevel ? `(${s.groupLevel})` : ''}</td>}
-                            <td>第{s.week}周</td>
+                            <td className="score-week-cell">第{s.week}周<span className="score-week-range">{weekRangeLabel(s.timestamp)}</span></td>
                             {renderCell(s)}
                             <td className="score-total">
                                 <span>{formatNumber(s.total)}</span>

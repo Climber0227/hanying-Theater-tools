@@ -2237,6 +2237,15 @@
     padding: 0 5px;
     white-space: nowrap;
 }
+.score-week-cell {
+    white-space: nowrap;
+}
+.score-week-range {
+    display: block;
+    font-size: 10px;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+}
 .score-cell-rank.off,
 .score-total-rank.off {
     color: var(--text-3);
