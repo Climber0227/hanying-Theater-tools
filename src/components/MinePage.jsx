@@ -106,7 +106,8 @@ function ScoreTable({ rows, columns, renderCell, onDelete, groupCol, onTeam, ren
                 历史记录
                 {tip && <span className="score-history-tip">{tip}</span>}
             </div>
-            <table className="score-table">
+            <div className="table-scroll">
+                <table className="score-table">
                 <thead>
                     <tr>
                         {groupCol && <th>段位</th>}
@@ -139,6 +140,7 @@ function ScoreTable({ rows, columns, renderCell, onDelete, groupCol, onTeam, ren
                     ))}
                 </tbody>
             </table>
+            </div>
         </>
     );
 }

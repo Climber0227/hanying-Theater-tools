@@ -2249,3 +2249,18 @@
     .ppc-ranking .ranking-header .col-player { width: auto; flex: 1; }
     .ppc-ranking .ranking-header .col-total { width: 110px; }
 }
+
+/* ========== 我的页移动端 ========== */
+@media (max-width: 560px) {
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .score-table { min-width: 640px; font-size: 12px; }
+    .setup-guide .guide-steps { flex-direction: column; gap: 8px; }
+    .setup-guide .guide-step { width: 100%; padding: 10px 12px; }
+    .guide-action { min-height: 40px; font-size: 12px; }
+    .mine-section { padding: 12px; }
+    .mine-section-header h3 { font-size: 14px; }
+    .mine-section input, .mine-section select, .mine-section button { min-height: 44px; }
+    .week-score-card .mine-section-header { flex-wrap: wrap; }
+    .score-total { white-space: nowrap; }
+    .score-delete, .score-team-btn { min-height: 36px; }
+}
