@@ -149,7 +149,6 @@ module.exports = async function handler(req, res) {
                 return res.status(404).json({ error: '云端未找到该库街区账号与网站账号的绑定关系。请先登录网站账号，并在「我的」页重新绑定一次库街区（绑定即自动关联）' });
             }
             // 3. 签发 session
-            const playerId = bindRow.player_id;
             const { data: userRow } = await supabase
                 .from('users')
                 .select('player_name')
