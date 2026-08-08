@@ -2228,6 +2228,15 @@
     color: var(--text-3);
     font-variant-numeric: tabular-nums;
 }
+.score-cell-mech {
+    font-style: normal;
+    font-size: 10px;
+    color: var(--accent);
+    background: rgba(72, 128, 255, 0.08);
+    border-radius: 4px;
+    padding: 0 5px;
+    white-space: nowrap;
+}
 .score-cell-rank.off,
 .score-total-rank.off {
     color: var(--text-3);

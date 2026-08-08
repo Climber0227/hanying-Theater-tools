@@ -246,6 +246,11 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                         <td key={i}>
                             <div className="score-cell">
                                 <span>{formatNumber(z.score)}</span>
+                                {(z.mech || z.monster || z.weather) && (
+                                    <em className="score-cell-mech">
+                                        {[z.mech, z.monster, z.weather].filter(Boolean).join(' · ')}
+                                    </em>
+                                )}
                                 {z.teamRank
                                     ? <em className="score-cell-rank">#{z.teamRank.rank}/{z.teamRank.total}</em>
                                     : <em className="score-cell-rank off">未上榜</em>}
@@ -1276,14 +1281,21 @@ export default function MinePage() {
                 const fullZones = (wz.warzone && wz.warzone.area && wz.warzone.area.zones) || [];
                 zoneScores = zoneScores.map(z => {
                     const full = fullZones.find(f => f.name === z.name);
-                    if (!full || !z.team || z.team.length === 0) return z;
+                    if (!full) return z;
+                    // 目标周机制标签：机制名（描述冒号前）+ 怪数量 + 首个天气（供历史记录渲染）
+                    const desc = full.description || '';
+                    const mech = desc.split('：')[0].split(':')[0];
+                    const monster = desc.includes('单体') ? '单怪' : desc.includes('双体') ? '双怪' : desc.includes('群体') ? '群怪' : '';
+                    const weather = (full.weathers && full.weathers[0]) ? full.weathers[0].name : '';
+                    const tagged = { ...z, mech, monster, weather };
+                    if (!z.team || z.team.length === 0) return tagged;
                     const myChars = z.team.map(t => ({ id: t.id || t.name, rank: GRADE_TO_RANK[t.grade] || 0 }));
                     const myKey = getTeamKey(myChars);
                     const teams = computeRankingGroups(wz.rankings || [], full.id, '');
                     const group = teams.find(t => getTeamKey(t.chars) === myKey);
-                    if (!group) return z;
+                    if (!group) return tagged;
                     const rank = group.players.filter(p => p.score > z.score).length + 1;
-                    return { ...z, teamRank: { rank, total: group.players.length } };
+                    return { ...tagged, teamRank: { rank, total: group.players.length } };
                 });
                 // 总榜排名 + 晋级前100差距
                 const totalScores = (wz.rankings || []).map(r => r.score || 0).filter(s => s > 0).sort((a, b) => b - a);
