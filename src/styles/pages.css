@@ -2279,13 +2279,42 @@
 @media (max-width: 560px) {
     .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .score-table { min-width: 640px; font-size: 12px; }
+    .setup-guide { padding: 12px 14px; border-radius: 12px; margin-bottom: 12px; }
+    .setup-guide-header { margin-bottom: 10px; }
+    .setup-guide-title { font-size: 14px; }
+    .setup-guide-sub { font-size: 11px; }
     .setup-guide .guide-steps { flex-direction: column; gap: 8px; }
-    .setup-guide .guide-step { width: 100%; padding: 10px 12px; }
-    .guide-action { min-height: 40px; font-size: 12px; }
+    .setup-guide .guide-step { width: 100%; padding: 8px 10px; gap: 8px; border-radius: 10px; }
+    .setup-guide .guide-step-dot { width: 24px; height: 24px; font-size: 12px; }
+    .setup-guide .guide-step-desc { font-size: 10px; white-space: normal; line-height: 1.4; }
+    .guide-action { min-height: 36px; font-size: 11px; padding: 5px 10px; }
     .mine-section { padding: 12px; }
     .mine-section-header h3 { font-size: 14px; }
     .mine-section input, .mine-section select, .mine-section button { min-height: 44px; }
     .week-score-card .mine-section-header { flex-wrap: wrap; }
     .score-total { white-space: nowrap; }
     .score-delete, .score-team-btn { min-height: 36px; }
+
+    /* 账号板块压缩：单列 */
+    .account-grid { grid-template-columns: 1fr; gap: 12px; }
+    .account-block { padding: 12px; }
+    .account-block-desc { font-size: 11px; margin: 6px 0 10px; }
+    .account-intro { margin-top: 10px; padding: 8px 10px; font-size: 11px; }
+    .kuro-bound-hint { font-size: 10px; padding: 5px 8px; }
+    .account-block-title { font-size: 12px; }
+
+    /* 本周分数卡片：单列 + 头部换行 */
+    .week-card-grid { grid-template-columns: 1fr; gap: 10px; }
+    .week-card-block { padding: 12px; }
+    .week-card-title { font-size: 13px; margin-bottom: 8px; }
+    .week-card-stats { gap: 16px; padding: 8px 0 10px; }
+    .week-stat-num { font-size: 22px; }
+    .week-zone { padding: 8px 10px; }
+    .week-zone-head { flex-wrap: wrap; gap: 6px; }
+    .week-zone-name { font-size: 12px; }
+    .week-zone-mech { font-size: 10px; padding: 1px 6px; }
+    .week-zone-wave { font-size: 10px; padding: 1px 6px; }
+    .week-zone-tags { margin-left: 0; }
+    .week-zone-score { font-size: 14px; }
+    .week-team-btn { padding: 4px 10px; font-size: 10px; min-height: 30px; }
 }

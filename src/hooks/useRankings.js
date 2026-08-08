@@ -60,15 +60,9 @@ export function useRankings(rawRankings, zones) {
     }, []);
 
     const toggleSort = useCallback(key => {
-        setSortKey(prev => {
-            if (prev === key) {
-                setSortAsc(a => !a);
-                return prev;
-            }
-            setSortAsc(false);
-            return key;
-        });
-    }, []);
+        setSortKey(prevKey => (prevKey === key ? prevKey : key));
+        setSortAsc(prevAsc => (sortKey === key ? !prevAsc : false));
+    }, [sortKey]);
 
     const resetFilters = useCallback(() => {
         setCharFilters({});

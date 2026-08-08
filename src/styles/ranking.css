@@ -672,7 +672,30 @@
     .zone-actions { position: static; opacity: 1; visibility: visible; }
     .ranking-row:hover .zone-actions .zone-sa-btn { opacity: 1; }
 
-    /* 表头 → 折叠筛选面板 */
+    /* 表头 → 排序行 + 折叠筛选面板 */
+    .mobile-sort-row {
+        display: flex;
+        gap: 6px;
+        padding: 8px 12px 4px;
+        border-bottom: 0.5px solid var(--border-soft);
+    }
+    .mobile-sort-btn {
+        flex: 1;
+        min-height: 36px;
+        border: 0.5px solid var(--border-soft);
+        background: var(--surface);
+        color: var(--text-2);
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .mobile-sort-btn.active {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: var(--accent);
+    }
     .mobile-filter { padding: 8px 12px; border-bottom: 0.5px solid var(--border-soft); }
     .mobile-filter-toggle {
         width: 100%;
