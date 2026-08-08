@@ -16,6 +16,8 @@ import { loadWarzone } from '../api/client.js';
 import { DIFFICULTY_OPTIONS, getDifficultyLabel } from '../api/config.js';
 import Modal from './Modals/Modal.jsx';
 import { CurveChart } from './Modals/CurveModal.jsx';
+import useMediaQuery, { MOBILE_QUERY } from '../hooks/useMediaQuery.js';
+import { useTrendData } from '../hooks/useTrendData.js';
 
 // 阶级字符串 → 榜单 rank 数字（1=B 2=A 3=S 4=SS 5=SSS 6=SSS+）
 const GRADE_TO_RANK = { 'B': 1, 'A': 2, 'S': 3, 'SS': 4, 'SSS': 5, 'SSS+': 6 };
@@ -189,77 +191,12 @@ function DeleteConfirmModal({ pending, label, onConfirm, onClose }) {
 }
 
 // 分数趋势（今日按时 + 本周按天，三区 + 总分；缺失时段：首次同步前=0，之后延续最新）
-// 数据用 useMemo 稳定引用：只有同步发生（syncStamp）或区列表变化才重算，避免动画反复重播
+// 数据用 useTrendData 稳定引用：只有同步发生（syncStamp）或区列表变化才重算，避免动画反复重播
+// 手机端不直接展示：收进「本周分数」卡片的二级弹窗（WeekScoreCard 内趋势按钮打开）
 function MyTrendSection({ zones, syncStamp }) {
-    const weekSamples = useMemo(() => {
-        try {
-            const raw = JSON.parse(localStorage.getItem(TODAY_SAMPLES_KEY)) || [];
-            const monday = getMondayStart();
-            return raw.filter(s => s.t >= monday && s.total > 0).sort((a, b) => a.t - b.t);
-        } catch { return []; }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [syncStamp]);
-
-    const zoneList = useMemo(() => zones.map((z, i) => ({ id: i, name: z.name })), [zones]);
-
-    const { todayData, dayData, hasToday, hasWeek } = useMemo(() => {
-        const monday = getMondayStart();
-
-        const toRow = (s, i) => ({
-            _i: i, time: s.t,
-            z0: (s.zones && s.zones[0]) || null,
-            z1: (s.zones && s.zones[1]) || null,
-            z2: (s.zones && s.zones[2]) || null,
-            total: s.total
-        });
-        const emptyRow = t => ({ _i: 0, time: t, z0: 0, z1: 0, z2: 0, total: 0 });
-
-        // 今日按时：0 点→现在按小时补点（首次同步前=0，之后缺失延续最新）
-        const now = Date.now();
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const todayData = [];
-        let lastKnown = null;
-        for (let h = 0; ; h++) {
-            const t = todayStart.getTime() + h * 3600000;
-            if (t > now) break;
-            const match = weekSamples.find(s => s.t >= t && s.t < t + 3600000);
-            if (match) lastKnown = match;
-            if (lastKnown) {
-                const row = toRow(lastKnown, h);
-                row.time = t;
-                todayData.push(row);
-            } else {
-                todayData.push(emptyRow(t));
-            }
-        }
-        const hasToday = todayData.length >= 2 && todayData.some(d => d.total > 0);
-
-        // 本周按天：周一~周日 7 点（首次同步日前=0，之后缺失延续）
-        const byDay = {};
-        weekSamples.forEach(s => {
-            const d = new Date(s.t);
-            const dayKey = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-            byDay[dayKey] = s;
-        });
-        const dayData = [];
-        let lastDayKnown = null;
-        for (let i = 0; i < 7; i++) {
-            const dayStart = monday + i * 86400000;
-            const s = byDay[dayStart];
-            if (s) lastDayKnown = s;
-            if (lastDayKnown) {
-                const row = toRow(lastDayKnown, i);
-                row.time = dayStart;
-                dayData.push(row);
-            } else {
-                dayData.push(emptyRow(dayStart));
-            }
-        }
-        const hasWeek = dayData.some(d => d.total > 0);
-
-        return { todayData, dayData, hasToday, hasWeek };
-    }, [weekSamples]);
+    const isMobile = useMediaQuery(MOBILE_QUERY);
+    const { todayData, dayData, hasToday, hasWeek, zoneList } = useTrendData(zones, syncStamp);
+    if (isMobile) return null;
 
     return (
         <div className="trend-grid">
@@ -1080,9 +1017,10 @@ function MyRankCompareModal({ stage, myGroupName, myGroupLevel, roleId, serverId
 }
 
 // 本周分数卡片（同步结果独立展示，阵容在二级弹窗）
-function WeekScoreCard({ area, ppc, roleId, serverId }) {
+function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn }) {
     const [activeStage, setActiveStage] = useState(null);
     const [compareStage, setCompareStage] = useState(null);
+    const [showTrend, setShowTrend] = useState(false);
     if (!area && !ppc) return null;
     const areaInfo = (area || {}).areaInfo || {};
     const ppcInfo = ((ppc || {}).prisonerCage) || {};
@@ -1092,7 +1030,12 @@ function WeekScoreCard({ area, ppc, roleId, serverId }) {
 
     return (
         <div className="mine-section week-score-card">
-            <div className="mine-section-header"><h3>本周分数</h3></div>
+            <div className="mine-section-header">
+                <h3>本周分数</h3>
+                {showTrendBtn && trend && (
+                    <button className="week-trend-btn" onClick={() => setShowTrend(true)}>趋势</button>
+                )}
+            </div>
             <div className="week-card-grid">
                 {area && (
                     <div className="week-card-block">
@@ -1173,6 +1116,14 @@ function WeekScoreCard({ area, ppc, roleId, serverId }) {
                 serverId={serverId}
                 onClose={() => setCompareStage(null)}
             />
+            {showTrend && trend && (
+                <Modal title="本周分数趋势" onClose={() => setShowTrend(false)}>
+                    <div className="trend-grid trend-modal-grid">
+                        <CurveChart title="今日按时趋势" data={trend.todayData} zones={trend.zoneList} mode="today" hasData={trend.hasToday} showTotal compact />
+                        <CurveChart title="本周按天趋势（周一~周日）" data={trend.dayData} zones={trend.zoneList} mode="week" hasData={trend.hasWeek} showTotal compact />
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 }
@@ -1431,6 +1382,9 @@ export default function MinePage() {
         }
     };
 
+    const isMobile = useMediaQuery(MOBILE_QUERY);
+    const trend = useTrendData(wzZones, syncStamp);
+
     const removeFollow = id => {
         const next = follows.filter(f => String(f.id) !== String(id));
         saveFollows(next);
@@ -1449,7 +1403,14 @@ export default function MinePage() {
                 authTick={authTick}
             />
 
-            <WeekScoreCard area={syncData ? syncData.area : null} ppc={syncData ? syncData.ppc : null} />
+            <WeekScoreCard
+                area={syncData ? syncData.area : null}
+                ppc={syncData ? syncData.ppc : null}
+                roleId={syncData ? syncData.roleId : null}
+                serverId={syncData ? syncData.serverId : null}
+                trend={trend}
+                showTrendBtn={isMobile}
+            />
 
             <div id="mine-scores">
                 <WzScoreSection zones={wzZones} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />

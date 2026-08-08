@@ -531,6 +531,24 @@
     font-weight: 500;
     color: var(--accent);
 }
+.week-trend-btn {
+    background: transparent;
+    color: var(--accent);
+    border: 0.5px solid var(--accent);
+    padding: 4px 14px;
+    border-radius: 980px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 32px;
+}
+.week-trend-btn:hover {
+    background: var(--accent);
+    color: var(--accent-text);
+}
+.trend-modal-grid {
+    grid-template-columns: 1fr;
+}
 .week-card-stats {
     display: flex;
     align-items: flex-end;
