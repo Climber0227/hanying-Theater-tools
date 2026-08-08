@@ -2172,6 +2172,9 @@
     gap: 14px;
     margin-bottom: 14px;
 }
+.trend-grid > * {
+    min-width: 0;
+}
 @media (max-width: 900px) {
     .trend-grid {
         grid-template-columns: 1fr;
@@ -2248,6 +2251,28 @@
     .ppc-ranking .ranking-header .col-rank { width: 56px; }
     .ppc-ranking .ranking-header .col-player { width: auto; flex: 1; }
     .ppc-ranking .ranking-header .col-total { width: 110px; }
+}
+
+/* ========== PPC 控制区移动端（.controls 无 ranking-controls 类，单独处理） ========== */
+@media (max-width: 560px) {
+    .header .controls {
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-start;
+    }
+    .header .controls select {
+        flex: 1 1 45%;
+        min-height: 40px;
+        font-size: 13px;
+    }
+    .header .controls .date-range {
+        font-size: 11px;
+    }
+    .header .controls .ranking-meta {
+        font-size: 11px;
+        margin-left: 0;
+        gap: 8px;
+    }
 }
 
 /* ========== 我的页移动端 ========== */

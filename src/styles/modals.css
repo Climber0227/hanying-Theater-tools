@@ -491,6 +491,9 @@
     border-radius: 12px;
     padding: 12px 14px;
     margin-bottom: 12px;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 .curve-chart:last-child {
     margin-bottom: 0;
@@ -514,11 +517,16 @@
 .curve-svg-wrap {
     width: 100%;
     margin-top: 6px;
+    min-width: 0;
 }
 .curve-svg {
     width: 100%;
     height: auto;
     display: block;
+    max-width: 100%;
+}
+.chart-legend {
+    flex-wrap: wrap;
 }
 .curve-fade {
     opacity: 0;
