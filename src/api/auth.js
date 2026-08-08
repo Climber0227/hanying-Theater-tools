@@ -81,22 +81,6 @@ export const auth = {
         return result.data;
     },
 
-    // 用库街区登录网站账号（设备已有有效库街区绑定）
-    async loginWithKuro(kuroToken, phone) {
-        if (!AUTH_API) throw new Error('本地开发环境不支持');
-        const resp = await fetch(AUTH_API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'kuro_login', token: kuroToken, phone })
-        });
-        const result = await resp.json();
-        if (!resp.ok) throw new Error(result.error || '登录失败');
-        this._saveSession(result.data);
-        await this._pullFromCloud();
-        await this._pushToCloud();
-        return result.data;
-    },
-
     // 找回密码 Step1：获取账号绑定的库街区手机号
     async getResetPhone(username) {
         if (!AUTH_API) throw new Error('本地开发环境不支持');

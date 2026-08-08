@@ -397,8 +397,6 @@ function WebLoginBlock({ onAuthChange }) {
     const [busy, setBusy] = useState('');
     const [user, setUser] = useState(null);
     const [showForgot, setShowForgot] = useState(false);
-    const [kuroBusy, setKuroBusy] = useState(false);
-    const canKuroLogin = !!getKuroToken() && !!getKuroPhone();
 
     useEffect(() => {
         auth.init().then(() => {
@@ -445,21 +443,6 @@ function WebLoginBlock({ onAuthChange }) {
         onAuthChange && onAuthChange(null);
     };
 
-    // 用库街区账号直接登录网站账号
-    const doKuroLogin = async () => {
-        setError('');
-        setKuroBusy(true);
-        try {
-            await auth.loginWithKuro(getKuroToken(), getKuroPhone());
-            const u = { id: auth.playerId, name: auth.playerName };
-            setUser(u);
-            onAuthChange && onAuthChange(u);
-        } catch (e) {
-            setError(e.message);
-        }
-        setKuroBusy(false);
-    };
-
     return (
         <div className="account-block">
             <div className="account-block-title">
@@ -489,11 +472,6 @@ function WebLoginBlock({ onAuthChange }) {
                         <button className="bind-set-btn follow-set-btn" disabled={!!busy} onClick={doRegister}>注册</button>
                     </div>
                     <div className="login-links">
-                        {canKuroLogin && (
-                            <button className="login-link" disabled={kuroBusy} onClick={doKuroLogin}>
-                                {kuroBusy ? '登录中…' : '用库街区一键登录'}
-                            </button>
-                        )}
                         <button className="login-link" onClick={() => setShowForgot(true)}>忘记密码</button>
                     </div>
                     <div className="login-error">{error}</div>

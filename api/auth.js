@@ -114,61 +114,6 @@ module.exports = async function handler(req, res) {
         }
     }
 
-    // 用库街区登录网站账号：验证 token 有效 → 按手机号反查绑定账号 → 签发 session
-    if (action === 'kuro_login') {
-        const { token: kuroToken, phone } = req.body || {};
-        if (!kuroToken || !phone) {
-            return res.status(400).json({ error: '缺少库街区凭证' });
-        }
-        try {
-            // 1. 后端验证库街区 token 真实有效（调 role/list）
-            const kuroResp = await kuroPost('/gamer/role/list', { token: kuroToken, data: { gameId: 2 } });
-            if (!kuroResp || (kuroResp.code !== 0 && kuroResp.code !== 200)) {
-                return res.status(401).json({ error: '库街区凭证已失效，请重新绑定' });
-            }
-            // 2. 反查网站账号（token 优先：token 唯一不会多行；phone 兜底：limit(1) 防多条匹配）
-            let playerId = null;
-            const { data: byToken } = await supabase
-                .from('user_data')
-                .select('player_id')
-                .eq('data_key', 'kuro_token')
-                .eq('data', kuroToken)
-                .limit(1);
-            if (byToken && byToken[0]) playerId = byToken[0].player_id;
-            if (!playerId) {
-                const { data: rows } = await supabase
-                    .from('user_data')
-                    .select('player_id')
-                    .eq('data_key', 'kuro_phone')
-                    .eq('data', phone)
-                    .limit(1);
-                if (rows && rows[0]) playerId = rows[0].player_id;
-            }
-            if (!playerId) {
-                console.error('[kuro_login] 反查失败 phone=' + phone + ' tokenLen=' + String(kuroToken || '').length);
-                return res.status(404).json({ error: '云端未找到该库街区账号与网站账号的绑定关系。请先登录网站账号，并在「我的」页重新绑定一次库街区（绑定即自动关联）' });
-            }
-            // 3. 签发 session
-            const { data: userRow } = await supabase
-                .from('users')
-                .select('player_name')
-                .eq('player_id', playerId)
-                .single();
-            const sessionToken = generateToken();
-            const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-            await supabase.from('sessions').insert({
-                token: sessionToken, player_id: playerId, expires_at: expiresAt
-            });
-            return res.status(200).json({
-                status: 'success',
-                data: { token: sessionToken, playerId, playerName: (userRow && userRow.player_name) || playerId }
-            });
-        } catch (error) {
-            console.error('Kuro login error:', error.message);
-            return res.status(500).json({ error: '服务器错误: ' + error.message });
-        }
-    }
-
     // 找回密码 Step1：返回账号绑定的库街区手机号（脱敏）
     if (action === 'reset_phone') {
         const username = String((req.body || {}).username || '').trim();
