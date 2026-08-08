@@ -629,3 +629,46 @@
     0% { background-position: 100% 50%; }
     100% { background-position: 0 50%; }
 }
+
+/* ========== 排行榜移动端（与 JS matchMedia 700px 一致） ========== */
+@media (max-width: 700px) {
+    .ranking-row { padding: 10px 12px; flex-wrap: wrap; row-gap: 6px; }
+    .ranking-row-mobile { cursor: pointer; }
+    .ranking-row-mobile:active { background: var(--row-hover); }
+    .ranking-row-mobile .rank-num { width: 56px; font-size: 13px; }
+    .ranking-row-mobile .rank-medal { width: 24px; height: 24px; font-size: 12px; }
+    .ranking-row-mobile .ranking-player { width: auto; flex: 1; min-width: 0; gap: 8px; }
+    .ranking-row-mobile .player-avatar-sm { width: 36px; height: 36px; }
+    .ranking-row-mobile .player-avatar-sm img { width: 36px; height: 36px; }
+    .ranking-row-mobile .player-avatar-sm .frame-sm { width: 42px; height: 42px; top: -3px; left: -3px; }
+    .ranking-row-mobile .player-name { font-size: 13px; }
+    .ranking-row-mobile .player-id-text { font-size: 10px; }
+    .ranking-row-mobile .mobile-total { width: auto; font-size: 13px; }
+    .ranking-row-mobile .mobile-total .score-delta-up,
+    .ranking-row-mobile .mobile-total .score-delta-down,
+    .ranking-row-mobile .mobile-total .score-delta-same { font-size: 9px; }
+    .mobile-zone-bar {
+        display: flex;
+        width: 100%;
+        gap: 6px;
+    }
+    .mobile-zone-seg {
+        flex: 1;
+        min-width: 0;
+        background: var(--surface);
+        border: 0.5px solid var(--border-soft);
+        border-radius: 8px;
+        padding: 6px 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+    .mobile-zone-name { font-size: 10px; color: var(--text-3); }
+    .mobile-zone-score { font-size: 12px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+    .mobile-zone-score .score-delta-up,
+    .mobile-zone-score .score-delta-down,
+    .mobile-zone-score .score-delta-same { font-size: 9px; }
+    .zone-actions { position: static; opacity: 1; visibility: visible; }
+    .ranking-row:hover .zone-actions .zone-sa-btn { opacity: 1; }
+}

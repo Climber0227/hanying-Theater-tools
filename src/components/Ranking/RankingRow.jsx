@@ -4,6 +4,7 @@ import { formatNumber, formatScoreCompact, getQualityInfo, getTeamKey } from '..
 import { getRankDelta } from '../../utils/ranking.js';
 
 export const ROW_HEIGHT = 152;
+export const ROW_HEIGHT_MOBILE = 96;
 
 function RankDelta({ delta }) {
     if (!delta) return null;
@@ -26,7 +27,7 @@ function ZoneScoreDelta({ diff }) {
     return <span className="score-delta-same">0</span>;
 }
 
-function TeamCompareTag({ zd, teamMax, zone }) {
+export function TeamCompareTag({ zd, teamMax, zone }) {
     if (!zd || !zd.characters || zd.characters.length === 0) return null;
     const key = getTeamKey(zd.characters);
     const max = teamMax[zone.id] && teamMax[zone.id][key];
@@ -73,13 +74,88 @@ const ZoneCell = memo(function ZoneCell({ zone, zd, delta, teamMax, playerId, zo
 
 const MEDALS = { 1: '冠军', 2: '亚军', 3: '季军' };
 
-function RankingRowBase({ index, style, rows, zones, teamMax, totalMaxScore, prevSnapshot, onOpenPlayer, onOpenAnalysis, onOpenTrend }) {
+function MobileZoneBar({ zones, r, delta }) {
+    return (
+        <div className="mobile-zone-bar">
+            {zones.map((zone, zi) => {
+                const zd = r.zones ? r.zones.find(z => z.id === zone.id) : null;
+                const zdDiff = delta && zd && Object.prototype.hasOwnProperty.call(delta.zoneScores, zone.id)
+                    ? (zd.score || 0) - (delta.zoneScores[zone.id] || 0)
+                    : null;
+                return (
+                    <div className="mobile-zone-seg" key={zone.id}>
+                        <span className="mobile-zone-name">{zone.name}</span>
+                        <span className="mobile-zone-score">
+                            {zd ? formatNumber(zd.score) : '--'}
+                            {zdDiff != null && (
+                                zdDiff > 0
+                                    ? <span className="score-delta-up">+{formatScoreCompact(zdDiff)}</span>
+                                    : zdDiff < 0
+                                        ? <span className="score-delta-down">-{formatScoreCompact(Math.abs(zdDiff))}</span>
+                                        : <span className="score-delta-same">0</span>
+                            )}
+                        </span>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+function MobileRow({ r, zones, delta, topN, displayRank, portraitUrl, frameUrl, onOpenPlayer }) {
+    return (
+        <>
+            <div className={`rank-num${topN ? ` top-${displayRank}` : ''}`}>
+                {topN && <span className={`rank-medal medal-${displayRank}`}>{displayRank}</span>}
+                {!topN && displayRank}
+                <RankDelta delta={delta} />
+            </div>
+            <div className="player-info ranking-player mobile-player" onClick={e => { e.stopPropagation(); onOpenPlayer(r.player.id); }}>
+                <div className="player-avatar-sm">
+                    {portraitUrl && <img src={portraitUrl} alt="" decoding="async" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+                    {frameUrl && <img src={frameUrl} alt="" className="frame-sm" decoding="async" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+                </div>
+                <div className="player-text">
+                    <div className="player-name">{r.player.name}</div>
+                    <div className="player-id-text">ID: {r.player.id}</div>
+                </div>
+            </div>
+            <div className="total-score mobile-total">
+                <div>{formatNumber(r.score)}<ScoreDelta delta={delta} /></div>
+            </div>
+            <MobileZoneBar zones={zones} r={r} delta={delta} />
+        </>
+    );
+}
+
+function RankingRowBase({ index, style, rows, zones, teamMax, totalMaxScore, prevSnapshot, isMobile, onOpenPlayer, onOpenAnalysis, onOpenTrend, onOpenMobileRow }) {
     const r = rows[index];
     const displayRank = index + 1;
     const topN = displayRank <= 3;
     const portraitUrl = r.player.portrait ? getImageUrl(r.player.portrait) : '';
     const frameUrl = r.player.frame ? getImageUrl(r.player.frame) : '';
     const delta = getRankDelta(r.player.id, r.rank, r.score, prevSnapshot);
+
+    if (isMobile) {
+        return (
+            <div
+                className={`ranking-row ranking-row-mobile${topN ? ` top-${displayRank}-row` : ''}`}
+                style={style}
+                onClick={() => onOpenMobileRow && onOpenMobileRow(r)}
+            >
+                <MobileRow
+                    r={r}
+                    zones={zones}
+                    delta={delta}
+                    topN={topN}
+                    displayRank={displayRank}
+                    portraitUrl={portraitUrl}
+                    frameUrl={frameUrl}
+                    onOpenPlayer={onOpenPlayer}
+                />
+            </div>
+        );
+    }
 
     return (
         <div className={`ranking-row${topN ? ` top-${displayRank}-row` : ''}`} style={style}>
