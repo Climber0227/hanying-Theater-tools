@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // 纷争战区宣传广告：随机漂动，鼠标悬停暂停，可关闭
+// 关闭状态存 sessionStorage：进入网站关一次，本次会话内（含切页/刷新）不再弹出
+const AD_CLOSED_KEY = 'huaxu_ad_closed';
+
 export default function AdFloat() {
-    const [visible, setVisible] = useState(true);
+    const [visible, setVisible] = useState(() => !sessionStorage.getItem(AD_CLOSED_KEY));
     const adRef = useRef(null);
     const timerRef = useRef(null);
     const flyingRef = useRef(true);
@@ -60,6 +63,7 @@ export default function AdFloat() {
                 onClick={e => {
                     e.stopPropagation();
                     clearInterval(timerRef.current);
+                    try { sessionStorage.setItem(AD_CLOSED_KEY, '1'); } catch { /* 隐私模式忽略 */ }
                     setVisible(false);
                 }}
             >
