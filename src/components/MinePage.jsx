@@ -532,18 +532,21 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
         onBoundChange && onBoundChange(!!t);
     };
 
-    // 网站账号登录完成后，自动从云端恢复库街区绑定（token 由 pullFromCloud 写入本地）
-    // authTick：登录/登出后重新检查（手机端登录后才拉到云端 token）
+    // 登录状态变化：已登录 → 把本地库街区绑定推送到云端账号（自动关联，覆盖修复前未推送场景）
+    // 未登录且本地有云端恢复的 token → 恢复绑定
     useEffect(() => {
-        if (token) return;
-        const cloudToken = getKuroToken();
-        if (cloudToken) {
+        const localToken = getKuroToken();
+        const localPhone = getKuroPhone();
+        if (auth.isLoggedIn() && localToken && localPhone) {
+            auth.syncToCloud('kuro_token', localToken);
+            auth.syncToCloud('kuro_phone', localPhone);
+        }
+        if (!token && localToken) {
             localStorage.removeItem(KURO_AUTO_SYNC_KEY);
-            changeToken(cloudToken);
-            const cloudPhone = getKuroPhone();
-            if (cloudPhone) {
-                setPhone(cloudPhone);
-                setBoundPhone(cloudPhone);
+            changeToken(localToken);
+            if (localPhone) {
+                setPhone(localPhone);
+                setBoundPhone(localPhone);
             }
             setMsg('已自动恢复库街区绑定，正在同步…');
         }
