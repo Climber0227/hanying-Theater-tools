@@ -204,3 +204,12 @@
         font-size: 20px;
     }
 }
+
+/* ========== 移动端战区卡片 ========== */
+@media (max-width: 560px) {
+    .zones-container { flex-direction: column; gap: 8px; margin-bottom: 10px; }
+    .zone-card { min-height: 44px; }
+    .zone-card .zone-name { font-size: 13px; }
+    .zone-card .zone-sub-chip { font-size: 11px; padding: 1px 6px; }
+    .zone-detail-btn { min-height: 36px; padding: 2px 14px; }
+}

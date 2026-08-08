@@ -207,3 +207,9 @@
         min-height: 40px;
     }
 }
+
+/* ========== 移动端收尾 ========== */
+@media (max-width: 560px) {
+    .ad-float { width: min(340px, 88vw); }
+    .corner-feedback { font-size: 10px; padding: 3px 10px; }
+}
