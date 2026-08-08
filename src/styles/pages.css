@@ -610,6 +610,13 @@
     font-weight: 600;
     color: var(--text);
 }
+.week-zone-sub {
+    font-style: normal;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-3);
+    margin-left: 2px;
+}
 .week-zone-mech {
     font-size: 11px;
     font-weight: 600;

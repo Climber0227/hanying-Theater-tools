@@ -246,7 +246,8 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
 
     // 旧记录机制标签补齐：历史数据保存时无 mech/weather 字段，按记录周请求 API 补标签并写回
     useEffect(() => {
-        const needsBackfill = scores.filter(s => (s.zones || []).some(z => !z.monster));
+        // 旧记录补齐：monster 或 subZones 字段缺失都触发（subZones 为空数组属正常，仅字段缺失需补）
+        const needsBackfill = scores.filter(s => (s.zones || []).some(z => z.subZones === undefined || !z.monster));
         if (needsBackfill.length === 0) return;
         let cancelled = false;
         (async () => {
@@ -1094,7 +1095,7 @@ function MyRankCompareModal({ stage, myGroupName, myGroupLevel, roleId, serverId
 }
 
 // 本周分数卡片（同步结果独立展示，阵容在二级弹窗）
-function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn }) {
+function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones }) {
     const [activeStage, setActiveStage] = useState(null);
     const [compareStage, setCompareStage] = useState(null);
     const [showTrend, setShowTrend] = useState(false);
@@ -1104,6 +1105,12 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn }) {
     const areaEv = evaluateWzScore(areaInfo.totalPoint || 0);
     const myGroupName = (area || {}).groupName || '';
     const myGroupLevel = (area || {}).groupLevel || '';
+    // 子区名：排行榜该区 buffs 中与区名不同者（熵钟异数 → 猩红冰原/岩流深壑）
+    const zoneSubs = name => {
+        const full = (zones || []).find(z => z.name === name);
+        if (!full) return [];
+        return (full.buffs || []).map(b => b.name).filter(n => n && n !== full.name);
+    };
 
     return (
         <div className="mine-section week-score-card">
@@ -1136,7 +1143,12 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn }) {
                                 <div className="week-zone" key={i}>
                                     <div className="week-zone-head">
                                         <div className="week-zone-top">
-                                            <span className="week-zone-name">{s.stageName}</span>
+                                            <span className="week-zone-name">
+                                                {s.stageName}
+                                                {zoneSubs(s.stageName).length > 0 && (
+                                                    <span className="week-zone-sub">（{zoneSubs(s.stageName).join('/')}）</span>
+                                                )}
+                                            </span>
                                             {s.description ? <span className="week-zone-mech">{s.description}</span> : null}
                                             <span className="week-zone-score">{formatNumber(s.point || 0)}</span>
                                         </div>
@@ -1487,6 +1499,7 @@ export default function MinePage() {
                 ppc={syncData ? syncData.ppc : null}
                 roleId={syncData ? syncData.roleId : null}
                 serverId={syncData ? syncData.serverId : null}
+                zones={wzZones}
                 trend={trend}
                 showTrendBtn={isMobile}
             />
