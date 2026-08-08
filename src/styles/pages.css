@@ -2231,3 +2231,21 @@
     .follow-actions { flex-wrap: wrap; }
     .follow-actions .bind-set-btn, .follow-actions .follow-view, .follow-actions .follow-remove { min-height: 40px; font-size: 12px; }
 }
+
+/* ========== 幻痛囚笼页移动端 ========== */
+@media (max-width: 560px) {
+    .ppc-bosses { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .ppc-boss-card { padding: 8px; justify-content: center; min-height: 64px; }
+    .ppc-boss-card img { width: 28px; height: 28px; }
+    .ppc-boss-card span { font-size: 12px; }
+    .ppc-row { padding: 10px 12px; }
+    .ppc-row .rank-num { width: 56px; font-size: 13px; }
+    .ppc-row .ranking-player { width: auto; flex: 1; min-width: 0; gap: 8px; }
+    .ppc-row .player-avatar-sm { width: 32px; height: 32px; }
+    .ppc-row .player-avatar-sm img { width: 32px; height: 32px; }
+    .ppc-row .player-name { font-size: 13px; }
+    .ppc-row .total-score { font-size: 13px; }
+    .ppc-ranking .ranking-header .col-rank { width: 56px; }
+    .ppc-ranking .ranking-header .col-player { width: auto; flex: 1; }
+    .ppc-ranking .ranking-header .col-total { width: 110px; }
+}

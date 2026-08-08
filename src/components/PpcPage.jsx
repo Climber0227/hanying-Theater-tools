@@ -134,12 +134,12 @@ export default function PpcPage({ onOpenPlayer }) {
                     {sorted.map((r, i) => {
                         const top = i < 3;
                         return (
-                            <div className="ranking-row" key={r.player.id} style={{ padding: '10px 24px' }}>
-                                <div className={`rank-num${top ? ` top-${i + 1}` : ''}`} style={{ width: 80 }}>
+                            <div className="ranking-row ppc-row" key={r.player.id} style={{ padding: '10px 24px' }}>
+                                <div className={`rank-num${top ? ` top-${i + 1}` : ''}`}>
                                     {top && <span className={`rank-medal medal-${i + 1}`}>{i + 1}</span>}
                                     {!top && i + 1}
                                 </div>
-                                <div className="player-info ranking-player" onClick={() => onOpenPlayer(r.player.id)} style={{ width: 220 }}>
+                                <div className="player-info ranking-player" onClick={() => onOpenPlayer(r.player.id)}>
                                     <div className="player-avatar-sm">
                                         {r.player.portrait && <img src={getImageUrl(r.player.portrait)} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
                                     </div>
