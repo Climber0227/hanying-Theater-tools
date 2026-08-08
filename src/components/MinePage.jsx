@@ -511,6 +511,7 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
     };
 
     // 登录状态变化：
+    // 0. 退出账号：清除有归属的设备绑定（重新登录原账号会从云端恢复）
     // 1. 本地绑定属于其他账号 → 清除（防串号）
     // 2. 属于当前账号（或首次归属）→ 推送云端 + 恢复绑定
     useEffect(() => {
@@ -519,6 +520,16 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
         const boundUser = localStorage.getItem('kurobbs_bound_user');
         const curUser = auth.isLoggedIn() ? auth.playerId : null;
 
+        if (!curUser && boundUser && localToken) {
+            clearKuroToken();
+            clearKuroPhone();
+            localStorage.removeItem('kurobbs_bound_user');
+            setPhone('');
+            setBoundPhone('');
+            changeToken('');
+            autoSyncedRef.current = false;
+            return;
+        }
         if (localToken && curUser && boundUser && boundUser !== curUser) {
             // 设备绑定属于其他账号：作废
             clearKuroToken();
