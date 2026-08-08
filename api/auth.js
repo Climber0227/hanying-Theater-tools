@@ -94,8 +94,17 @@ module.exports = async function handler(req, res) {
     // 登出：删除服务端 session
     if (action === 'logout') {
         if (!token) return res.status(400).json({ error: '缺少 token' });
-        await supabase.from('sessions').delete().eq('token', token);
-        return res.status(200).json({ status: 'success' });
+        try {
+            const { error: delError } = await supabase.from('sessions').delete().eq('token', token);
+            if (delError) {
+                console.error('Logout delete error:', JSON.stringify(delError));
+                return res.status(500).json({ error: '登出失败: ' + delError.message });
+            }
+            return res.status(200).json({ status: 'success' });
+        } catch (error) {
+            console.error('Logout error:', error.message, error.stack);
+            return res.status(500).json({ error: '登出失败: ' + error.message });
+        }
     }
 
     // 用库街区登录网站账号：验证 token 有效 → 按手机号反查绑定账号 → 签发 session
