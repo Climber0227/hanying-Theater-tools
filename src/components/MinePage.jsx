@@ -117,6 +117,16 @@ function weekRangeLabel(ts) {
     } catch { return ''; }
 }
 
+// 从完整区数据提取机制标签（机制名 + 怪数量 + 首个天气；保存与旧记录补齐共用）
+function extractZoneTags(full) {
+    const desc = (full && full.description) || '';
+    const mech = desc.split('：')[0].split(':')[0];
+    const m = desc.match(/刷新\s*(\d+)\s*只/);
+    const monster = m ? (parseInt(m[1]) >= 3 ? '群怪' : parseInt(m[1]) === 2 ? '双怪' : '单怪') : '';
+    const weather = (full && full.weathers && full.weathers[0]) ? full.weathers[0].name : '';
+    return { mech, monster, weather };
+}
+
 function ScoreTable({ rows, columns, renderCell, onDelete, groupCol, onTeam, renderTotalRank, tip }) {
     if (rows.length === 0) return null;
     const hasTeam = s => (s.zones || []).some(z => (z.team || []).length > 0);
@@ -232,6 +242,43 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
 
     useEffect(() => { setScores(getScores(WZ_SCORE_KEY)); }, [syncStamp]);
 
+    // 旧记录机制标签补齐：历史数据保存时无 mech/weather 字段，按记录周请求 API 补标签并写回
+    useEffect(() => {
+        const needsBackfill = scores.filter(s => (s.zones || []).some(z => !z.mech && !z.monster && !z.weather));
+        if (needsBackfill.length === 0) return;
+        let cancelled = false;
+        (async () => {
+            const patches = [];
+            for (const s of needsBackfill) {
+                try {
+                    const diff = matchDifficulty(s.groupName, s.groupLevel);
+                    const wz = await loadWarzone(diff, s.week);
+                    const fullZones = (wz.warzone && wz.warzone.area && wz.warzone.area.zones) || [];
+                    const patched = {
+                        ...s,
+                        zones: (s.zones || []).map(z => {
+                            const full = fullZones.find(f => f.name === z.name);
+                            if (!full) return z;
+                            return { ...z, ...extractZoneTags(full) };
+                        })
+                    };
+                    patches.push(patched);
+                } catch { /* 历史周数据不可得则保持原样 */ }
+                if (cancelled) return;
+            }
+            if (cancelled || patches.length === 0) return;
+            const all = getScores(WZ_SCORE_KEY).map(s => {
+                const p = patches.find(x => String(x.week) === String(s.week));
+                return p || s;
+            });
+            localStorage.setItem(WZ_SCORE_KEY, JSON.stringify(all));
+            if (auth.isLoggedIn()) auth.syncToCloud('wz_scores', all);
+            setScores(all);
+        })();
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [scores]);
+
     const del = week => {
         const next = getScores(WZ_SCORE_KEY).filter(s => s.week !== week);
         localStorage.setItem(WZ_SCORE_KEY, JSON.stringify(next));
@@ -243,7 +290,8 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
     if (zones.length === 0) return <div className="score-input-label">加载战区数据中…</div>;
 
     const latest = scores[0];
-    const columns = latest ? latest.zones.map(z => z.name) : zones.map(z => z.name);
+    // 表头用通用列名（每周区名/机制不同，区名在行内单元格自描述，避免错位）
+    const columns = latest ? latest.zones.map((z, i) => `区${i + 1}`) : zones.map((z, i) => `区${i + 1}`);
     const pending = scores.find(s => s.week === pendingWeek);
 
     return (
@@ -263,7 +311,8 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                     renderCell={s => s.zones.map((z, i) => (
                         <td key={i}>
                             <div className="score-cell">
-                                <span>{formatNumber(z.score)}</span>
+                                <span className="score-cell-zone">{z.name}</span>
+                                <span className="score-cell-val">{formatNumber(z.score)}</span>
                                 {(z.mech || z.monster || z.weather) && (
                                     <em className="score-cell-mech">
                                         {[z.mech, z.monster, z.weather].filter(Boolean).join(' · ')}
@@ -1300,12 +1349,7 @@ export default function MinePage() {
                 zoneScores = zoneScores.map(z => {
                     const full = fullZones.find(f => f.name === z.name);
                     if (!full) return z;
-                    // 目标周机制标签：机制名（描述冒号前）+ 怪数量 + 首个天气（供历史记录渲染）
-                    const desc = full.description || '';
-                    const mech = desc.split('：')[0].split(':')[0];
-                    const monster = desc.includes('单体') ? '单怪' : desc.includes('双体') ? '双怪' : desc.includes('群体') ? '群怪' : '';
-                    const weather = (full.weathers && full.weathers[0]) ? full.weathers[0].name : '';
-                    const tagged = { ...z, mech, monster, weather };
+                    const tagged = { ...z, ...extractZoneTags(full) };
                     if (!z.team || z.team.length === 0) return tagged;
                     const myChars = z.team.map(t => ({ id: t.id || t.name, rank: GRADE_TO_RANK[t.grade] || 0 }));
                     const myKey = getTeamKey(myChars);

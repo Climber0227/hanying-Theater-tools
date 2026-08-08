@@ -2237,6 +2237,17 @@
     padding: 0 5px;
     white-space: nowrap;
 }
+.score-cell-zone {
+    font-style: normal;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-2);
+    white-space: nowrap;
+}
+.score-cell-val {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
 .score-week-cell {
     white-space: nowrap;
 }
