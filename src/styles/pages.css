@@ -1108,6 +1108,110 @@
     white-space: nowrap;
     transition: filter 0.2s;
 }
+.guide-step-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.guide-action-kuro {
+    background: transparent;
+    color: var(--accent);
+    border: 0.5px solid var(--accent);
+}
+.guide-step-lights {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+.guide-light {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-3);
+    background: var(--surface-2);
+    border: 0.5px solid var(--border-soft);
+    border-radius: 980px;
+    padding: 2px 8px;
+    white-space: nowrap;
+}
+.guide-light::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff3b30;
+    flex-shrink: 0;
+}
+.guide-light.on {
+    color: #34c759;
+    background: rgba(52, 199, 89, 0.08);
+    border-color: rgba(52, 199, 89, 0.3);
+}
+.guide-light.on::before {
+    background: #34c759;
+    box-shadow: 0 0 6px rgba(52, 199, 89, 0.8);
+}
+
+/* 登录弹窗 */
+.login-modal-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.login-modal-tab {
+    flex: 1;
+    min-height: 40px;
+    border: 0.5px solid var(--border-soft);
+    background: var(--surface);
+    color: var(--text-2);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.login-modal-tab.active {
+    background: var(--accent);
+    color: var(--accent-text);
+}
+.login-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.login-modal-body .bind-input {
+    max-width: none;
+}
+.login-modal-switch {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px;
+}
+.login-modal-code-row {
+    display: flex;
+    gap: 8px;
+}
+.login-modal-code-row .bind-input {
+    flex: 1;
+    min-width: 0;
+}
+.login-modal-send {
+    flex-shrink: 0;
+    padding: 9px 14px;
+    white-space: nowrap;
+}
+@media (max-width: 560px) {
+    .login-modal-body .bind-input,
+    .login-modal-code-row .bind-input,
+    .login-modal-code-row button { min-height: 44px; }
+    .guide-step-actions { flex-direction: row; }
+}
 .guide-action:hover {
     filter: brightness(1.08);
 }

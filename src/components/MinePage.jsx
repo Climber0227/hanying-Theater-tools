@@ -58,7 +58,8 @@ function evaluateWzScore(total) {
 const EVAL_DESCS = ['英雄区保不了级系列', '运气好英雄区保级', '', '', '', '', ''];
 
 // 三步使用引导（横向步骤条）
-function SetupGuide({ loggedIn, kuroBound, weekSaved }) {
+// 第 1 步含网站账号 + 库街区两个状态灯与弹窗登录入口
+function SetupGuide({ loggedIn, kuroBound, weekSaved, onOpenLogin }) {
     const jump = anchor => {
         const el = document.getElementById(anchor);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -71,24 +72,26 @@ function SetupGuide({ loggedIn, kuroBound, weekSaved }) {
                 <div className="setup-guide-sub">三步开启「分数一键同步 · 历史多端可查」</div>
             </div>
             <div className="guide-steps">
-                <div className={`guide-step${loggedIn ? ' done' : ''}`} onClick={() => !loggedIn && jump('mine-account')}>
+                <div className={`guide-step${loggedIn ? ' done' : ''}`} onClick={() => !loggedIn && onOpenLogin && onOpenLogin('web')}>
                     <div className="guide-step-dot">{loggedIn ? '✓' : '1'}</div>
                     <div className="guide-step-info">
                         <div className="guide-step-title">登录账号</div>
-                        <div className="guide-step-desc">{loggedIn ? '已完成 · 云端同步开启' : '没有账号？一键注册'}</div>
+                        <div className="guide-step-lights">
+                            <span className={`guide-light${loggedIn ? ' on' : ''}`}>网站 {loggedIn ? '已登录' : '未登录'}</span>
+                            <span className={`guide-light${kuroBound ? ' on' : ''}`}>库街区 {kuroBound ? '已绑定' : '未绑定'}</span>
+                        </div>
                     </div>
-                    {!loggedIn && <button className="guide-action">登录 / 注册</button>}
-                </div>
-                <div className={`guide-step${kuroBound ? ' done' : ''}`} onClick={() => !kuroBound && jump('mine-account')}>
-                    <div className="guide-step-dot">{kuroBound ? '✓' : '2'}</div>
-                    <div className="guide-step-info">
-                        <div className="guide-step-title">绑定库街区</div>
-                        <div className="guide-step-desc">{kuroBound ? '已完成 · 可同步分数' : '一键拉取游戏内分数'}</div>
+                    <div className="guide-step-actions">
+                        <button className="guide-action" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin('web'); }}>
+                            {loggedIn ? '登录状态' : '登录/注册'}
+                        </button>
+                        <button className="guide-action guide-action-kuro" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin('kuro'); }}>
+                            {kuroBound ? '绑定状态' : '绑定库街区'}
+                        </button>
                     </div>
-                    {!kuroBound && <button className="guide-action">去绑定</button>}
                 </div>
                 <div className={`guide-step${weekSaved ? ' done' : ''}`} onClick={() => !weekSaved && jump('mine-scores')}>
-                    <div className="guide-step-dot">{weekSaved ? '✓' : '3'}</div>
+                    <div className="guide-step-dot">{weekSaved ? '✓' : '2'}</div>
                     <div className="guide-step-info">
                         <div className="guide-step-title">保存本周分数</div>
                         <div className="guide-step-desc">{weekSaved ? '已完成 · 已备份云端' : '确认录入并保存'}</div>
@@ -97,6 +100,136 @@ function SetupGuide({ loggedIn, kuroBound, weekSaved }) {
                 </div>
             </div>
         </div>
+    );
+}
+
+// 登录弹窗：网站账号（登录/注册） + 库街区（验证码绑定）双 tab
+function LoginModal({ tab, onClose, onLoggedIn }) {
+    const [mode, setMode] = useState(tab === 'kuro' ? 'kuro' : 'web');
+    // 网站账号
+    const [id, setId] = useState('');
+    const [pw, setPw] = useState('');
+    const [isReg, setIsReg] = useState(false);
+    // 库街区
+    const [phone, setPhone] = useState('');
+    const [code, setCode] = useState('');
+    const [countdown, setCountdown] = useState(0);
+    const [msg, setMsg] = useState('');
+    const [busy, setBusy] = useState('');
+
+    const doWeb = async () => {
+        setMsg('');
+        setBusy(isReg ? '注册中…' : '登录中…');
+        try {
+            if (isReg) await auth.register(id.trim(), pw);
+            else await auth.login(id.trim(), pw);
+            setBusy('');
+            onLoggedIn && onLoggedIn();
+        } catch (e) {
+            setBusy('');
+            setMsg(e.message || (isReg ? '注册失败' : '登录失败'));
+        }
+    };
+
+    const sendKuroCode = async () => {
+        if (!/^1[3-9]\d{9}$/.test(phone)) return setMsg('请输入正确的11位手机号');
+        setMsg('请完成滑块验证…');
+        try {
+            const gt = await showGeetestCaptcha();
+            setMsg('正在发送验证码…');
+            await sendSmsCode(phone, gt);
+            setMsg('验证码已发送，请查收短信');
+            let n = 60;
+            setCountdown(n);
+            const timer = setInterval(() => {
+                n -= 1;
+                if (n <= 0) { clearInterval(timer); setCountdown(0); } else setCountdown(n);
+            }, 1000);
+        } catch (e) {
+            setMsg(e.message || '发送失败');
+        }
+    };
+
+    const doKuro = async () => {
+        if (!/^1[3-9]\d{9}$/.test(phone)) return setMsg('请输入正确的11位手机号');
+        if (!code) return setMsg('请输入验证码');
+        setMsg('');
+        setBusy('登录中…');
+        try {
+            const result = await kuroLogin(phone, code);
+            if (result && result.token) setKuroToken(result.token);
+            setKuroPhone(phone);
+            const curUser = auth.isLoggedIn() ? auth.playerId : null;
+            if (curUser) localStorage.setItem('kurobbs_bound_user', curUser);
+            setBusy('');
+            onLoggedIn && onLoggedIn();
+        } catch (e) {
+            setBusy('');
+            setMsg(e.message || '绑定失败');
+        }
+    };
+
+    return (
+        <Modal title={mode === 'web' ? '网站账号登录' : '库街区绑定'} onClose={onClose}>
+            <div className="login-modal-tabs">
+                <button className={`login-modal-tab${mode === 'web' ? ' active' : ''}`} onClick={() => { setMode('web'); setMsg(''); }}>网站账号</button>
+                <button className={`login-modal-tab${mode === 'kuro' ? ' active' : ''}`} onClick={() => { setMode('kuro'); setMsg(''); }}>库街区绑定</button>
+            </div>
+
+            {mode === 'web' ? (
+                <div className="login-modal-body">
+                    <input
+                        className="bind-input"
+                        style={{ width: '100%', maxWidth: 'none' }}
+                        placeholder="账号（手机号/用户名）"
+                        value={id}
+                        onChange={e => setId(e.target.value)}
+                    />
+                    <input
+                        className="bind-input"
+                        style={{ width: '100%', maxWidth: 'none' }}
+                        type="password"
+                        placeholder="密码"
+                        value={pw}
+                        onChange={e => setPw(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') doWeb(); }}
+                    />
+                    <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} disabled={!!busy} onClick={doWeb}>
+                        {busy || (isReg ? '注册并登录' : '登录')}
+                    </button>
+                    <button className="login-modal-switch" onClick={() => { setIsReg(r => !r); setMsg(''); }}>
+                        {isReg ? '已有账号？去登录' : '没有账号？一键注册'}
+                    </button>
+                    {msg && <div className="data-mgmt-msg">{msg}</div>}
+                </div>
+            ) : (
+                <div className="login-modal-body">
+                    <div className="kuro-bound-hint">绑定后每周点「同步分数」，一键拉取游戏内战区 / 幻痛数据（需先在库街区App打开「纷争战区」刷新）</div>
+                    <input
+                        className="bind-input"
+                        style={{ width: '100%', maxWidth: 'none' }}
+                        placeholder="库街区绑定手机号"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                    />
+                    <div className="login-modal-code-row">
+                        <input
+                            className="bind-input"
+                            placeholder="验证码"
+                            value={code}
+                            onChange={e => setCode(e.target.value)}
+                        />
+                        <button className="bind-btn login-modal-send" disabled={countdown > 0 || !!busy} onClick={sendKuroCode}>
+                            {countdown > 0 ? `${countdown}s` : '发送验证码'}
+                        </button>
+                    </div>
+                    <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} disabled={!!busy} onClick={doKuro}>
+                        {busy || '绑定并登录'}
+                    </button>
+                    {msg && <div className="data-mgmt-msg">{msg}</div>}
+                </div>
+            )}
+        </Modal>
     );
 }
 
@@ -1532,6 +1665,7 @@ export default function MinePage() {
 
     const isMobile = useMediaQuery(MOBILE_QUERY);
     const trend = useTrendData(wzZones, syncStamp);
+    const [loginModal, setLoginModal] = useState(null); // null | 'web' | 'kuro'
 
     const removeFollow = id => {
         const next = follows.filter(f => String(f.id) !== String(id));
@@ -1541,7 +1675,7 @@ export default function MinePage() {
 
     return (
         <div>
-            <SetupGuide loggedIn={!!user} kuroBound={kuroBound} weekSaved={weekSaved} />
+            <SetupGuide loggedIn={!!user} kuroBound={kuroBound} weekSaved={weekSaved} onOpenLogin={setLoginModal} />
 
             <WeekScoreCard
                 area={syncData ? syncData.area : null}
@@ -1585,6 +1719,19 @@ export default function MinePage() {
                     ))}
                 </div>
             </div>
+
+            {loginModal && (
+                <LoginModal
+                    tab={loginModal}
+                    onClose={() => setLoginModal(null)}
+                    onLoggedIn={() => {
+                        setLoginModal(null);
+                        setUser(auth.isLoggedIn() ? { id: auth.playerId, name: auth.playerName } : null);
+                        setAuthTick(t => t + 1); // 触发库街区恢复绑定/自动同步
+                        setKuroBound(!!getKuroToken());
+                    }}
+                />
+            )}
         </div>
     );
 }
