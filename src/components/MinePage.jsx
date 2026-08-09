@@ -440,6 +440,9 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                 <h3><span className="step-badge">2</span>我的战区</h3>
             </div>
             <MyTrendSection zones={zones} syncStamp={syncStamp} />
+            <div className="score-note">
+                注意：历史记录自「登录网站账号 + 绑定库街区」后开始记录每周分数；<b>每周日战区结算前</b>请进入网站同步分数（进页面自动同步，也可点「同步分数」手动同步），分数会随账号上传云端，换设备登录可查
+            </div>
             {scores.length === 0 ? (
                 <div className="score-empty">暂无历史记录 —— 同步本周分数后自动生成</div>
             ) : (
