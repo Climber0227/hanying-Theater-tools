@@ -175,6 +175,11 @@ export async function refreshKuroData(token, roleId, serverId) {
     return gameRequest('/haru/roleBox/refreshData', token, roleId, serverId);
 }
 
+// 账号数据（角色名/服务器/等级/勋阶/头像）
+export async function getAccountData(token, roleId, serverId) {
+    return gameRequest('/haru/roleBox/accountData', token, roleId, serverId);
+}
+
 // 幻痛囚笼数据
 export async function getPrisonerCageData(token, roleId, serverId) {
     return gameRequest('/haru/roleBox/prisonerCage', token, roleId, serverId);

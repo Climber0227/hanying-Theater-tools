@@ -7,7 +7,7 @@ import {
     getKuroToken, clearKuroToken,
     getKuroPhone, setKuroPhone, clearKuroPhone,
     sendSmsCode, kuroLogin, showGeetestCaptcha,
-    getKuroRoleList, getAreaData, getPrisonerCageData, getRoleIndexData, refreshKuroData
+    getKuroRoleList, getAreaData, getPrisonerCageData, getRoleIndexData, refreshKuroData, getAccountData
 } from '../api/kurobbs.js';
 import { formatNumber } from '../utils/format.js';
 import { getTeamKey, getQualityInfo, formatScoreCompact, getMondayStart } from '../utils/format.js';
@@ -515,6 +515,7 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
     const [code, setCode] = useState('');
     const [countdown, setCountdown] = useState(0);
     const [token, setToken] = useState(getKuroToken());
+    const [accountInfo, setAccountInfo] = useState(null); // { roleName, serverName, level, rank }
     const [roles, setRoles] = useState([]);
     const [selRole, setSelRole] = useState(null);
     const [sync, setSync] = useState(null);
@@ -593,14 +594,29 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
             ((area || {}).areaInfo || {}).stageFightInfoList.forEach(s => {
                 if (!s.stageName) return;
                 const team = [];
+                // 子区关卡（buff）：每个 buff 关卡有独立区名/分数/战斗时间/增益（如熵钟异数=猩红冰原+岩流深壑）
+                const subs = [];
                 ((s.areaBuffFightInfoList) || []).forEach(bf => {
+                    if (!bf.buffName) return;
+                    subs.push({
+                        name: bf.buffName,
+                        score: bf.point || 0,
+                        fightTime: bf.fightTime || 0,
+                        supportBuffs: ((bf.supportBuffList) || []).map(sb => sb.name).filter(Boolean)
+                    });
                     ((bf.bodyList) || []).forEach(bodyItem => {
                         const bodyInfo = (bodyItem.bodyInfo) || {};
                         const body = (bodyInfo.body) || {};
                         if (body.bodyName) team.push({ name: body.bodyName, grade: bodyInfo.grade || '', id: body.bodyId || '' });
                     });
                 });
-                zones[s.stageName] = { score: s.point, team };
+                s.subs = subs; // 写回原始数据（本周分数卡片直接渲染子区明细）
+                zones[s.stageName] = {
+                    score: s.point,
+                    team,
+                    subs,
+                    subZones: subs.map(x => x.name)
+                };
             });
             const bosses = {};
             (((ppc || {}).prisonerCage || {}).bossFightInfoList || []).forEach(b => {
@@ -649,6 +665,7 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
         if (!token) {
             setRoles([]);
             setSelRole(null);
+            setAccountInfo(null);
             return;
         }
         let cancelled = false;
@@ -670,6 +687,27 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
         return () => { cancelled = true; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token]);
+
+    // 角色选中后拉取账号信息（勋阶/等级/头像）
+    useEffect(() => {
+        if (!token || !selRole) {
+            setAccountInfo(null);
+            return;
+        }
+        let cancelled = false;
+        getAccountData(token, selRole.roleId, selRole.serverId || '1000').then(res => {
+            if (cancelled || !res) return;
+            setAccountInfo({
+                roleName: res.roleName || selRole.roleName || '',
+                serverName: res.serverName || selRole.serverName || '',
+                level: res.level || 0,
+                rank: res.rank || 0,
+                headIconUrl: res.headIconUrl || ''
+            });
+        }).catch(() => { /* 账号信息获取失败不影响主流程 */ });
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token, selRole]);
 
     const sendCode = async () => {
         if (!/^1[3-9]\d{9}$/.test(phone)) return setMsg('请输入正确的11位手机号');
@@ -782,8 +820,17 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
                 <>
                     <div className="logged-in-info" style={{ padding: 0 }}>
                         <div className="logged-in-user">
-                            <div className="logged-in-name">库街区已绑定</div>
-                            <div className="logged-in-id">{selRole ? `${selRole.roleName || '未知角色'} · ${selRole.serverName || ''}` : (busy || '获取角色中…')}</div>
+                        <div className="logged-in-name">库街区已绑定</div>
+                        <div className="logged-in-id">
+                            {(accountInfo && accountInfo.roleName) || (selRole ? selRole.roleName || '未知角色' : (busy || '获取角色中…'))}
+                            {(accountInfo && accountInfo.serverName) || (selRole ? selRole.serverName || '' : '')}
+                        </div>
+                        {accountInfo && (
+                            <div className="logged-in-rank">
+                                {accountInfo.rank ? `勋阶 ${accountInfo.rank}` : `Lv.${accountInfo.level}`}
+                                {accountInfo.rank && accountInfo.level ? ` · Lv.${accountInfo.level}` : ''}
+                            </div>
+                        )}
                         </div>
                         <div className="data-mgmt-btns" style={{ marginTop: 6, justifyContent: 'center' }}>
                             {roles.length > 1 && (
@@ -1150,13 +1197,25 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones
                                         <div className="week-zone-top">
                                             <span className="week-zone-name">
                                                 {s.stageName}
-                                                {zoneSubs(s.stageName).length > 0 && (
-                                                    <span className="week-zone-sub">（{zoneSubs(s.stageName).join('/')}）</span>
-                                                )}
+                                                {(s.subs && s.subs.length > 0)
+                                                    ? <span className="week-zone-sub">（{s.subs.map(x => x.name).join('/')}）</span>
+                                                    : zoneSubs(s.stageName).length > 0 && (
+                                                        <span className="week-zone-sub">（{zoneSubs(s.stageName).join('/')}）</span>
+                                                    )}
                                             </span>
                                             {s.description ? <span className="week-zone-mech">{s.description}</span> : null}
                                             <span className="week-zone-score">{formatNumber(s.point || 0)}</span>
                                         </div>
+                                        {s.subs && s.subs.length > 0 && (
+                                            <div className="week-zone-subs">
+                                                {s.subs.map((sub, k) => (
+                                                    <span className="week-zone-sub-item" key={k}>
+                                                        {sub.name} {formatNumber(sub.score)}分
+                                                        {sub.fightTime ? <em>· {sub.fightTime}min</em> : null}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                         <div className="week-zone-foot">
                                             <div className="week-zone-tags">
                                                 {s.totalNum ? <span className="week-zone-wave">挑战 {s.totalNum} 次</span> : null}
