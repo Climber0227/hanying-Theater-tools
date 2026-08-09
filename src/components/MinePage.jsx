@@ -58,13 +58,8 @@ function evaluateWzScore(total) {
 const EVAL_DESCS = ['英雄区保不了级系列', '运气好英雄区保级', '', '', '', '', ''];
 
 // 三步使用引导（横向步骤条）
-// 第 1 步含网站账号 + 库街区两个状态灯与弹窗登录入口
-function SetupGuide({ loggedIn, kuroBound, weekSaved, onOpenLogin }) {
-    const jump = anchor => {
-        const el = document.getElementById(anchor);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-
+// 1 登录网站账号 2 登录库街区 3 同步分数
+function SetupGuide({ loggedIn, kuroBound, weekSaved, onOpenLogin, onSyncRequest }) {
     return (
         <div className="setup-guide">
             <div className="setup-guide-header">
@@ -75,28 +70,36 @@ function SetupGuide({ loggedIn, kuroBound, weekSaved, onOpenLogin }) {
                 <div className={`guide-step${loggedIn ? ' done' : ''}`} onClick={() => !loggedIn && onOpenLogin && onOpenLogin('web')}>
                     <div className="guide-step-dot">{loggedIn ? '✓' : '1'}</div>
                     <div className="guide-step-info">
-                        <div className="guide-step-title">登录账号</div>
+                        <div className="guide-step-title">登录网站账号</div>
                         <div className="guide-step-lights">
                             <span className={`guide-light${loggedIn ? ' on' : ''}`}>网站 {loggedIn ? '已登录' : '未登录'}</span>
+                        </div>
+                    </div>
+                    <button className="guide-action" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin('web'); }}>
+                        {loggedIn ? '登录状态' : '登录/注册'}
+                    </button>
+                </div>
+                <div className={`guide-step${kuroBound ? ' done' : ''}`} onClick={() => !kuroBound && onOpenLogin && onOpenLogin('kuro')}>
+                    <div className="guide-step-dot">{kuroBound ? '✓' : '2'}</div>
+                    <div className="guide-step-info">
+                        <div className="guide-step-title">登录库街区</div>
+                        <div className="guide-step-lights">
                             <span className={`guide-light${kuroBound ? ' on' : ''}`}>库街区 {kuroBound ? '已绑定' : '未绑定'}</span>
                         </div>
                     </div>
-                    <div className="guide-step-actions">
-                        <button className="guide-action" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin('web'); }}>
-                            {loggedIn ? '登录状态' : '登录/注册'}
-                        </button>
-                        <button className="guide-action guide-action-kuro" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin('kuro'); }}>
-                            {kuroBound ? '绑定状态' : '绑定库街区'}
-                        </button>
-                    </div>
+                    <button className="guide-action guide-action-kuro" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin('kuro'); }}>
+                        {kuroBound ? '绑定状态' : '去绑定'}
+                    </button>
                 </div>
-                <div className={`guide-step${weekSaved ? ' done' : ''}`} onClick={() => !weekSaved && jump('mine-scores')}>
-                    <div className="guide-step-dot">{weekSaved ? '✓' : '2'}</div>
+                <div className={`guide-step${weekSaved ? ' done' : ''}`} onClick={() => !weekSaved && onSyncRequest && onSyncRequest()}>
+                    <div className="guide-step-dot">{weekSaved ? '✓' : '3'}</div>
                     <div className="guide-step-info">
-                        <div className="guide-step-title">保存本周分数</div>
-                        <div className="guide-step-desc">{weekSaved ? '已完成 · 已备份云端' : '确认录入并保存'}</div>
+                        <div className="guide-step-title">同步分数</div>
+                        <div className="guide-step-desc">{weekSaved ? '已完成 · 已备份云端' : '一键拉取游戏内最新分数'}</div>
                     </div>
-                    {!weekSaved && <button className="guide-action">去录入</button>}
+                    <button className="guide-action" onClick={e => { e.stopPropagation(); onSyncRequest && onSyncRequest(); }}>
+                        同步分数
+                    </button>
                 </div>
             </div>
         </div>
@@ -643,7 +646,7 @@ function WebLoginBlock({ onAuthChange }) {
 }
 
 // 库街区绑定 + 一键同步分数（支持云端恢复绑定）
-function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
+function KuroBlock({ onSyncData, onBoundChange, authReady, authTick, syncRef }) {
     const [phone, setPhone] = useState('');
     const [boundPhone, setBoundPhone] = useState(getKuroPhone());
     const [code, setCode] = useState('');
@@ -780,6 +783,8 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
             return false;
         }
     };
+    // 对外暴露同步能力（引导块/卡片"同步分数"按钮调用）
+    if (syncRef) syncRef.current = () => fetchScores(false);
 
     // 进入页面主动同步：绑定 + 角色就绪即拉取（60s 防抖）
     useEffect(() => {
@@ -1281,7 +1286,7 @@ function MyRankCompareModal({ stage, myGroupName, myGroupLevel, roleId, serverId
 }
 
 // 本周分数卡片（同步结果独立展示，阵容在二级弹窗）
-function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones }) {
+function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, showSyncBtn, onSync, zones }) {
     const [activeStage, setActiveStage] = useState(null);
     const [compareStage, setCompareStage] = useState(null);
     const [showTrend, setShowTrend] = useState(false);
@@ -1301,9 +1306,14 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones
         <div className="mine-section week-score-card">
             <div className="mine-section-header">
                 <h3>本周分数</h3>
-                {showTrendBtn && trend && (
-                    <button className="week-trend-btn" onClick={() => setShowTrend(true)}>趋势</button>
-                )}
+                <div className="week-card-actions">
+                    {showSyncBtn && (
+                        <button className="week-trend-btn week-sync-btn" onClick={() => onSync && onSync()}>同步分数</button>
+                    )}
+                    {showTrendBtn && trend && (
+                        <button className="week-trend-btn" onClick={() => setShowTrend(true)}>趋势</button>
+                    )}
+                </div>
             </div>
             <div className="week-card-grid">
                 {area && (
@@ -1408,13 +1418,13 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones
 }
 
 // 账号卡片：左网站账号，右库街区，底部说明
-function AccountSection({ onSyncData, onAuthChange, onBoundChange, authReady, authTick }) {
+function AccountSection({ onSyncData, onAuthChange, onBoundChange, authReady, authTick, syncRef }) {
     return (
         <div className="mine-section" id="mine-account">
             <div className="mine-section-header"><h3><span className="step-badge">1</span>账号 · 库街区</h3></div>
             <div className="account-grid">
                 <WebLoginBlock onAuthChange={onAuthChange} />
-                <KuroBlock onSyncData={onSyncData} onBoundChange={onBoundChange} authReady={authReady} authTick={authTick} />
+                <KuroBlock onSyncData={onSyncData} onBoundChange={onBoundChange} authReady={authReady} authTick={authTick} syncRef={syncRef} />
             </div>
             <div className="account-intro">
                 <span>· 登录网站账号：分数保存自动同步云端，换设备登录即可查看历史</span>
@@ -1666,6 +1676,7 @@ export default function MinePage() {
     const isMobile = useMediaQuery(MOBILE_QUERY);
     const trend = useTrendData(wzZones, syncStamp);
     const [loginModal, setLoginModal] = useState(null); // null | 'web' | 'kuro'
+    const syncScoreRef = useRef(null); // 库街区同步函数（KuroBlock 注册）
 
     const removeFollow = id => {
         const next = follows.filter(f => String(f.id) !== String(id));
@@ -1675,7 +1686,13 @@ export default function MinePage() {
 
     return (
         <div>
-            <SetupGuide loggedIn={!!user} kuroBound={kuroBound} weekSaved={weekSaved} onOpenLogin={setLoginModal} />
+            <SetupGuide
+                loggedIn={!!user}
+                kuroBound={kuroBound}
+                weekSaved={weekSaved}
+                onOpenLogin={setLoginModal}
+                onSyncRequest={() => syncScoreRef.current && syncScoreRef.current()}
+            />
 
             <WeekScoreCard
                 area={syncData ? syncData.area : null}
@@ -1685,6 +1702,8 @@ export default function MinePage() {
                 zones={wzZones}
                 trend={trend}
                 showTrendBtn={isMobile}
+                showSyncBtn={isMobile && kuroBound}
+                onSync={() => syncScoreRef.current && syncScoreRef.current()}
             />
 
             <div id="mine-scores">
@@ -1698,6 +1717,7 @@ export default function MinePage() {
                 onBoundChange={setKuroBound}
                 authReady={authReady}
                 authTick={authTick}
+                syncRef={syncScoreRef}
             />
 
             <div className="mine-section">

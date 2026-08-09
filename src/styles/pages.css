@@ -552,6 +552,18 @@
     cursor: pointer;
     min-height: 32px;
 }
+.week-sync-btn {
+    background: var(--accent);
+    color: var(--accent-text);
+}
+.week-sync-btn:hover {
+    filter: brightness(1.1);
+}
+.week-card-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
 .week-trend-btn:hover {
     background: var(--accent);
     color: var(--accent-text);
