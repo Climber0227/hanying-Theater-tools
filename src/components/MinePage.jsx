@@ -1543,14 +1543,6 @@ export default function MinePage() {
         <div>
             <SetupGuide loggedIn={!!user} kuroBound={kuroBound} weekSaved={weekSaved} />
 
-            <AccountSection
-                onSyncData={saveSyncedScores}
-                onAuthChange={u => { setUser(u); setAuthTick(t => t + 1); }}
-                onBoundChange={setKuroBound}
-                authReady={authReady}
-                authTick={authTick}
-            />
-
             <WeekScoreCard
                 area={syncData ? syncData.area : null}
                 ppc={syncData ? syncData.ppc : null}
@@ -1565,6 +1557,14 @@ export default function MinePage() {
                 <WzScoreSection zones={wzZones} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
                 <PpcScoreSection bosses={ppcBosses} currentWeek={ppcWeek} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
             </div>
+
+            <AccountSection
+                onSyncData={saveSyncedScores}
+                onAuthChange={u => { setUser(u); setAuthTick(t => t + 1); }}
+                onBoundChange={setKuroBound}
+                authReady={authReady}
+                authTick={authTick}
+            />
 
             <div className="mine-section">
                 <div className="mine-section-header">
