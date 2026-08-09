@@ -1158,6 +1158,17 @@
     background: #ff3b30;
     flex-shrink: 0;
 }
+.guide-light.checking::before {
+    background: #b0b0b5;
+    animation: guide-pulse 1s ease-in-out infinite;
+}
+.guide-light.checking {
+    color: var(--text-3);
+}
+@keyframes guide-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+}
 .guide-light.on {
     color: #34c759;
     background: rgba(52, 199, 89, 0.08);
@@ -1217,6 +1228,43 @@
     flex-shrink: 0;
     padding: 9px 14px;
     white-space: nowrap;
+}
+.login-done {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(52, 199, 89, 0.06);
+    border: 0.5px solid rgba(52, 199, 89, 0.3);
+    border-radius: 12px;
+    padding: 14px;
+}
+.login-done-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #34c759;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(52, 199, 89, 0.5);
+}
+.login-done-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.login-done-text b {
+    font-size: 14px;
+    color: var(--text);
+}
+.login-done-text span {
+    font-size: 11px;
+    color: var(--text-2);
+    line-height: 1.5;
 }
 @media (max-width: 560px) {
     .login-modal-body .bind-input,

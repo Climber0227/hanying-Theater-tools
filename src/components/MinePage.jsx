@@ -57,9 +57,15 @@ function evaluateWzScore(total) {
 
 const EVAL_DESCS = ['英雄区保不了级系列', '运气好英雄区保级', '', '', '', '', ''];
 
+// 手机号脱敏显示（138****0000）
+function maskPhone(p) {
+    if (!p) return '';
+    return String(p).replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2');
+}
+
 // 三步使用引导（横向步骤条）
 // 1 登录网站账号 2 登录库街区 3 同步分数
-function SetupGuide({ loggedIn, kuroBound, weekSaved, onOpenLogin, onSyncRequest }) {
+function SetupGuide({ loggedIn, kuroBound, weekSaved, authReady, onOpenLogin, onSyncRequest }) {
     return (
         <div className="setup-guide">
             <div className="setup-guide-header">
@@ -72,7 +78,9 @@ function SetupGuide({ loggedIn, kuroBound, weekSaved, onOpenLogin, onSyncRequest
                     <div className="guide-step-info">
                         <div className="guide-step-title">登录网站账号</div>
                         <div className="guide-step-lights">
-                            <span className={`guide-light${loggedIn ? ' on' : ''}`}>网站 {loggedIn ? '已登录' : '未登录'}</span>
+                            <span className={`guide-light${loggedIn ? ' on' : ''}${!authReady ? ' checking' : ''}`}>
+                                网站 {!authReady ? '检查中…' : (loggedIn ? '已登录' : '未登录')}
+                            </span>
                         </div>
                     </div>
                     <button className="guide-action" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin('web'); }}>
@@ -107,7 +115,8 @@ function SetupGuide({ loggedIn, kuroBound, weekSaved, onOpenLogin, onSyncRequest
 }
 
 // 登录弹窗：网站账号（登录/注册） + 库街区（验证码绑定）双 tab
-function LoginModal({ tab, onClose, onLoggedIn }) {
+// 已登录/已绑定时显示状态视图，不再重复表单
+function LoginModal({ tab, onClose, onLoggedIn, userLoggedIn, kuroBound }) {
     const [mode, setMode] = useState(tab === 'kuro' ? 'kuro' : 'web');
     // 网站账号
     const [id, setId] = useState('');
@@ -180,57 +189,85 @@ function LoginModal({ tab, onClose, onLoggedIn }) {
             </div>
 
             {mode === 'web' ? (
-                <div className="login-modal-body">
-                    <input
-                        className="bind-input"
-                        style={{ width: '100%', maxWidth: 'none' }}
-                        placeholder="账号（手机号/用户名）"
-                        value={id}
-                        onChange={e => setId(e.target.value)}
-                    />
-                    <input
-                        className="bind-input"
-                        style={{ width: '100%', maxWidth: 'none' }}
-                        type="password"
-                        placeholder="密码"
-                        value={pw}
-                        onChange={e => setPw(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') doWeb(); }}
-                    />
-                    <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} disabled={!!busy} onClick={doWeb}>
-                        {busy || (isReg ? '注册并登录' : '登录')}
-                    </button>
-                    <button className="login-modal-switch" onClick={() => { setIsReg(r => !r); setMsg(''); }}>
-                        {isReg ? '已有账号？去登录' : '没有账号？一键注册'}
-                    </button>
-                    {msg && <div className="data-mgmt-msg">{msg}</div>}
-                </div>
-            ) : (
-                <div className="login-modal-body">
-                    <div className="kuro-bound-hint">绑定后每周点「同步分数」，一键拉取游戏内战区 / 幻痛数据（需先在库街区App打开「纷争战区」刷新）</div>
-                    <input
-                        className="bind-input"
-                        style={{ width: '100%', maxWidth: 'none' }}
-                        placeholder="库街区绑定手机号"
-                        value={phone}
-                        onChange={e => setPhone(e.target.value)}
-                    />
-                    <div className="login-modal-code-row">
+                userLoggedIn ? (
+                    <div className="login-modal-body">
+                        <div className="login-done">
+                            <div className="login-done-icon">✓</div>
+                            <div className="login-done-text">
+                                <b>网站账号已登录</b>
+                                <span>账号：{auth.playerName || auth.playerId}</span>
+                                <span>云端同步已开启 · 分数/历史多端可查</span>
+                            </div>
+                        </div>
+                        <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} onClick={onClose}>完成</button>
+                    </div>
+                ) : (
+                    <div className="login-modal-body">
                         <input
                             className="bind-input"
-                            placeholder="验证码"
-                            value={code}
-                            onChange={e => setCode(e.target.value)}
+                            style={{ width: '100%', maxWidth: 'none' }}
+                            placeholder="账号（手机号/用户名）"
+                            value={id}
+                            onChange={e => setId(e.target.value)}
                         />
-                        <button className="bind-btn login-modal-send" disabled={countdown > 0 || !!busy} onClick={sendKuroCode}>
-                            {countdown > 0 ? `${countdown}s` : '发送验证码'}
+                        <input
+                            className="bind-input"
+                            style={{ width: '100%', maxWidth: 'none' }}
+                            type="password"
+                            placeholder="密码"
+                            value={pw}
+                            onChange={e => setPw(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') doWeb(); }}
+                        />
+                        <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} disabled={!!busy} onClick={doWeb}>
+                            {busy || (isReg ? '注册并登录' : '登录')}
                         </button>
+                        <button className="login-modal-switch" onClick={() => { setIsReg(r => !r); setMsg(''); }}>
+                            {isReg ? '已有账号？去登录' : '没有账号？一键注册'}
+                        </button>
+                        {msg && <div className="data-mgmt-msg">{msg}</div>}
                     </div>
-                    <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} disabled={!!busy} onClick={doKuro}>
-                        {busy || '绑定并登录'}
-                    </button>
-                    {msg && <div className="data-mgmt-msg">{msg}</div>}
-                </div>
+                )
+            ) : (
+                kuroBound ? (
+                    <div className="login-modal-body">
+                        <div className="login-done">
+                            <div className="login-done-icon">✓</div>
+                            <div className="login-done-text">
+                                <b>库街区已绑定</b>
+                                <span>手机号：{maskPhone(getKuroPhone())}</span>
+                                <span>每周点「同步分数」一键拉取游戏内战区 / 幻痛数据</span>
+                            </div>
+                        </div>
+                        <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} onClick={onClose}>完成</button>
+                    </div>
+                ) : (
+                    <div className="login-modal-body">
+                        <div className="kuro-bound-hint">绑定后每周点「同步分数」，一键拉取游戏内战区 / 幻痛数据（需先在库街区App打开「纷争战区」刷新）</div>
+                        <input
+                            className="bind-input"
+                            style={{ width: '100%', maxWidth: 'none' }}
+                            placeholder="库街区绑定手机号"
+                            value={phone}
+                            onChange={e => setPhone(e.target.value)}
+                        />
+                        <div className="login-modal-code-row">
+                            <input
+                                className="bind-input"
+                                placeholder="验证码"
+                                value={code}
+                                onChange={e => setCode(e.target.value)}
+                            />
+                            <button className="bind-btn login-modal-send" disabled={countdown > 0 || !!busy} onClick={sendKuroCode}>
+                                {countdown > 0 ? `${countdown}s` : '发送验证码'}
+                            </button>
+                        </div>
+                        <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} disabled={!!busy} onClick={doKuro}>
+                            {busy || '绑定并登录'}
+                        </button>
+                        {msg && <div className="data-mgmt-msg">{msg}</div>}
+                    </div>
+                )
             )}
         </Modal>
     );
@@ -1693,6 +1730,7 @@ export default function MinePage() {
                 loggedIn={!!user}
                 kuroBound={kuroBound}
                 weekSaved={weekSaved}
+                authReady={authReady}
                 onOpenLogin={setLoginModal}
                 onSyncRequest={() => syncScoreRef.current && syncScoreRef.current()}
             />
@@ -1747,6 +1785,8 @@ export default function MinePage() {
                 <LoginModal
                     tab={loginModal}
                     onClose={() => setLoginModal(null)}
+                    userLoggedIn={!!user}
+                    kuroBound={kuroBound}
                     onLoggedIn={() => {
                         setLoginModal(null);
                         setUser(auth.isLoggedIn() ? { id: auth.playerId, name: auth.playerName } : null);
