@@ -42,13 +42,15 @@ export default function App() {
         <ErrorBoundary>
             <div className="container">
                 <Nav current={page} onChange={changePage} />
-                {page === 'warzone' && <WarzonePage onOpenPlayer={openPlayer} />}
-                <Suspense fallback={PAGE_FALLBACK}>
-                    {page === 'player' && <PlayerPage pendingPlayerId={pendingPlayerId} />}
-                    {page === 'ppc' && <PpcPage onOpenPlayer={openPlayer} />}
-                    {page === 'mine' && <MinePage />}
-                    {page === 'changelog' && <ChangelogPage />}
-                </Suspense>
+                <div className="page-fade" key={page}>
+                    {page === 'warzone' && <WarzonePage onOpenPlayer={openPlayer} />}
+                    <Suspense fallback={PAGE_FALLBACK}>
+                        {page === 'player' && <PlayerPage pendingPlayerId={pendingPlayerId} />}
+                        {page === 'ppc' && <PpcPage onOpenPlayer={openPlayer} />}
+                        {page === 'mine' && <MinePage />}
+                        {page === 'changelog' && <ChangelogPage />}
+                    </Suspense>
+                </div>
                 <AdFloat />
                 <a
                     className="corner-feedback"

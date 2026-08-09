@@ -64,7 +64,7 @@ function splitPoints(points) {
 // 单张多区曲线图（SVG 自绘：平滑曲线 + 入场动画 + 常驻跟随 tooltip）
 // showTotal=true 时额外渲染总分线（d.total），xLabelFn 可自定义 X 轴标签
 // compact=true 为小尺寸版（并排时用）：更小 viewBox + 相对更粗线条，减少锯齿
-export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTotal, compact }) {
+export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTotal, compact, startDelay = 0 }) {
     const [phase, setPhase] = useState(0); // 0 隐藏 → 1 区域 → 2 折线 → 3 数据点
     const [hover, setHover] = useState(null); // { i, x, y } 列索引 + 鼠标 viewBox 坐标
 
@@ -83,12 +83,12 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
         setPhase(0);
         setHover(null);
         const timers = [
-            setTimeout(() => setPhase(1), 100),
-            setTimeout(() => setPhase(2), 400),
-            setTimeout(() => setPhase(3), 800)
+            setTimeout(() => setPhase(1), startDelay + 100),
+            setTimeout(() => setPhase(2), startDelay + 400),
+            setTimeout(() => setPhase(3), startDelay + 800)
         ];
         return () => timers.forEach(clearTimeout);
-    }, [data]);
+    }, [data, startDelay]);
 
     const xLabel = d => {
         if (!d) return '';

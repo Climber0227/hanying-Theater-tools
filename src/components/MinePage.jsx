@@ -230,8 +230,8 @@ function MyTrendSection({ zones, syncStamp }) {
 
     return (
         <div className="trend-grid">
-            <CurveChart title="今日按时趋势" data={todayData} zones={zoneList} mode="today" hasData={hasToday} showTotal />
-            <CurveChart title="本周按天趋势（周一~周日）" data={dayData} zones={zoneList} mode="week" hasData={hasWeek} showTotal />
+            <CurveChart title="今日按时趋势" data={todayData} zones={zoneList} mode="today" hasData={hasToday} showTotal startDelay={0} />
+            <CurveChart title="本周按天趋势（周一~周日）" data={dayData} zones={zoneList} mode="week" hasData={hasWeek} showTotal startDelay={260} />
         </div>
     );
 }
@@ -1535,48 +1535,58 @@ export default function MinePage() {
 
     return (
         <div>
-            <SetupGuide loggedIn={!!user} kuroBound={kuroBound} weekSaved={weekSaved} />
-
-            <AccountSection
-                onSyncData={saveSyncedScores}
-                onAuthChange={u => { setUser(u); setAuthTick(t => t + 1); }}
-                onBoundChange={setKuroBound}
-                authReady={authReady}
-                authTick={authTick}
-            />
-
-            <WeekScoreCard
-                area={syncData ? syncData.area : null}
-                ppc={syncData ? syncData.ppc : null}
-                roleId={syncData ? syncData.roleId : null}
-                serverId={syncData ? syncData.serverId : null}
-                zones={wzZones}
-                trend={trend}
-                showTrendBtn={isMobile}
-            />
-
-            <div id="mine-scores">
-                <WzScoreSection zones={wzZones} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
-                <PpcScoreSection bosses={ppcBosses} currentWeek={ppcWeek} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
+            <div className="anim-in" style={{ '--d': '0ms' }}>
+                <SetupGuide loggedIn={!!user} kuroBound={kuroBound} weekSaved={weekSaved} />
             </div>
 
-            <div className="mine-section">
-                <div className="mine-section-header">
-                    <h3><span className="step-badge">4</span>关注列表</h3>
-                    <button className="clear-btn" onClick={clearFollows}>清空</button>
+            <div className="anim-in" style={{ '--d': '80ms' }}>
+                <AccountSection
+                    onSyncData={saveSyncedScores}
+                    onAuthChange={u => { setUser(u); setAuthTick(t => t + 1); }}
+                    onBoundChange={setKuroBound}
+                    authReady={authReady}
+                    authTick={authTick}
+                />
+            </div>
+
+            <div className="anim-in" style={{ '--d': '160ms' }}>
+                <WeekScoreCard
+                    area={syncData ? syncData.area : null}
+                    ppc={syncData ? syncData.ppc : null}
+                    roleId={syncData ? syncData.roleId : null}
+                    serverId={syncData ? syncData.serverId : null}
+                    zones={wzZones}
+                    trend={trend}
+                    showTrendBtn={isMobile}
+                />
+            </div>
+
+            <div className="anim-in" style={{ '--d': '240ms' }}>
+                <div id="mine-scores">
+                    <WzScoreSection zones={wzZones} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
+                    <PpcScoreSection bosses={ppcBosses} currentWeek={ppcWeek} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
                 </div>
-                <div className="follow-list">
-                    {follows.length === 0 && <span className="follow-empty">暂无关注</span>}
-                    {follows.map(f => (
-                        <div className="follow-item" key={f.id}>
-                            {f.portrait && <img className="follow-avatar" src={getImageUrl(f.portrait)} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
-                            <div className="follow-info">
-                                <div className="follow-name">{f.name}</div>
-                                <div className="follow-id">ID: {f.id}</div>
+            </div>
+
+            <div className="anim-in" style={{ '--d': '320ms' }}>
+                <div className="mine-section">
+                    <div className="mine-section-header">
+                        <h3><span className="step-badge">4</span>关注列表</h3>
+                        <button className="clear-btn" onClick={clearFollows}>清空</button>
+                    </div>
+                    <div className="follow-list">
+                        {follows.length === 0 && <span className="follow-empty">暂无关注</span>}
+                        {follows.map(f => (
+                            <div className="follow-item" key={f.id}>
+                                {f.portrait && <img className="follow-avatar" src={getImageUrl(f.portrait)} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+                                <div className="follow-info">
+                                    <div className="follow-name">{f.name}</div>
+                                    <div className="follow-id">ID: {f.id}</div>
+                                </div>
+                                <button className="follow-remove" onClick={() => removeFollow(f.id)}>取关</button>
                             </div>
-                            <button className="follow-remove" onClick={() => removeFollow(f.id)}>取关</button>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
