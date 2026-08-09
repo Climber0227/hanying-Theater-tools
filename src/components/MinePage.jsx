@@ -1157,12 +1157,6 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones
     const areaEv = evaluateWzScore(areaInfo.totalPoint || 0);
     const myGroupName = (area || {}).groupName || '';
     const myGroupLevel = (area || {}).groupLevel || '';
-    // 子区名：排行榜该区 buffs 中与区名不同者（熵钟异数 → 猩红冰原/岩流深壑）
-    const zoneSubs = name => {
-        const full = (zones || []).find(z => z.name === name);
-        if (!full) return [];
-        return (full.buffs || []).map(b => b.name).filter(n => n && n !== full.name);
-    };
 
     return (
         <div className="mine-section week-score-card">
@@ -1195,27 +1189,10 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones
                                 <div className="week-zone" key={i}>
                                     <div className="week-zone-head">
                                         <div className="week-zone-top">
-                                            <span className="week-zone-name">
-                                                {s.stageName}
-                                                {(s.subs && s.subs.length > 0)
-                                                    ? <span className="week-zone-sub">（{s.subs.map(x => x.name).join('/')}）</span>
-                                                    : zoneSubs(s.stageName).length > 0 && (
-                                                        <span className="week-zone-sub">（{zoneSubs(s.stageName).join('/')}）</span>
-                                                    )}
-                                            </span>
+                                            <span className="week-zone-name">{s.stageName}</span>
                                             {s.description ? <span className="week-zone-mech">{s.description}</span> : null}
                                             <span className="week-zone-score">{formatNumber(s.point || 0)}</span>
                                         </div>
-                                        {s.subs && s.subs.length > 0 && (
-                                            <div className="week-zone-subs">
-                                                {s.subs.map((sub, k) => (
-                                                    <span className="week-zone-sub-item" key={k}>
-                                                        {sub.name} {formatNumber(sub.score)}分
-                                                        {sub.fightTime ? <em>· {sub.fightTime}min</em> : null}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
                                         <div className="week-zone-foot">
                                             <div className="week-zone-tags">
                                                 {s.totalNum ? <span className="week-zone-wave">挑战 {s.totalNum} 次</span> : null}
@@ -1227,6 +1204,16 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones
                                             <button className="week-team-btn week-compare-btn" onClick={() => setCompareStage(s)}>对比榜单</button>
                                         </div>
                                     </div>
+                                    {s.subs && s.subs.length > 0 && (
+                                        <div className="week-zone-subs">
+                                            {s.subs.map((sub, k) => (
+                                                <span className="week-zone-sub-item" key={k}>
+                                                    {sub.name} {formatNumber(sub.score)}分
+                                                    {sub.fightTime ? <em>· {sub.fightTime}min</em> : null}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
