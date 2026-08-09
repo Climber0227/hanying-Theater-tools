@@ -18,6 +18,7 @@ import Modal from './Modals/Modal.jsx';
 import { CurveChart } from './Modals/CurveModal.jsx';
 import useMediaQuery, { MOBILE_QUERY } from '../hooks/useMediaQuery.js';
 import { useTrendData } from '../hooks/useTrendData.js';
+import { useCountUp } from '../utils/countUp.js';
 
 // 阶级字符串 → 榜单 rank 数字（1=B 2=A 3=S 4=SS 5=SSS 6=SSS+）
 const GRADE_TO_RANK = { 'B': 1, 'A': 2, 'S': 3, 'SS': 4, 'SSS': 5, 'SSS+': 6 };
@@ -1157,6 +1158,11 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones
     const areaEv = evaluateWzScore(areaInfo.totalPoint || 0);
     const myGroupName = (area || {}).groupName || '';
     const myGroupLevel = (area || {}).groupLevel || '';
+    // 数字就位动画：总分/挑战次数从 0 滚动到最终值（仪表盘就位感）
+    const areaTotal = useCountUp(areaInfo.totalPoint || 0);
+    const areaTimes = useCountUp(areaInfo.totalChallengeTimes || 0);
+    const ppcTotal = useCountUp(ppcInfo.totalPoint || 0);
+    const ppcTimes = useCountUp(ppcInfo.totalChallengeTimes || 0);
 
     return (
         <div className="mine-section week-score-card">
@@ -1175,11 +1181,11 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones
                         </div>
                         <div className="week-card-stats">
                             <div className="week-stat">
-                                <span className="week-stat-num">{formatNumber(areaInfo.totalPoint || 0)}</span>
+                                <span className="week-stat-num">{formatNumber(areaTotal)}</span>
                                 <span className="week-stat-label">总分</span>
                             </div>
                             <div className="week-stat">
-                                <span className="week-stat-num">{areaInfo.totalChallengeTimes || 0}</span>
+                                <span className="week-stat-num">{areaTimes}</span>
                                 <span className="week-stat-label">挑战次数</span>
                             </div>
                             <div className={`eval-tag eval-level-${areaEv.level}`}>{areaEv.text}</div>
@@ -1224,11 +1230,11 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, zones
                         <div className="week-card-title">幻痛囚笼</div>
                         <div className="week-card-stats">
                             <div className="week-stat">
-                                <span className="week-stat-num">{formatNumber(ppcInfo.totalPoint || 0)}</span>
+                                <span className="week-stat-num">{formatNumber(ppcTotal)}</span>
                                 <span className="week-stat-label">总分</span>
                             </div>
                             <div className="week-stat">
-                                <span className="week-stat-num">{ppcInfo.totalChallengeTimes || 0}</span>
+                                <span className="week-stat-num">{ppcTimes}</span>
                                 <span className="week-stat-label">挑战次数</span>
                             </div>
                         </div>
