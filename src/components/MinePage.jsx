@@ -798,6 +798,7 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
                             )}
                             <button className="bind-btn" disabled={!!busy} onClick={doSync}>{busy || '同步分数'}</button>
                         </div>
+                        <div className="kuro-sync-tip">提示：分数不是最新？先在库街区App打开「纷争战区」页面刷新数据，再回来同步</div>
                     </div>
                     <div className="data-mgmt-btns" style={{ marginTop: 10, justifyContent: 'center' }}>
                         <button className="bind-btn-unbind" onClick={doUnbind}>解绑库街区</button>
