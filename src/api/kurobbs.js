@@ -169,6 +169,12 @@ export async function getAreaData(token, roleId, serverId) {
     return gameRequest('/haru/roleBox/area', token, roleId, serverId);
 }
 
+// 刷新战双游戏数据（等同库街区App打开页面时的触发：服务器从游戏拉取最新数据）
+// 同步前先调它，避免拿到服务器缓存的旧成绩
+export async function refreshKuroData(token, roleId, serverId) {
+    return gameRequest('/haru/roleBox/refreshData', token, roleId, serverId);
+}
+
 // 幻痛囚笼数据
 export async function getPrisonerCageData(token, roleId, serverId) {
     return gameRequest('/haru/roleBox/prisonerCage', token, roleId, serverId);

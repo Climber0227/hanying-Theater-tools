@@ -7,7 +7,7 @@ import {
     getKuroToken, clearKuroToken,
     getKuroPhone, setKuroPhone, clearKuroPhone,
     sendSmsCode, kuroLogin, showGeetestCaptcha,
-    getKuroRoleList, getAreaData, getPrisonerCageData, getRoleIndexData
+    getKuroRoleList, getAreaData, getPrisonerCageData, getRoleIndexData, refreshKuroData
 } from '../api/kurobbs.js';
 import { formatNumber } from '../utils/format.js';
 import { getTeamKey, getQualityInfo, formatScoreCompact, getMondayStart } from '../utils/format.js';
@@ -581,6 +581,10 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick }) {
         try {
             const roleId = selRole.roleId;
             const serverId = selRole.serverId || '1000';
+            // 先调库街区刷新接口（等同App打开页面）：服务器从游戏拉最新数据，避免拿到缓存旧成绩
+            try {
+                await refreshKuroData(token, roleId, serverId);
+            } catch { /* 刷新失败（频率限制等）则继续用缓存数据 */ }
             const [area, ppc] = await Promise.all([
                 getAreaData(token, roleId, serverId),
                 getPrisonerCageData(token, roleId, serverId)
