@@ -247,7 +247,7 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
                         />
                     ))}
 
-                    {/* 折线（分段绘制动画） */}
+                    {/* 折线（从左到右平滑绘制：分段依次生长，linear 匀速 + 长时长） */}
                     {series.map(s => s.segs.map((seg, si) => (
                         <path
                             key={`line-${s.si}-${si}`}
@@ -261,8 +261,7 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
                                 opacity: phase >= 2 ? 1 : 0,
                                 strokeDasharray: 1,
                                 strokeDashoffset: phase >= 2 ? 0 : 1,
-                                transition: 'opacity 0.6s ease-out, stroke-dashoffset 1.6s ease-out',
-                                transitionDelay: `${600 + s.si * 220}ms`
+                                transition: `stroke-dashoffset 1.8s linear ${startDelay + 400 + s.si * 260 + si * 140}ms, opacity 0.3s ease ${startDelay + 400 + s.si * 260 + si * 140}ms`
                             }}
                         />
                     )))}
@@ -279,8 +278,7 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
                             style={{
                                 opacity: phase >= 2 ? 1 : 0,
                                 strokeDashoffset: phase >= 2 ? 0 : 1,
-                                transition: 'opacity 0.6s ease-out, stroke-dashoffset 1.6s ease-out',
-                                transitionDelay: `${700 + series.length * 220}ms`
+                                transition: `stroke-dashoffset 1.8s linear ${startDelay + 400 + series.length * 260 + si * 140}ms, opacity 0.3s ease ${startDelay + 400 + series.length * 260 + si * 140}ms`
                             }}
                         />
                     ))}
@@ -297,13 +295,13 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
                             style={{
                                 opacity: phase >= 3 ? 1 : 0,
                                 transition: 'opacity 0.5s ease-out',
-                                transitionDelay: phase >= 3 ? `${1000 + i * 40}ms` : '0ms'
+                                transitionDelay: phase >= 3 ? `${startDelay + 2400 + i * 30}ms` : '0ms'
                             }}
                         >
                             {xLabel(d)}
                         </text>
                     ))}
-                    {/* 数据点（逐个弹出：缩放 + 淡入） */}
+                    {/* 数据点（折线绘制完成后逐个弹出：缩放 + 淡入） */}
                     {series.map(s => data.map((d, i) => {
                         const v = d['z' + s.si];
                         if (v == null) return null;
@@ -323,7 +321,7 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
                                     transformBox: 'fill-box',
                                     transformOrigin: 'center',
                                     transition: 'opacity 0.5s ease-out, transform 0.5s ease-out, r 0.25s ease',
-                                    transitionDelay: phase >= 3 ? `${1200 + i * 60 + s.si * 80}ms` : '0ms'
+                                    transitionDelay: phase >= 3 ? `${startDelay + 2500 + i * 35 + s.si * 60}ms` : '0ms'
                                 }}
                             />
                         );
@@ -347,7 +345,7 @@ export function CurveChart({ title, data, zones, mode, hasData, xLabelFn, showTo
                                     transformBox: 'fill-box',
                                     transformOrigin: 'center',
                                     transition: 'opacity 0.5s ease-out, transform 0.5s ease-out, r 0.25s ease',
-                                    transitionDelay: phase >= 3 ? `${1300 + i * 60}ms` : '0ms'
+                                    transitionDelay: phase >= 3 ? `${startDelay + 2600 + i * 35}ms` : '0ms'
                                 }}
                             />
                         );
