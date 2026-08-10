@@ -7,7 +7,8 @@ const FOLLOWS_KEY = 'huaxu_follows';
 
 // ========== 趋势曲线采样 ==========
 // 返回 true 表示本次确实写入了新采样（用于判断是否需要上传后端）
-export function recordCurveSample(difficulty, activity, rankings) {
+// zoneNames：三区名数组，采样时随分数一起存（读取时按名匹配，防止三区顺序变化导致错位）
+export function recordCurveSample(difficulty, activity, rankings, zoneNames) {
     try {
         const key = `${CURVE_PREFIX}${difficulty}_${activity}`;
         for (let i = localStorage.length - 1; i >= 0; i--) {
@@ -20,11 +21,11 @@ export function recordCurveSample(difficulty, activity, rankings) {
         try { data = JSON.parse(localStorage.getItem(key)); } catch { /* 忽略损坏 */ }
         if (!data || !data.samples) data = { samples: [] };
 
-        const sample = { t: Date.now(), p: {} };
+        const sample = { t: Date.now(), p: {}, names: zoneNames || [] };
         (rankings || []).forEach(r => {
             sample.p[String(r.player.id)] = {
                 n: r.player.name,
-                z: (r.zones || []).map(z => z.score || 0),
+                z: (r.zones || []).map((z, i) => ({ n: (zoneNames || [])[i] || '', s: z.score || 0 })),
                 t: r.score || 0
             };
         });
@@ -49,7 +50,16 @@ export function getPlayerCurve(playerId, difficulty, activity) {
     if (!data || !data.samples) return [];
     return data.samples.map(s => {
         const p = s.p[String(playerId)];
-        return p ? { t: s.t, zones: p.z, total: p.t } : null;
+        if (!p) return null;
+        // 新格式：z 为 {n: 区名, s: 分数} 对象数组；旧格式：纯数字数组（无区名按顺序兜底）
+        const raw = p.z || [];
+        const isObj = raw.length > 0 && typeof raw[0] === 'object';
+        return {
+            t: s.t,
+            zones: isObj ? raw.map(x => x.s) : raw,
+            names: isObj ? raw.map(x => x.n || '') : (s.names || null),
+            total: p.t
+        };
     }).filter(Boolean);
 }
 

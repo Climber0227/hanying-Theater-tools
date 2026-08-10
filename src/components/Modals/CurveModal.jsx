@@ -19,12 +19,21 @@ function dayLabel(ts) {
 }
 
 // 采样 → 图表行（三区单独字段，0 分视为缺失）
-function toRow(s) {
+// 优先按区名匹配（采样带 names 时），旧数据无 names 按数组顺序兜底
+function toRow(s, zoneList) {
     if (!s) return { time: 0, z0: null, z1: null, z2: null };
     const r = { time: s.t, z0: null, z1: null, z2: null };
-    (s.zones || []).forEach((v, i) => {
-        if (i < 3 && v > 0) r['z' + i] = v;
-    });
+    if (!s.zones) return r;
+    if (s.names && s.names.length >= 3) {
+        (zoneList || []).forEach((z, i) => {
+            const idx = s.names.indexOf(z.name);
+            if (idx >= 0 && s.zones[idx] > 0) r['z' + i] = s.zones[idx];
+        });
+    } else {
+        (s.zones || []).forEach((v, i) => {
+            if (i < 3 && v > 0) r['z' + i] = v;
+        });
+    }
     return r;
 }
 
@@ -463,10 +472,10 @@ export default function CurveModal({ playerId, playerName, difficulty, currentWe
         const endT = startT + 24 * 3600 * 1000;
         return samples
             .filter(s => s && s.t >= startT && s.t < endT)
-            .map(s => ({ ...toRow(s), label: fmtTime(s.t) }))
+            .map(s => ({ ...toRow(s, zoneList), label: fmtTime(s.t) }))
             .sort((a, b) => a.time - b.time)
             .map((d, i) => ({ ...d, _i: i }));
-    }, [samples]);
+    }, [samples, zoneList]);
 
     // 本周（按天，每天取最后一条采样）
     const weekData = useMemo(() => {
@@ -480,10 +489,10 @@ export default function CurveModal({ playerId, playerName, difficulty, currentWe
                 byDay[dayKey] = s;
             });
         return Object.values(byDay)
-            .map(s => ({ ...toRow(s), label: dayLabel(s.t) }))
+            .map(s => ({ ...toRow(s, zoneList), label: dayLabel(s.t) }))
             .sort((a, b) => a.time - b.time)
             .map((d, i) => ({ ...d, _i: i }));
-    }, [samples]);
+    }, [samples, zoneList]);
 
     const hasAny = data => data.some(d => d.z0 != null || d.z1 != null || d.z2 != null);
     const todayHas = hasAny(todayData) && todayData.length >= 2;

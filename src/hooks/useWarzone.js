@@ -57,7 +57,8 @@ export function useWarzone() {
                 });
 
                 if (week === null && list) {
-                    const sampled = recordCurveSample(difficulty, curWeek, list);
+                    const zoneNames = (warzone.area.zones || []).map(z => z.name);
+                    const sampled = recordCurveSample(difficulty, curWeek, list, zoneNames);
                     if (sampled) uploadCurveSample(difficulty, curWeek, list);
                     // 排名变化快照（30 分钟基线）
                     const prev = loadWzSnapshot(difficulty);
