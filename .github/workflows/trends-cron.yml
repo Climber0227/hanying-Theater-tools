@@ -1,0 +1,23 @@
+name: trends-cron
+
+on:
+  schedule:
+    # 每 30 分钟拉取源站榜单采样（对齐源站 ~30 分钟刷新）
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: pip install curl_cffi
+
+      - name: Fetch and upload trend samples
+        run: python scripts/cron_fetch.py

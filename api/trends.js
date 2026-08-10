@@ -20,7 +20,9 @@ module.exports = async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     let body;
-    try { body = JSON.parse(req.body || '{}'); } catch { return res.status(400).json({ error: '无效请求' }); }
+    try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    } catch { return res.status(400).json({ error: '无效请求' }); }
 
     const week = parseInt(body.week);
     const difficulty = String(body.difficulty || '').trim();
