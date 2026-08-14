@@ -27,9 +27,9 @@ const TODAY_SAMPLES_KEY = 'my_wz_today_samples';
 // 最近一次同步的本周数据（刷新后先显示本地，再异步更新）
 const LAST_SYNC_KEY = 'my_wz_last_sync';
 
-// 段位（组名 + 区间）→ 难度 ID（如 传奇 + 80-120 → 16）
-// 库街区 groupLevel 真实格式带空格（如 "80 - 120"），且可能有全角/波浪线变体，做归一化匹配；
-// 匹配失败时不再直接 fallback 传奇(16)，而是同段位组内取最高区间，仍比跨段位合理
+// 段位（组名 + 区间）→ 难度 ID（如 英雄小队 + 80-120 → 15）
+// 库街区 groupName 带"小队"后缀（如 "英雄小队"），groupLevel 带空格（如 "80 - 120"），
+// 匹配时归一化 + 包含匹配；失败时同段位组内取最高区间，不再跨段位 fallback
 function matchDifficulty(groupName, groupLevel) {
     const norm = v => String(v || '')
         .replace(/[\s\u3000]/g, '')   // 半角/全角空格
@@ -38,13 +38,18 @@ function matchDifficulty(groupName, groupLevel) {
     const name = norm(groupName);
     const level = norm(groupLevel);
     if (!name) return '16';
+    // 组名包含匹配："英雄小队" ↔ "英雄" 双向包含，避免后缀（小队）导致匹配失败
+    const groupMatch = (labelGroup, n) => {
+        const lg = norm(labelGroup);
+        return lg === n || (n.includes(lg) && lg.length >= 2) || (lg.includes(n) && n.length >= 2);
+    };
     let opt = null;
     if (level) {
-        opt = DIFFICULTY_OPTIONS.find(o => norm(o.label.split(' ')[0]) === name && norm(o.label).includes(level));
+        opt = DIFFICULTY_OPTIONS.find(o => groupMatch(o.label.split(' ')[0], name) && norm(o.label).includes(level));
     }
     if (!opt) {
         // 区间匹配不到（如接口缺 groupLevel）：同段位组内取最高区间（80-120）
-        const group = DIFFICULTY_OPTIONS.filter(o => norm(o.label.split(' ')[0]) === name);
+        const group = DIFFICULTY_OPTIONS.filter(o => groupMatch(o.label.split(' ')[0], name));
         if (group.length > 0) opt = group[0];
     }
     return opt ? opt.value : '16';
