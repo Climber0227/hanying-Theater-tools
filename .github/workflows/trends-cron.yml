@@ -1,0 +1,26 @@
+name: trends-cron
+
+on:
+  schedule:
+    # 每 30 分钟拉取源站榜单采样（对齐源站 ~30 分钟刷新）
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: pip install curl_cffi
+
+      - name: Fetch and upload trend samples
+        env:
+          # 与 Vercel 环境变量 CRON_SECRET 一致；用于 /api/trends 的清理鉴权
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: python scripts/cron_fetch.py
