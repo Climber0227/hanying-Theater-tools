@@ -28,12 +28,58 @@ const TODAY_SAMPLES_KEY = 'my_wz_today_samples';
 const LAST_SYNC_KEY = 'my_wz_last_sync';
 
 // 段位（组名 + 区间）→ 难度 ID（如 传奇 + 80-120 → 16）
+// 库街区 groupLevel 真实格式带空格（如 "80 - 120"），且可能有全角/波浪线变体，做归一化匹配；
+// 匹配失败时不再直接 fallback 传奇(16)，而是同段位组内取最高区间，仍比跨段位合理
 function matchDifficulty(groupName, groupLevel) {
-    const level = String(groupLevel || '').replace(/\s+/g, '');
-    const opt = DIFFICULTY_OPTIONS.find(o =>
-        o.label.split(' ')[0] === String(groupName || '') && level && o.label.includes(level)
-    );
+    const norm = v => String(v || '')
+        .replace(/[\s\u3000]/g, '')   // 半角/全角空格
+        .replace(/[～~—－_]/g, '-')    // 区间分隔符变体归一为 -
+        .replace(/[（）()]/g, '');     // 括号
+    const name = norm(groupName);
+    const level = norm(groupLevel);
+    if (!name) return '16';
+    let opt = null;
+    if (level) {
+        opt = DIFFICULTY_OPTIONS.find(o => norm(o.label.split(' ')[0]) === name && norm(o.label).includes(level));
+    }
+    if (!opt) {
+        // 区间匹配不到（如接口缺 groupLevel）：同段位组内取最高区间（80-120）
+        const group = DIFFICULTY_OPTIONS.filter(o => norm(o.label.split(' ')[0]) === name);
+        if (group.length > 0) opt = group[0];
+    }
     return opt ? opt.value : '16';
+}
+
+// 按段位拉取榜单，计算一条战区记录的排名：
+// 各区「同阵容同阶级」排名 + 总榜排名 + 晋级前100差距
+// week 传 null 表示本周（同步保存时），传周号表示历史周（旧记录排名重算时）
+async function computeWzRanks(zoneScores, total, groupName, groupLevel, week) {
+    let diff = matchDifficulty(groupName, groupLevel);
+    let totalRank = 0;
+    let totalDiff = 0;
+    try {
+        const wz = await loadWarzone(diff, week);
+        const fullZones = (wz.warzone && wz.warzone.area && wz.warzone.area.zones) || [];
+        zoneScores = zoneScores.map(z => {
+            const full = fullZones.find(f => f.name === z.name);
+            if (!full) return z;
+            const tagged = { ...z, ...extractZoneTags(full) };
+            if (!z.team || z.team.length === 0) return tagged;
+            const myChars = z.team.map(t => ({ id: t.id || t.name, rank: GRADE_TO_RANK[t.grade] || 0 }));
+            const myKey = getTeamKey(myChars);
+            const teams = computeRankingGroups(wz.rankings || [], full.id, '');
+            const group = teams.find(t => getTeamKey(t.chars) === myKey);
+            if (!group) return tagged;
+            const rank = group.players.filter(p => p.score > z.score).length + 1;
+            return { ...tagged, teamRank: { rank, total: group.players.length } };
+        });
+        // 总榜排名 + 晋级前100差距
+        const totalScores = (wz.rankings || []).map(r => r.score || 0).filter(s => s > 0).sort((a, b) => b - a);
+        totalRank = totalScores.filter(s => s > total).length + 1;
+        const gate = totalScores.length >= 100 ? totalScores[99] : (totalScores.length ? totalScores[totalScores.length - 1] : 0);
+        totalDiff = gate > 0 ? gate - total : 0;
+    } catch { /* 排名计算失败不影响保存 */ }
+    return { zoneScores, totalRank, totalDiff, diff };
 }
 
 const WZ_SCORE_KEY = 'my_wz_scores';
@@ -418,6 +464,7 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
     const [scores, setScores] = useState(getScores(WZ_SCORE_KEY));
     const [pendingWeek, setPendingWeek] = useState(null);
     const [teamRecord, setTeamRecord] = useState(null);
+    const recalcDoneRef = useRef({}); // 已完成排名重算的周（防重复请求）
 
     useEffect(() => { setScores(getScores(WZ_SCORE_KEY)); }, [syncStamp]);
 
@@ -445,6 +492,45 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                     patches.push(patched);
                 } catch { /* 历史周数据不可得则保持原样 */ }
                 if (cancelled) return;
+            }
+            if (cancelled || patches.length === 0) return;
+            const all = getScores(WZ_SCORE_KEY).map(s => {
+                const p = patches.find(x => String(x.week) === String(s.week));
+                return p || s;
+            });
+            localStorage.setItem(WZ_SCORE_KEY, JSON.stringify(all));
+            if (auth.isLoggedIn()) auth.syncToCloud('wz_scores', all);
+            setScores(all);
+        })();
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [scores]);
+
+    // 历史记录排名修正：旧记录保存时若段位匹配失败（fallback 传奇），
+    // 按记录实际段位（groupName+groupLevel）重算各区同阵容排名 + 总榜排名 + 晋级差距，并写回
+    useEffect(() => {
+        const needsRecalc = scores.filter(s =>
+            !recalcDoneRef.current[String(s.week)] &&
+            (s.diff === undefined || String(s.diff) !== String(matchDifficulty(s.groupName, s.groupLevel)))
+        );
+        if (needsRecalc.length === 0) return;
+        let cancelled = false;
+        (async () => {
+            const patches = [];
+            for (const s of needsRecalc) {
+                if (cancelled) break;
+                try {
+                    const zoneScores = (s.zones || []).map(z => ({ name: z.name, score: z.score || 0, team: z.team || [] }));
+                    const res = await computeWzRanks(zoneScores, s.total || 0, s.groupName, s.groupLevel, s.week);
+                    patches.push({
+                        ...s,
+                        diff: res.diff,
+                        zones: res.zoneScores,
+                        totalRank: res.totalRank > 0 ? res.totalRank : 0,
+                        totalDiff: res.totalDiff > 0 ? res.totalDiff : 0
+                    });
+                    recalcDoneRef.current[String(s.week)] = true;
+                } catch { /* 历史周数据不可得则保持原样 */ }
             }
             if (cancelled || patches.length === 0) return;
             const all = getScores(WZ_SCORE_KEY).map(s => {
@@ -490,7 +576,7 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                     rows={scores}
                     columns={columns}
                     groupCol
-                    tip="区排名 #你的名次/同阵容总人数 · 总分旁为该段位总榜排名，未进前100显示晋级差距"
+                    tip="区排名 #同阵容名次/总人数 · 排名按该周所处段位（传奇/英雄…）计算，总分旁为该段位总榜排名，未进前100显示晋级差距"
                     renderCell={s => s.zones.map((z, i) => (
                         <td key={i}>
                             <div className="score-cell">
@@ -501,7 +587,7 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                                             <span className="score-cell-sub">（{z.subZones.join('/')}）</span>
                                         )}
                                     </span>
-                                    {z.monster && <em className="score-cell-mech" title={z.mech || ''}>{z.monster}</em>}
+                                    {(z.mech || z.monster) && <em className="score-cell-mech" title={z.monster || ''}>{z.mech || z.monster}</em>}
                                 </span>
                                 <span className="score-cell-val">{formatNumber(z.score)}</span>
                                 {z.teamRank
@@ -1372,7 +1458,7 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, showS
                     <div className="week-card-block">
                         <div className="week-card-title">
                             纷争战区
-                            {area.groupName && <span className="week-card-group">{area.groupName}{area.groupLevel ? `（${area.groupLevel}）` : ''}</span>}
+                            {area.groupName && <span className="week-card-group">{String(area.groupName).trim()}{area.groupLevel ? `（${String(area.groupLevel).replace(/\s+/g, '')}）` : ''}</span>}
                         </div>
                         <div className="week-card-stats">
                             <div className="week-stat">
@@ -1614,37 +1700,16 @@ export default function MinePage() {
             );
             const total = zoneScores.reduce((a, z) => a + z.score, 0);
 
-            // 同阵容排名（按段位匹配难度，异步）
-            let totalRank = 0;
-            let totalDiff = 0;
-            try {
-                const diff = matchDifficulty(groupName, groupLevel);
-                const wz = await loadWarzone(diff, null);
-                const fullZones = (wz.warzone && wz.warzone.area && wz.warzone.area.zones) || [];
-                zoneScores = zoneScores.map(z => {
-                    const full = fullZones.find(f => f.name === z.name);
-                    if (!full) return z;
-                    const tagged = { ...z, ...extractZoneTags(full) };
-                    if (!z.team || z.team.length === 0) return tagged;
-                    const myChars = z.team.map(t => ({ id: t.id || t.name, rank: GRADE_TO_RANK[t.grade] || 0 }));
-                    const myKey = getTeamKey(myChars);
-                    const teams = computeRankingGroups(wz.rankings || [], full.id, '');
-                    const group = teams.find(t => getTeamKey(t.chars) === myKey);
-                    if (!group) return tagged;
-                    const rank = group.players.filter(p => p.score > z.score).length + 1;
-                    return { ...tagged, teamRank: { rank, total: group.players.length } };
-                });
-                // 总榜排名 + 晋级前100差距
-                const totalScores = (wz.rankings || []).map(r => r.score || 0).filter(s => s > 0).sort((a, b) => b - a);
-                totalRank = totalScores.filter(s => s > total).length + 1;
-                const gate = totalScores.length >= 100 ? totalScores[99] : (totalScores.length ? totalScores[totalScores.length - 1] : 0);
-                totalDiff = gate > 0 ? gate - total : 0;
-            } catch { /* 排名计算失败不影响保存 */ }
+            // 排名计算（按我的段位匹配难度；diff 存入记录供历史展示/重算识别）
+            const res = await computeWzRanks(zoneScores, total, groupName, groupLevel, null);
+            zoneScores = res.zoneScores;
+            const { totalRank, totalDiff, diff } = res;
 
             let all = getScores(WZ_SCORE_KEY);
             all = all.filter(s => String(s.week) !== String(wzWeek));
             all.unshift({
                 week: wzWeek,
+                diff,
                 groupName: groupName || '',
                 groupLevel: groupLevel || '',
                 challengeTimes: challengeTimes || 0,
