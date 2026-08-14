@@ -16,6 +16,7 @@ import { loadWarzone } from '../api/client.js';
 import { DIFFICULTY_OPTIONS, getDifficultyLabel } from '../api/config.js';
 import Modal from './Modals/Modal.jsx';
 import { CurveChart } from './Modals/CurveModal.jsx';
+import ChallengeSection from './ChallengeSection.jsx';
 import useMediaQuery, { MOBILE_QUERY } from '../hooks/useMediaQuery.js';
 import { useTrendData } from '../hooks/useTrendData.js';
 import { useCountUp } from '../utils/countUp.js';
@@ -525,7 +526,7 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
             for (const s of needsRecalc) {
                 if (cancelled) break;
                 try {
-                    const zoneScores = (s.zones || []).map(z => ({ name: z.name, score: z.score || 0, team: z.team || [] }));
+                    const zoneScores = (s.zones || []).map(z => ({ name: z.name, score: z.score || 0, team: z.team || [], times: z.times || 0 }));
                     const res = await computeWzRanks(zoneScores, s.total || 0, s.groupName, s.groupLevel, s.week);
                     patches.push({
                         ...s,
@@ -571,6 +572,7 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                 <h3><span className="step-badge">2</span>我的战区</h3>
             </div>
             <MyTrendSection zones={zones} syncStamp={syncStamp} />
+            <ChallengeSection zones={zones} syncStamp={syncStamp} />
             <div className="score-note">
                 注意：历史记录自「登录网站账号 + 绑定库街区」后开始记录每周分数；<b>每周日战区结算前</b>请进入网站同步分数（进页面自动同步，也可点「同步分数」手动同步），分数会随账号上传云端，换设备登录可查
             </div>
@@ -889,7 +891,8 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick, syncRef }) 
                     score: s.point,
                     team,
                     subs,
-                    subZones: subs.map(x => x.name)
+                    subZones: subs.map(x => x.name),
+                    times: s.totalNum || 0 // 该区本周挑战次数（挑战×分数图表用）
                 };
             });
             const bosses = {};
@@ -1701,7 +1704,9 @@ export default function MinePage() {
         let savedPpc = false;
         if (zones && wzWeek && Object.keys(zones).length) {
             let zoneScores = Object.entries(zones).map(([name, v]) =>
-                typeof v === 'number' ? { name, score: v, team: [] } : { name, score: v.score, team: v.team || [] }
+                typeof v === 'number'
+                    ? { name, score: v, team: [], times: 0 }
+                    : { name, score: v.score, team: v.team || [], times: v.times || 0 }
             );
             const total = zoneScores.reduce((a, z) => a + z.score, 0);
 
@@ -1728,14 +1733,20 @@ export default function MinePage() {
             if (auth.isLoggedIn()) auth.syncToCloud('wz_scores', all.slice(0, 20));
             savedWz = true;
 
-            // 本周按时采样（换周清理，分数未变不重复）
+            // 本周按时采样（换周清理；挑战次数或分数变化都记点——挑战×分数图表的数据源）
             try {
                 let today = JSON.parse(localStorage.getItem(TODAY_SAMPLES_KEY)) || [];
                 const monday = getMondayStart();
                 today = today.filter(s => s.t >= monday);
-                const sample = { t: Date.now(), zones: zoneScores.map(z => z.score), total };
+                const sample = {
+                    t: Date.now(),
+                    zones: zoneScores.map(z => z.score),
+                    total,
+                    challengeTimes: challengeTimes || 0,      // 总挑战次数
+                    zoneTimes: zoneScores.map(z => z.times || 0) // 各区挑战次数
+                };
                 const lastS = today[today.length - 1];
-                if (!lastS || lastS.total !== sample.total || JSON.stringify(lastS.zones) !== JSON.stringify(sample.zones)) {
+                if (!lastS || lastS.challengeTimes !== sample.challengeTimes || lastS.total !== sample.total || JSON.stringify(lastS.zones) !== JSON.stringify(sample.zones)) {
                     today.push(sample);
                     localStorage.setItem(TODAY_SAMPLES_KEY, JSON.stringify(today.slice(-50)));
                 }
