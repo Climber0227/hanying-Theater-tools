@@ -500,7 +500,7 @@ export default function CurveModal({ playerId, playerName, difficulty, currentWe
 
     return (
         <Modal
-            title={`${playerName} 本周走势`}
+            title={`${playerName || '玩家'} 本周走势`}
             sub={`第${currentWeek}周 · 三区合并`}
             onClose={onClose}
             wide

@@ -2,13 +2,28 @@
 # 源站 api.huaxu.app 在 Cloudflare 后面对数据中心 IP 返回 403 挑战页，
 # 用 curl_cffi 模拟 Chrome TLS 指纹绕过；拉取 16 难度榜单 → 上传 /api/trends 入库
 import json
+import os
 import sys
+from datetime import datetime, timezone
 
 from curl_cffi import requests as cffi
 
 BASE = 'https://api.huaxu.app/servers/cn/warzone'
 UPLOAD = 'https://jiatenghui.icu/api/trends'
 DIFFS = [str(i) for i in range(1, 17)]
+
+# 与 Vercel 环境变量 CRON_SECRET 一致（GitHub Actions secret 注入），
+# /api/trends 仅对携带该头的请求开放删除清理（防未鉴权清库）
+CRON_SECRET = os.environ.get('CRON_SECRET', '')
+CRON_HEADERS = {'x-cron-secret': CRON_SECRET} if CRON_SECRET else {}
+
+
+def aligned_sampled_at():
+    """对齐到 5 分钟窗口的 UTC ISO 时间：同一窗口内 cron 重试/重复运行产生相同 sampled_at，
+    配合唯一约束 (week, sampled_at, player_id, difficulty) 幂等去重，避免重试堆积重复数据"""
+    ts = int(datetime.now(timezone.utc).timestamp())
+    ts = ts - (ts % 300)
+    return datetime.fromtimestamp(ts, tz=timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
 
 def main():
@@ -51,7 +66,13 @@ def main():
             print(f'd{d} no samples')
             continue
         try:
-            r2 = cffi.post(UPLOAD, json={'week': week, 'difficulty': d, 'samples': samples}, impersonate='chrome', timeout=30)
+            r2 = cffi.post(
+                UPLOAD,
+                json={'week': week, 'difficulty': d, 'samples': samples, 'sampled_at': aligned_sampled_at()},
+                headers=CRON_HEADERS,
+                impersonate='chrome',
+                timeout=30
+            )
             print(f'd{d}: {r2.status_code} {r2.text[:120]}')
             if r2.status_code == 200:
                 ok += 1

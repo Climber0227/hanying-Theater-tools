@@ -27,7 +27,9 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
     const [curveTarget, setCurveTarget] = useState(null); // { playerId, playerName, zoneIndex }
     const [playerRankTarget, setPlayerRankTarget] = useState(null); // { ranking }（手机端行点击）
 
-    const teamMax = useMemo(() => computeTeamMaxScores(rk.filtered, zones), [rk.filtered, zones]);
+    // 阵容最高分必须基于全量榜单计算（不受筛选/排序/TOP100 截断影响），
+    // 否则应用阶级筛选后"同阶级阵容最高"会漏掉真正最高的玩家
+    const teamMax = useMemo(() => computeTeamMaxScores(rankings, zones), [rankings, zones]);
 
     // 稳定回调（避免虚拟列表行全量重渲染）
     const openAnalysis = useCallback((playerId, zi) => {
@@ -35,8 +37,10 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
         if (ranking) setSaTarget({ ranking, zoneIndex: zi });
     }, [rankings]);
     const openTrend = useCallback((pid, zi) => {
-        setCurveTarget({ playerId: pid, playerName: null, zoneIndex: zi });
-    }, []);
+        // 查真实玩家名（此前传 null 导致弹窗标题显示 "null 本周走势"）
+        const ranking = (rankings || []).find(r => r && r.player && String(r.player.id) === String(pid));
+        setCurveTarget({ playerId: pid, playerName: ranking && ranking.player ? ranking.player.name : null, zoneIndex: zi });
+    }, [rankings]);
 
     // 手机端行点击 → PlayerRankModal
     const openMobileRow = useCallback(ranking => {
@@ -91,6 +95,7 @@ export default function RankingPanel({ warzone, onOpenPlayer }) {
                 <VirtualRankingTable
                     rows={rk.filtered}
                     zones={zones}
+                    teamMax={teamMax}
                     prevSnapshot={prevSnapshot}
                     header={
                         <RankingHeader

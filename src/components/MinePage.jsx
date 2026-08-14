@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchJson } from '../api/client.js';
 import { API_CONFIG, getImageUrl } from '../api/config.js';
 import { getFollows, saveFollows } from '../api/storage.js';
@@ -118,6 +118,9 @@ function SetupGuide({ loggedIn, kuroBound, weekSaved, authReady, onOpenLogin, on
 // 已登录/已绑定时显示状态视图，不再重复表单
 function LoginModal({ tab, onClose, onLoggedIn, userLoggedIn, kuroBound }) {
     const [mode, setMode] = useState(tab === 'kuro' ? 'kuro' : 'web');
+    // 倒计时定时器：弹窗关闭/组件卸载时清理，避免泄漏与卸载后 setState
+    const countdownTimerRef = useRef(null);
+    useEffect(() => () => { if (countdownTimerRef.current) { clearInterval(countdownTimerRef.current); countdownTimerRef.current = null; } }, []);
     // 网站账号
     const [id, setId] = useState('');
     const [pw, setPw] = useState('');
@@ -153,9 +156,9 @@ function LoginModal({ tab, onClose, onLoggedIn, userLoggedIn, kuroBound }) {
             setMsg('验证码已发送，请查收短信');
             let n = 60;
             setCountdown(n);
-            const timer = setInterval(() => {
+            countdownTimerRef.current = setInterval(() => {
                 n -= 1;
-                if (n <= 0) { clearInterval(timer); setCountdown(0); } else setCountdown(n);
+                if (n <= 0) { clearInterval(countdownTimerRef.current); countdownTimerRef.current = null; setCountdown(0); } else setCountdown(n);
             }, 1000);
         } catch (e) {
             setMsg(e.message || '发送失败');
@@ -699,6 +702,9 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick, syncRef }) 
     const [busy, setBusy] = useState('');
     const [msg, setMsg] = useState('');
     const autoSyncedRef = useRef(false);
+    // 倒计时定时器：组件卸载/解绑时清理，避免泄漏与卸载后 setState
+    const countdownTimerRef = useRef(null);
+    useEffect(() => () => { if (countdownTimerRef.current) { clearInterval(countdownTimerRef.current); countdownTimerRef.current = null; } }, []);
 
     const changeToken = t => {
         setToken(t);
@@ -768,7 +774,7 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick, syncRef }) 
                 getPrisonerCageData(token, roleId, serverId)
             ]);
             const zones = {};
-            ((area || {}).areaInfo || {}).stageFightInfoList.forEach(s => {
+            (((area || {}).areaInfo || {}).stageFightInfoList || []).forEach(s => {
                 if (!s.stageName) return;
                 const team = [];
                 // 子区关卡（buff）：每个 buff 关卡有独立区名/分数/战斗时间/增益（如熵钟异数=猩红冰原+岩流深壑）
@@ -800,7 +806,8 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick, syncRef }) 
                 const name = b.boss && b.boss.name;
                 if (name && b.totalPoint) bosses[name] = b.totalPoint;
             });
-            if (onSyncData) onSyncData({
+            let saved = true;
+            if (onSyncData) saved = (await onSyncData({
                 zones,
                 bosses,
                 area,
@@ -810,10 +817,15 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick, syncRef }) 
                 groupName: (area || {}).groupName || '',
                 groupLevel: (area || {}).groupLevel || '',
                 challengeTimes: ((area || {}).areaInfo || {}).totalChallengeTimes || 0
-            });
-            localStorage.setItem(KURO_AUTO_SYNC_KEY, String(Date.now()));
-            if (!auto) setMsg('已同步并保存本周分数');
-            return true;
+            })) === true;
+            if (saved) {
+                // 真正写入本周记录才记录同步时间并提示成功（周信息未就绪时不节流，下次可再自动同步）
+                localStorage.setItem(KURO_AUTO_SYNC_KEY, String(Date.now()));
+                if (!auto) setMsg('已同步并保存本周分数');
+            } else if (!auto) {
+                setMsg('同步成功，但本周周信息尚未就绪，记录暂未保存，请稍后重试');
+            }
+            return saved;
         } catch (e) {
             if (/过期|风险/.test(e.message)) {
                 clearKuroToken();
@@ -898,9 +910,9 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick, syncRef }) 
             setMsg('验证码已发送，请查收短信');
             let n = 60;
             setCountdown(n);
-            const timer = setInterval(() => {
+            countdownTimerRef.current = setInterval(() => {
                 n -= 1;
-                if (n <= 0) { clearInterval(timer); setCountdown(0); } else setCountdown(n);
+                if (n <= 0) { clearInterval(countdownTimerRef.current); countdownTimerRef.current = null; setCountdown(0); } else setCountdown(n);
             }, 1000);
         } catch (e) {
             setMsg(e.message || '验证码发送失败');
@@ -1482,6 +1494,9 @@ function ForgotPasswordModal({ show, onClose }) {
     const [countdown, setCountdown] = useState(0);
     const [busy, setBusy] = useState('');
     const [msg, setMsg] = useState('');
+    // 倒计时定时器：弹窗关闭/组件卸载时清理
+    const countdownTimerRef = useRef(null);
+    useEffect(() => () => { if (countdownTimerRef.current) { clearInterval(countdownTimerRef.current); countdownTimerRef.current = null; } }, []);
 
     if (!show) return null;
     const step = phoneMasked ? 1 : 0;
@@ -1508,9 +1523,9 @@ function ForgotPasswordModal({ show, onClose }) {
             setMsg('验证码已发送，请查收短信');
             let n = 60;
             setCountdown(n);
-            const timer = setInterval(() => {
+            countdownTimerRef.current = setInterval(() => {
                 n -= 1;
-                if (n <= 0) { clearInterval(timer); setCountdown(0); } else setCountdown(n);
+                if (n <= 0) { clearInterval(countdownTimerRef.current); countdownTimerRef.current = null; setCountdown(0); } else setCountdown(n);
             }, 1000);
         } catch (e) {
             setMsg(e.message || '验证码发送失败');
@@ -1583,13 +1598,16 @@ export default function MinePage() {
 
     // 同步即保存：库街区同步成功后直接写入本周记录（本地 + 云端）
     // 同时按段位拉取榜单，计算各区「同阵容同阶级」排名存入历史
+    // 返回是否真正落库了本周记录（供 fetchScores 决定提示/节流，避免"周信息未就绪"时误报成功）
     const saveSyncedScores = async data => {
         if (!data) {
             setSyncData(null);
             localStorage.removeItem(LAST_SYNC_KEY);
-            return;
+            return false;
         }
         const { zones, bosses, groupName, groupLevel, challengeTimes } = data;
+        let savedWz = false;
+        let savedPpc = false;
         if (zones && wzWeek && Object.keys(zones).length) {
             let zoneScores = Object.entries(zones).map(([name, v]) =>
                 typeof v === 'number' ? { name, score: v, team: [] } : { name, score: v.score, team: v.team || [] }
@@ -1638,6 +1656,7 @@ export default function MinePage() {
             });
             localStorage.setItem(WZ_SCORE_KEY, JSON.stringify(all.slice(0, 20)));
             if (auth.isLoggedIn()) auth.syncToCloud('wz_scores', all.slice(0, 20));
+            savedWz = true;
 
             // 本周按时采样（换周清理，分数未变不重复）
             try {
@@ -1660,12 +1679,14 @@ export default function MinePage() {
             all.unshift({ week: ppcWeek, bosses: bossScores, total, timestamp: Date.now() });
             localStorage.setItem(PPC_SCORE_KEY, JSON.stringify(all.slice(0, 20)));
             if (auth.isLoggedIn()) auth.syncToCloud('ppc_scores', all.slice(0, 20));
+            savedPpc = true;
         }
         setWeekSaved(true);
         setSyncStamp(n => n + 1);
         const lastSync = { area: data.area, ppc: data.ppc, roleId: data.roleId, serverId: data.serverId };
         setSyncData(lastSync);
         try { localStorage.setItem(LAST_SYNC_KEY, JSON.stringify(lastSync)); } catch { /* 本地缓存失败忽略 */ }
+        return savedWz || savedPpc;
     };
 
     useEffect(() => {

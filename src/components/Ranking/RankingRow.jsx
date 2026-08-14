@@ -130,7 +130,9 @@ function MobileRow({ r, zones, delta, topN, displayRank, portraitUrl, frameUrl, 
 
 function RankingRowBase({ index, style, rows, zones, teamMax, totalMaxScore, prevSnapshot, isMobile, onOpenPlayer, onOpenAnalysis, onOpenTrend, onOpenMobileRow }) {
     const r = rows[index];
-    const displayRank = index + 1;
+    // 显示真实排名（源站 r.rank）：筛选/单区排序后行号会变，但排名/奖牌必须与真实排名一致，
+    // 否则"冠军/亚军/季军"会错指给过滤视图前 3 名；老数据无 rank 时回退为视图行号
+    const displayRank = r.rank || (index + 1);
     const topN = displayRank <= 3;
     const portraitUrl = r.player.portrait ? getImageUrl(r.player.portrait) : '';
     const frameUrl = r.player.frame ? getImageUrl(r.player.frame) : '';

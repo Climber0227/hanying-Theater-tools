@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { List } from 'react-window';
 import RankingRow, { ROW_HEIGHT, ROW_HEIGHT_MOBILE } from './RankingRow.jsx';
-import { computeTeamMaxScores } from '../../utils/ranking.js';
 import useMediaQuery, { MOBILE_QUERY } from '../../hooks/useMediaQuery.js';
 
 // 列宽常量（桌面与 CSS 一致）
@@ -11,7 +10,7 @@ const COL_ZONE = 268;
 const COL_TOTAL = 160;
 const COL_RESET = 56;
 
-export default function VirtualRankingTable({ rows, zones, prevSnapshot, header, onOpenPlayer, onOpenAnalysis, onOpenTrend, onOpenMobileRow }) {
+export default function VirtualRankingTable({ rows, zones, teamMax, prevSnapshot, header, onOpenPlayer, onOpenAnalysis, onOpenTrend, onOpenMobileRow }) {
     const wrapRef = useRef(null);
     const [wrapHeight, setWrapHeight] = useState(640);
     const [headerH, setHeaderH] = useState(114);
@@ -35,7 +34,7 @@ export default function VirtualRankingTable({ rows, zones, prevSnapshot, header,
         return () => ro.disconnect();
     }, [zones, isMobile]);
 
-    const teamMax = useMemo(() => computeTeamMaxScores(rows, zones), [rows, zones]);
+    // teamMax 由 RankingPanel 基于全量榜单计算传入（过滤/TOP100 截断不影响"同阶级阵容最高"）
     const totalMaxScore = useMemo(() => rows.reduce((m, r) => Math.max(m, r.score || 0), 0), [rows]);
 
     const listHeight = Math.max(wrapHeight - headerH, 120);

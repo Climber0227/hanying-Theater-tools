@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
-// 机制名：description 冒号前（如 困兽犹斗/祸不单行）
+// 机制名：description 冒号前（如 困兽犹斗/祸不单行），兼容全角/半角冒号
 function getMechanicName(zone) {
     if (!zone || !zone.description) return '';
-    const idx = zone.description.indexOf('：');
+    const idx = zone.description.search(/[：:]/);
     if (idx > 0) return zone.description.slice(0, idx);
     return '';
 }

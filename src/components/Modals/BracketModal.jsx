@@ -30,7 +30,7 @@ export default function BracketModal({ rankings, zones, difficulty, onClose }) {
                 ))}
             </div>
 
-            {data && data.buckets.length > 0 ? (
+            {data && data.buckets && data.buckets.length > 0 ? (
                 <>
                     <div className="bracket-title">{title}分布（{formatNumber(data.total)} 人）</div>
                     <ResponsiveContainer width="100%" height={280}>

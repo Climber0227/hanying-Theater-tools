@@ -111,11 +111,11 @@ export function getSearchHistory() {
     try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; }
 }
 export function saveSearchHistory(list) {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch { /* 隐私模式/配额超限忽略 */ }
 }
 export function getFollows() {
     try { return JSON.parse(localStorage.getItem(FOLLOWS_KEY)) || []; } catch { return []; }
 }
 export function saveFollows(list) {
-    localStorage.setItem(FOLLOWS_KEY, JSON.stringify(list));
+    try { localStorage.setItem(FOLLOWS_KEY, JSON.stringify(list)); } catch { /* 隐私模式/配额超限忽略 */ }
 }

@@ -20,4 +20,7 @@ jobs:
         run: pip install curl_cffi
 
       - name: Fetch and upload trend samples
+        env:
+          # 与 Vercel 环境变量 CRON_SECRET 一致；用于 /api/trends 的清理鉴权
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: python scripts/cron_fetch.py
