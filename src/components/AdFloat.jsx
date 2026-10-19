@@ -69,7 +69,7 @@ export default function AdFloat() {
             >
                 &times;
             </button>
-            <img src="/img/Snipaste_2026-08-04_00-46-56.png" alt="纷争战区" draggable="false" />
+            <img src="/img/Snipaste_2026-10-19_15-30-13.png" alt="纷争战区" draggable="false" />
         </div>
     );
 }
