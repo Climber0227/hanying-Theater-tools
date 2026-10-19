@@ -161,6 +161,40 @@
 .ad-close:hover {
     background: rgba(255, 60, 60, 0.9);
 }
+/* 手动打开广告的入口（广告关闭后常驻左下角） */
+.ad-reopen {
+    position: fixed;
+    left: 14px;
+    bottom: 12px;
+    z-index: 100;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 980px;
+    border: 0.5px solid rgba(0, 0, 0, 0.14);
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-sm);
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.ad-reopen:hover {
+    color: var(--accent);
+    background: #fff;
+    border-color: var(--accent);
+}
+.ad-reopen-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff5a3c;
+    box-shadow: 0 0 0 3px rgba(255, 90, 60, 0.15);
+}
 .ad-float:hover {
     animation-play-state: paused;
     cursor: move;
@@ -218,4 +252,5 @@
 @media (max-width: 560px) {
     .ad-float { width: min(340px, 88vw); }
     .corner-feedback { font-size: 10px; padding: 3px 10px; }
+    .ad-reopen { left: 10px; bottom: 10px; font-size: 11px; padding: 5px 10px; }
 }
