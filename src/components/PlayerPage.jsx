@@ -1,18 +1,31 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { loadPlayer, fetchJson } from '../api/client.js';
 import { API_CONFIG, getImageUrl } from '../api/config.js';
 import { getSearchHistory, saveSearchHistory, getFollows, saveFollows } from '../api/storage.js';
+import { readRosterCache, writeRosterCache } from '../api/history.js';
+import { rosterLookup } from '../utils/roster.js';
 import { formatNumber, getQualityInfo } from '../utils/format.js';
 import CharacterModal from './Modals/CharacterModal.jsx';
 import HistoryModal from './Modals/HistoryModal.jsx';
+import RosterModal from './Modals/RosterModal.jsx';
 
 const QUALITY_MAP = { 1: 'B', 2: 'A', 3: 'S', 4: 'SS', 5: 'SSS', 6: 'SSS+' };
 
-function CharacterCard({ c, onClick }) {
+function CharacterCard({ c, onClick, inferred }) {
     const iconUrl = c.fashionIcon ? getImageUrl(c.fashionIcon) : '';
     const isHidden = c.level === 0;
+    // 隐藏角色：用历届阵容反推出的最高阶级/战力补位
+    const showInferred = !!inferred && isHidden;
+    const rank = showInferred ? inferred.maxRank : c.quality;
+    const tip = showInferred
+        ? `历届阵容反推：最高 ${getQualityInfo(inferred.maxRank) || '未知'} · 出场 ${inferred.count} 周 · 最高战力 ${formatNumber(inferred.maxBp)}`
+        : undefined;
     return (
-        <div className={`character-card${isHidden ? ' character-hidden' : ''}`} onClick={onClick}>
+        <div
+            className={`character-card${isHidden ? ' character-hidden' : ''}${showInferred ? ' character-inferred' : ''}`}
+            onClick={onClick}
+            title={tip}
+        >
             {iconUrl && <img className="character-icon" src={iconUrl} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
             <div className="character-info">
                 <div className="character-name">
@@ -21,9 +34,13 @@ function CharacterCard({ c, onClick }) {
                 </div>
                 <div className="character-stats">
                     {!isHidden && <span>Lv.{c.level}</span>}
-                    {getQualityInfo(c.quality) && <span className={`quality-tag quality-${c.quality}`}>{getQualityInfo(c.quality)}</span>}
-                    {isHidden && <span className="char-tag">隐藏</span>}
+                    {getQualityInfo(rank) && <span className={`quality-tag quality-${rank}`}>{getQualityInfo(rank)}</span>}
+                    {showInferred && <span className="char-inferred-tag">反推</span>}
+                    {isHidden && !showInferred && <span className="char-tag">隐藏</span>}
                 </div>
+                {showInferred && inferred.maxBp > 0 && (
+                    <div className="char-bp">最高战力 {formatNumber(inferred.maxBp)}</div>
+                )}
             </div>
         </div>
     );
@@ -39,6 +56,8 @@ export default function PlayerPage({ pendingPlayerId }) {
     const [follows, setFollows] = useState(getFollows());
     const [charDetail, setCharDetail] = useState(null); // { charId }
     const [showHistory, setShowHistory] = useState(false);
+    const [showRoster, setShowRoster] = useState(false);
+    const [roster, setRoster] = useState(null); // 历届阵容反推结果（缓存或接口返回）
     const [weekOptions, setWeekOptions] = useState({ min: null, max: null });
     const queryingRef = useRef(null); // AbortController：查询新玩家时取消旧请求
 
@@ -98,6 +117,27 @@ export default function PlayerPage({ pendingPlayerId }) {
     }, []);
 
     const acquiredChars = characters.filter(c => c.acquired);
+    const hiddenChars = acquiredChars.filter(c => c.visible === false);
+    const isHiddenPlayer = !!player && (player.privacySettings?.charactersHidden === true || hiddenChars.length > 0);
+    // 反推结果带上 playerId：换玩家时旧结果不会串到新玩家身上
+    const activeRoster = roster && player && String(roster.playerId) === String(player.id) ? roster : null;
+    const rosterMap = useMemo(() => rosterLookup(activeRoster && activeRoster.chars), [activeRoster]);
+    const hiddenCovered = hiddenChars.filter(c => rosterMap.has(String(c.id))).length;
+
+    // 换玩家时读取该玩家的反推缓存（隐藏角色详情时直接展示）
+    useEffect(() => {
+        setShowRoster(false);
+        if (!player) { setRoster(null); return; }
+        const cached = readRosterCache(player.id);
+        setRoster(cached ? { ...cached, playerId: player.id } : null);
+    }, [player]);
+
+    const handleRosterLoaded = useCallback(agg => {
+        if (!player) return;
+        const tagged = { ...agg, playerId: player.id };
+        setRoster(tagged);
+        writeRosterCache(player.id, tagged);
+    }, [player]);
 
     return (
         <div>
@@ -160,6 +200,7 @@ export default function PlayerPage({ pendingPlayerId }) {
                                 {follows.some(f => String(f.id) === String(player.id)) ? '已关注' : '关注'}
                             </button>
                             <button className="bind-set-btn follow-set-btn" onClick={() => setShowHistory(true)}>历史战绩</button>
+                            <button className="bind-set-btn follow-set-btn roster-set-btn" onClick={() => setShowRoster(true)}>历届阵容</button>
                         </div>
                     </div>
                 </div>
@@ -167,10 +208,35 @@ export default function PlayerPage({ pendingPlayerId }) {
 
             {player && (
                 <div className="characters-section">
-                    <h3>角色列表 <span>({acquiredChars.length})</span></h3>
+                    <h3>
+                        角色列表
+                        <span> ({acquiredChars.length}{hiddenChars.length > 0 ? ` · ${hiddenChars.length} 隐藏` : ''})</span>
+                    </h3>
+
+                    {isHiddenPlayer && (
+                        <div className="roster-hint">
+                            <div className="roster-hint-body">
+                                <div className="roster-hint-title">该玩家隐藏了角色详情</div>
+                                <div className="roster-hint-desc">
+                                    {activeRoster
+                                        ? `已从历届上榜阵容反推 ${activeRoster.chars.length} 个角色的阶级，覆盖 ${hiddenCovered}/${hiddenChars.length} 个隐藏角色`
+                                        : '等级与阶级不可见。可拉取历届战区 TOP100 的上阵阵容，反推这些隐藏角色的阶级与战力。'}
+                                </div>
+                            </div>
+                            <button className="roster-hint-btn" onClick={() => setShowRoster(true)}>
+                                {activeRoster ? '查看反推详情' : '开始反推'}
+                            </button>
+                        </div>
+                    )}
+
                     <div className="characters-grid">
                         {acquiredChars.map(c => (
-                            <CharacterCard key={c.id} c={c} onClick={() => setCharDetail({ charId: c.id })} />
+                            <CharacterCard
+                                key={c.id}
+                                c={c}
+                                inferred={rosterMap.get(String(c.id))}
+                                onClick={() => setCharDetail({ charId: c.id })}
+                            />
                         ))}
                     </div>
                 </div>
@@ -212,6 +278,15 @@ export default function PlayerPage({ pendingPlayerId }) {
                     playerName={player.name}
                     weekOptions={weekOptions}
                     onClose={() => setShowHistory(false)}
+                />
+            )}
+            {showRoster && player && (
+                <RosterModal
+                    player={player}
+                    characters={characters}
+                    cached={activeRoster}
+                    onClose={() => setShowRoster(false)}
+                    onLoaded={handleRosterLoaded}
                 />
             )}
         </div>

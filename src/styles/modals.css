@@ -672,3 +672,243 @@
     font-weight: 600;
     cursor: pointer;
 }
+
+/* ========== 历届阵容反推 ========== */
+.roster-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 12px;
+    color: var(--text-2);
+    font-size: 13px;
+    text-align: center;
+}
+.roster-spinner {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2.5px solid var(--surface-3);
+    border-top-color: var(--accent);
+    animation: roster-spin 0.8s linear infinite;
+}
+@keyframes roster-spin {
+    to { transform: rotate(360deg); }
+}
+.roster-loading-sub {
+    font-size: 11px;
+    color: var(--text-3);
+    line-height: 1.5;
+}
+.roster-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 32px 12px;
+    font-size: 13px;
+    color: var(--text-2);
+    text-align: center;
+}
+
+.roster-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.roster-stat {
+    background: var(--surface-2);
+    border-radius: 12px;
+    padding: 10px 12px;
+    min-width: 0;
+}
+.roster-stat b {
+    display: block;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.3px;
+}
+.roster-stat b em {
+    font-style: normal;
+    font-size: 12px;
+    color: var(--text-3);
+    font-weight: 600;
+}
+.roster-stat span {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--text-3);
+}
+
+.roster-rankline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    font-size: 11px;
+    color: var(--text-3);
+}
+.roster-rankline > span:first-child {
+    color: var(--text-2);
+    font-weight: 600;
+}
+.roster-rank-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface-2);
+    border-radius: 6px;
+    padding: 2px 6px;
+    color: var(--text-2);
+}
+.roster-rank-chip em { font-style: normal; }
+.roster-span { margin-left: auto; }
+.roster-refresh {
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-2);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+}
+.roster-refresh:disabled { opacity: 0.5; cursor: default; }
+
+.roster-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+.roster-tabs { display: flex; gap: 2px; }
+.roster-tabs .team-tab { padding: 6px 10px; font-size: 12px; }
+.roster-sort {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-3);
+}
+.roster-sort select {
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+
+.roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 8px;
+}
+.roster-card {
+    background: var(--surface-2);
+    border: 0.5px solid transparent;
+    border-radius: 12px;
+    padding: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.roster-card:hover { background: var(--surface-3); }
+.roster-card.is-open { opacity: 0.72; }
+.roster-card.is-hidden-char {
+    border-color: rgba(255, 107, 0, 0.22);
+    background: linear-gradient(135deg, rgba(255, 107, 0, 0.05), rgba(255, 45, 0, 0.03));
+}
+.roster-card.is-expanded { grid-column: 1 / -1; }
+.roster-card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+.roster-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--surface-3);
+}
+.roster-icon-empty { display: block; }
+.roster-card-main { min-width: 0; flex: 1; }
+.roster-card-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.roster-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--text-2);
+}
+.roster-bp { font-variant-numeric: tabular-nums; color: var(--text-2); }
+.roster-open-tag {
+    font-size: 10px;
+    color: var(--text-3);
+    background: var(--surface-3);
+    border-radius: 4px;
+    padding: 0 4px;
+    white-space: nowrap;
+}
+.roster-card-sub { margin-top: 2px; font-size: 11px; color: var(--text-3); }
+.roster-detail {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 0.5px dashed var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-2);
+}
+.roster-detail-row { display: flex; gap: 8px; align-items: flex-start; }
+.roster-detail-label { flex-shrink: 0; width: 60px; color: var(--text-3); }
+.roster-weeks { display: flex; flex-wrap: wrap; gap: 4px; }
+.roster-week {
+    background: var(--surface-3);
+    border-radius: 4px;
+    padding: 0 5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-2);
+}
+.roster-week-more { color: var(--text-3); }
+.roster-empty {
+    padding: 30px 12px;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 13px;
+}
+.roster-foot { margin-top: 12px; }
+.roster-note { font-size: 11px; color: var(--text-3); line-height: 1.6; }
+
+@media (max-width: 640px) {
+    .team-modal-title .history-sub {
+        display: block;
+        margin-left: 0;
+        margin-top: 4px;
+    }
+    .roster-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .roster-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .roster-card { padding: 8px; }
+    .roster-icon { width: 36px; height: 36px; border-radius: 8px; }
+    .roster-card-name { font-size: 12px; }
+    .roster-card-sub { display: none; }
+    .roster-span { margin-left: 0; width: 100%; order: 9; }
+    .roster-toolbar { align-items: flex-start; }
+}

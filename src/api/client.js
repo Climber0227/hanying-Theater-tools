@@ -5,8 +5,8 @@ import { API_CONFIG } from './config.js';
 const CACHE_TTL = 60 * 1000;
 const cache = new Map();
 
-export async function fetchJson(url, { force = false, signal } = {}) {
-    if (!force) {
+export async function fetchJson(url, { force = false, signal, cache: useCache = true } = {}) {
+    if (useCache && !force) {
         const hit = cache.get(url);
         if (hit && Date.now() < hit.expire) return hit.data;
     }
@@ -15,7 +15,7 @@ export async function fetchJson(url, { force = false, signal } = {}) {
         throw new Error(`HTTP ${response.status}`);
     }
     const data = await response.json();
-    cache.set(url, { data, expire: Date.now() + CACHE_TTL });
+    if (useCache) cache.set(url, { data, expire: Date.now() + CACHE_TTL });
     return data;
 }
 
