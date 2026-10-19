@@ -768,6 +768,22 @@
 }
 .roster-rank-chip em { font-style: normal; }
 .roster-span { margin-left: auto; }
+.roster-diff-line { margin-top: -6px; }
+.roster-diff-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface-2);
+    border: 0.5px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 2px 7px;
+    color: var(--text-2);
+}
+.roster-diff-chip em {
+    font-style: normal;
+    font-size: 10px;
+    color: var(--text-3);
+}
 .roster-refresh {
     border: 0.5px solid var(--border);
     background: var(--surface);

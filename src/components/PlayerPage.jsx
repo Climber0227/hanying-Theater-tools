@@ -220,7 +220,7 @@ export default function PlayerPage({ pendingPlayerId }) {
                                 <div className="roster-hint-desc">
                                     {activeRoster
                                         ? `已从历届上榜阵容反推 ${activeRoster.chars.length} 个角色的阶级，覆盖 ${hiddenCovered}/${hiddenChars.length} 个隐藏角色`
-                                        : '等级与阶级不可见。可拉取历届战区 TOP100 的上阵阵容，反推这些隐藏角色的阶级与战力。'}
+                                        : '等级与阶级不可见。可拉取历届战区 TOP100 的上阵阵容（含英雄/传奇等各段位），反推这些隐藏角色的阶级与战力。'}
                                 </div>
                             </div>
                             <button className="roster-hint-btn" onClick={() => setShowRoster(true)}>

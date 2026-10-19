@@ -25,6 +25,8 @@ function finalize(entry) {
 export function aggregateRoster(weeks) {
     const map = new Map();
     const weekSet = new Set();
+    const diffDist = {};
+    const weekDifficulty = {};
     let slots = 0;
     let minWeek = Infinity;
     let maxWeek = -Infinity;
@@ -34,6 +36,12 @@ export function aggregateRoster(weeks) {
         weekSet.add(w.week);
         minWeek = Math.min(minWeek, w.week);
         maxWeek = Math.max(maxWeek, w.week);
+        // 同一玩家每周只在一个段位（传奇/英雄/…）上榜；跨段位的历史一并统计
+        const diff = String(w.difficulty || '');
+        if (diff) {
+            diffDist[diff] = (diffDist[diff] || 0) + 1;
+            weekDifficulty[w.week] = diff;
+        }
         for (const z of w.zones || []) {
             for (const c of z.characters || []) {
                 if (!c || c.id == null) continue;
@@ -83,7 +91,9 @@ export function aggregateRoster(weeks) {
         slots,
         maxBp: chars.reduce((m, c) => Math.max(m, c.maxBp), 0),
         maxRank: chars.reduce((m, c) => Math.max(m, c.maxRank), 0),
-        rankDist
+        rankDist,
+        difficulties: diffDist,
+        weekDifficulty
     };
 
     return { chars: sortRoster(chars, 'rank'), summary };

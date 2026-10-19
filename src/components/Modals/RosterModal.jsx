@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Modal from './Modal.jsx';
 import { loadPlayerHistory } from '../../api/history.js';
 import { aggregateRoster, sortRoster, splitByVisibility } from '../../utils/roster.js';
-import { getImageUrl } from '../../api/config.js';
+import { getImageUrl, getDifficultyShort } from '../../api/config.js';
 import { formatNumber, getQualityInfo } from '../../utils/format.js';
 
 const FILTERS = [
@@ -26,7 +26,7 @@ function fmtTime(ts) {
     }
 }
 
-function RosterCard({ c, isOpen, open, expanded, onToggle }) {
+function RosterCard({ c, isOpen, open, expanded, weekDifficulty, onToggle }) {
     return (
         <div
             className={`roster-card${isOpen ? ' is-open' : ' is-hidden-char'}${expanded ? ' is-expanded' : ''}`}
@@ -68,7 +68,14 @@ function RosterCard({ c, isOpen, open, expanded, onToggle }) {
                     <div className="roster-detail-row">
                         <span className="roster-detail-label">上榜周</span>
                         <span className="roster-weeks">
-                            {c.weeks.slice(0, 12).map(w => <span className="roster-week" key={w}>{w}</span>)}
+                            {c.weeks.slice(0, 12).map(w => {
+                                const d = weekDifficulty && weekDifficulty[w];
+                                return (
+                                    <span className="roster-week" key={w} title={`第${w}周${d ? ' · ' + getDifficultyShort(d) : ''}`}>
+                                        {w}
+                                    </span>
+                                );
+                            })}
                             {c.weeks.length > 12 && <span className="roster-week roster-week-more">+{c.weeks.length - 12}</span>}
                         </span>
                     </div>
@@ -157,7 +164,7 @@ export default function RosterModal({ player, characters, cached, onClose, onLoa
     return (
         <Modal
             title={`${player.name} · 历届阵容反推`}
-            sub="来自历届战区 TOP100 上阵阵容"
+            sub="来自历届战区 TOP100 上阵阵容（含各段位）"
             onClose={onClose}
             wide
         >
@@ -226,6 +233,20 @@ export default function RosterModal({ player, characters, cached, onClose, onLoa
                         </button>
                     </div>
 
+                    {summary.difficulties && Object.keys(summary.difficulties).length > 0 && (
+                        <div className="roster-rankline roster-diff-line">
+                            <span>覆盖段位</span>
+                            {Object.entries(summary.difficulties)
+                                .sort((a, b) => b[1] - a[1] || Number(b[0]) - Number(a[0]))
+                                .map(([d, n]) => (
+                                    <span className="roster-diff-chip" key={d}>
+                                        {getDifficultyShort(d) || `难度${d}`}
+                                        <em>{n} 周</em>
+                                    </span>
+                                ))}
+                        </div>
+                    )}
+
                     <div className="roster-toolbar">
                         <div className="roster-tabs">
                             {FILTERS.map(f => (
@@ -257,6 +278,7 @@ export default function RosterModal({ player, characters, cached, onClose, onLoa
                                     c={c}
                                     isOpen={groups.visible.has(String(c.id))}
                                     expanded={expanded === c.id}
+                                    weekDifficulty={summary.weekDifficulty}
                                     onToggle={() => setExpanded(expanded === c.id ? null : c.id)}
                                 />
                             ))}
@@ -265,8 +287,8 @@ export default function RosterModal({ player, characters, cached, onClose, onLoa
 
                     <div className="roster-foot">
                         <div className="roster-note">
-                            仅统计进入 TOP100 的周，阶级取历史最高观测值；未上阵过的角色无法反推。
-                            反推结果已自动同步到角色列表。
+                            仅统计进入 TOP100 的周（含当前周），同一玩家每周只在一个段位上榜，跨段位（传奇/英雄等）的周已一并计入；
+                            阶级取历史最高观测值，未上阵过的角色无法反推。反推结果已自动同步到角色列表。
                         </div>
                     </div>
                 </>
