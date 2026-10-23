@@ -1,0 +1,23 @@
+{
+  "noJs": {
+    "visible": true,
+    "covers": 100,
+    "tip": "正在连接数据源"
+  },
+  "desktop": {
+    "bootPresentAtStart": true,
+    "bootRemovedAfterMs": 1787,
+    "rows": 8,
+    "skeleton": 8,
+    "zoneCards": 3,
+    "sceneCardsSkeleton": 3
+  },
+  "mobile": {
+    "bootPresentAtStart": true,
+    "bootRemovedAfterMs": 1792,
+    "rows": 8,
+    "skeleton": 8,
+    "zoneCards": 3,
+    "sceneCardsSkeleton": 3
+  }
+}

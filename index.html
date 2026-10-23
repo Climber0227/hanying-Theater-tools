@@ -50,12 +50,12 @@
         }
         .boot-mark {
             position: relative;
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
             background: #14171c;
             color: #fff;
-            font-size: 30px;
+            font-size: 34px;
             font-weight: 600;
             line-height: 1;
             display: grid;
@@ -127,6 +127,11 @@
             25% { content: '·'; }
             50% { content: '··'; }
             75% { content: '···'; }
+        }
+        @media (max-width: 560px) {
+            .boot-mark { width: 52px; height: 52px; border-radius: 15px; font-size: 28px; }
+            .boot-mark::after { inset: -8px; border-radius: 19px; }
+            .boot-title { margin-top: 18px; }
         }
         @media (prefers-reduced-motion: reduce) {
             .boot-mark, .boot-mark::after { animation: none; }
