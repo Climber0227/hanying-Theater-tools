@@ -308,8 +308,17 @@
         margin-bottom: var(--s-3);
         border-radius: var(--r-sm);
     }
-    .nav-brand,
+    /* 手机上只留图标，文字让位给 5 个等分 tab */
     .nav-meta { display: none; }
+    .nav-brand {
+        padding: 0 2px;
+    }
+    .nav-brand-text { display: none; }
+    .nav-logo {
+        width: 24px;
+        height: 24px;
+        border-radius: 7px;
+    }
     .nav-tabs {
         width: 100%;
         gap: 0;
