@@ -1074,7 +1074,9 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick, syncRef }) 
                 <span className={`status-dot${token ? ' on' : ' off'}`} />
                 <span className={`status-text${token ? ' on' : ' off'}`}>{token ? '已绑定' : '未绑定'}</span>
             </div>
-            <div className="account-block-desc">绑定后每周点「同步分数」，一键拉取游戏内战区 / 幻痛数据</div>
+            <div className="account-block-desc">
+                {token || auth.isLoggedIn() ? '每周点「同步分数」，一键拉取游戏内战区 / 幻痛数据' : '用手机号登录时自动绑定，无需单独操作'}
+            </div>
             {!token ? (
                 auth.isLoggedIn() ? (
                 <div className="account-form">
