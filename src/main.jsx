@@ -8,6 +8,7 @@ import './styles/ranking.css';
 import './styles/zone.css';
 import './styles/modals.css';
 import './styles/pages.css';
+import './styles/mine.css';
 
 installImageFallback();
 

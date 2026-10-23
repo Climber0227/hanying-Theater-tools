@@ -1,0 +1,416 @@
+/* ========== 我的页面 ========== */
+/* 版式跟首页一致：页头 + 卡片，卡片内尽量少套卡片 */
+
+.mine-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 24px;
+}
+.mine-page .mine-section {
+    margin-bottom: 0;
+    padding: 16px 18px;
+    border-radius: var(--r-lg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ---- 页头 ---- */
+.mine-head {
+    align-items: center;
+    margin: 4px 0 0;
+}
+.mine-head .page-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: var(--fs-12);
+    color: var(--text-3);
+}
+.meta-sep {
+    color: var(--text-4);
+}
+.meta-state {
+    color: var(--text-3);
+}
+.meta-state.on {
+    color: var(--green);
+}
+.head-sync-btn {
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: var(--fs-13);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.head-sync-btn:hover {
+    background: var(--accent-hover);
+}
+.head-sync-btn.done {
+    background: var(--surface);
+    border-color: var(--line-strong);
+    color: var(--text-2);
+}
+
+/* ---- 待办条 ---- */
+.mine-onboard {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm);
+}
+.mo-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex: 0 0 auto;
+}
+.mo-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: var(--fs-12);
+    color: var(--text-2);
+}
+.mine-toast {
+    padding: 9px 12px;
+    border-radius: var(--r-sm);
+    background: var(--gold-soft);
+    border: 1px solid rgba(176, 122, 18, 0.18);
+    color: var(--gold);
+    font-size: var(--fs-12);
+}
+
+/* ---- 卡片头 ---- */
+.mine-page .mine-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.mine-page .mine-section-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-15);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+}
+.msh-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-12);
+    color: var(--text-3);
+    white-space: nowrap;
+}
+.msh-stat b {
+    font-size: var(--fs-15);
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+.msh-rank {
+    font-style: normal;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--surface-3);
+    color: var(--text-2);
+    font-size: var(--fs-11);
+}
+.msh-rank.ok {
+    background: var(--gold-soft);
+    color: var(--gold);
+}
+
+/* ---- 账号摘要 ---- */
+.mine-account {
+    padding: 14px 18px;
+}
+.ma-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.ma-avatar {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--surface-3);
+    color: var(--text-3);
+    font-size: var(--fs-15);
+    font-weight: 600;
+}
+.ma-avatar.on {
+    background: var(--accent);
+    color: var(--accent-text);
+}
+.ma-info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.ma-name {
+    font-size: var(--fs-15);
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ma-sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+    font-size: var(--fs-12);
+    color: var(--text-3);
+}
+.ma-badge {
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--surface-3);
+    color: var(--text-3);
+    font-size: var(--fs-11);
+}
+.ma-badge.on {
+    background: var(--green-soft);
+    color: var(--green);
+}
+.ma-actions {
+    flex: 0 0 auto;
+}
+.ma-btn {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: var(--fs-13);
+    font-weight: 600;
+    cursor: pointer;
+}
+.ma-btn.ghost {
+    background: var(--surface);
+    border-color: var(--line-strong);
+    color: var(--text-2);
+}
+.ma-btn:hover {
+    filter: brightness(0.97);
+}
+
+.ma-more {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+}
+.ma-more > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    cursor: pointer;
+    font-size: var(--fs-12);
+    color: var(--text-2);
+}
+.ma-more > summary::-webkit-details-marker {
+    display: none;
+}
+.ma-more > summary em {
+    font-style: normal;
+    color: var(--text-4);
+}
+.ma-more[open] > summary {
+    margin-bottom: 12px;
+    color: var(--text);
+    font-weight: 600;
+}
+.ma-more .account-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    justify-content: stretch;
+}
+.ma-more .account-block-title .step-badge {
+    display: none;
+}
+
+/* 挑战与分数：不再套一层卡片，用一条分隔线接在曲线下方 */
+.mine-page .challenge-section {
+    margin-top: 16px;
+    padding: 14px 0 0;
+    border: 0;
+    border-top: 1px solid var(--border-soft);
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+.mine-page .challenge-section .score-note {
+    padding: 0 0 10px;
+    margin-bottom: 10px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    font-size: var(--fs-11);
+    line-height: 1.7;
+    color: var(--text-3);
+}
+.mine-page .challenge-section .score-note b {
+    color: var(--text-2);
+    font-weight: 600;
+}
+.mine-page .challenge-section .score-empty {
+    padding: 18px 12px;
+    margin-bottom: 0;
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    font-size: var(--fs-12);
+    color: var(--text-3);
+}
+
+/* ---- 空态与说明 ---- */.mine-empty {
+    padding: 20px 12px;
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    color: var(--text-3);
+    font-size: var(--fs-12);
+    text-align: center;
+}
+.mine-note {
+    margin-top: 14px;
+    font-size: var(--fs-12);
+}
+.mine-note > summary {
+    cursor: pointer;
+    color: var(--text-3);
+    list-style: none;
+}
+.mine-note > summary::-webkit-details-marker {
+    display: none;
+}
+.mine-note > summary::before {
+    content: '?';
+    display: inline-grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: var(--surface-3);
+    color: var(--text-3);
+    font-size: 9px;
+    font-weight: 700;
+}
+.mine-note p {
+    margin-top: 8px;
+    line-height: 1.7;
+    color: var(--text-3);
+}
+.mine-note b {
+    color: var(--gold);
+    font-weight: 600;
+}
+
+/* ---- 关注列表 ---- */
+.mine-follows .follow-list {
+    gap: 8px;
+}
+.follow-item {
+    border-radius: var(--r-md);
+    padding: 8px 12px;
+    gap: 8px;
+}
+.follow-empty {
+    font-size: var(--fs-12);
+    color: var(--text-3);
+}
+.mine-follows .clear-btn {
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-3);
+    font-size: var(--fs-11);
+    cursor: pointer;
+}
+
+/* ---- 历史记录表 ---- */
+.mine-page .score-history-title {
+    margin-top: 16px;
+    font-size: var(--fs-13);
+    font-weight: 600;
+    color: var(--text);
+}
+.mine-page .score-history-tip {
+    font-weight: 400;
+    color: var(--text-3);
+    font-size: var(--fs-11);
+}
+
+@media (max-width: 700px) {
+    .mine-page {
+        gap: 10px;
+    }
+    .mine-page .mine-section {
+        padding: 14px;
+        border-radius: var(--r-md);
+    }
+    .mine-head {
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .head-sync-btn {
+        height: 32px;
+        padding: 0 14px;
+        font-size: var(--fs-12);
+    }
+    .mine-onboard {
+        flex-wrap: wrap;
+        padding: 10px 12px;
+    }
+    .ma-row {
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    .ma-info {
+        flex: 1 1 calc(100% - 52px);
+    }
+    .ma-actions {
+        flex: 1 1 100%;
+    }
+    .ma-btn {
+        width: 100%;
+        height: 40px;
+    }
+    .ma-more .account-grid {
+        grid-template-columns: 1fr;
+    }
+    .mine-page .mine-section-header {
+        margin-bottom: 12px;
+        align-items: flex-start;
+    }
+    .msh-stat {
+        font-size: var(--fs-11);
+    }
+    .msh-stat b {
+        font-size: var(--fs-13);
+    }
+}

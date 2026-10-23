@@ -115,45 +115,13 @@ function maskPhone(p) {
     return String(p).replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2');
 }
 
-// 两步使用引导（横向步骤条）
-// 1 手机号登录（同一验证码顺带绑定库街区） 2 同步分数
-function SetupGuide({ loggedIn, kuroBound, weekSaved, authReady, onOpenLogin, onSyncRequest, syncLabel, hint }) {
-    const syncText = syncLabel || (weekSaved ? '已完成' : '同步分数');
-    const done = loggedIn && kuroBound;
+// 顶部一条提示：只在已登录但库街区还没绑定时出现，告诉用户为什么需要重登一次
+function OnboardStrip({ loggedIn, kuroBound, authReady }) {
+    if (!authReady || !loggedIn || kuroBound) return null;
     return (
-        <div className="setup-guide">
-            <div className="setup-guide-header">
-                <div className="setup-guide-title">使用引导</div>
-                <div className="setup-guide-sub">一个手机号完成登录，库街区自动绑定</div>
-            </div>
-            <div className="guide-steps">
-                <div className={`guide-step${done ? ' done' : ''}`} onClick={() => !done && onOpenLogin && onOpenLogin()}>
-                    <div className="guide-step-dot">{done ? '✓' : '1'}</div>
-                    <div className="guide-step-info">
-                        <div className="guide-step-title">手机号登录</div>
-                        <div className="guide-step-lights">
-                            <span className={`guide-light${loggedIn ? ' on' : ''}${!authReady ? ' checking' : ''}`}>
-                                账号 {!authReady ? '检查中…' : (loggedIn ? '已登录' : '未登录')}
-                            </span>
-                            <span className={`guide-light${kuroBound ? ' on' : ''}`}>库街区 {kuroBound ? '已绑定' : '未绑定'}</span>
-                        </div>
-                    </div>
-                    <button className="guide-action" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin(); }}>
-                        {done ? '登录状态' : (loggedIn ? '补绑库街区' : '手机号登录')}
-                    </button>
-                </div>
-                <div className={`guide-step${weekSaved ? ' done' : ''}`} onClick={() => !weekSaved && onSyncRequest && onSyncRequest()}>
-                    <div className="guide-step-dot">{weekSaved ? '✓' : '2'}</div>
-                    <div className="guide-step-info">
-                        <div className="guide-step-title">同步分数</div>
-                        <div className="guide-step-desc">{weekSaved ? '已完成 · 已备份云端' : '一键拉取游戏内最新分数'}</div>
-                    </div>
-                    <button className="guide-action" onClick={e => { e.stopPropagation(); onSyncRequest && onSyncRequest(); }}>
-                        {syncText}
-                    </button>
-                </div>
-            </div>
-            {hint && <div className="setup-guide-hint">{hint}</div>}
+        <div className="mine-onboard">
+            <span className="mo-dot" />
+            <span className="mo-text">库街区还没绑定：点右上角「补绑库街区」，用手机号重新登录一次即可自动完成绑定。</span>
         </div>
     );
 }
@@ -446,6 +414,9 @@ function MyTrendSection({ zones, syncStamp }) {
     const isMobile = useMediaQuery(MOBILE_QUERY);
     const { todayData, dayData, hasToday, hasWeek, zoneList } = useTrendData(zones, syncStamp);
     if (isMobile) return null;
+    if (!hasToday && !hasWeek) {
+        return <div className="mine-empty">同步一次分数后，这里会显示今日与本周的分数曲线</div>;
+    }
 
     return (
         <div className="trend-grid">
@@ -552,7 +523,7 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
     if (zones.length === 0) return (
         <div className="mine-section">
             <div className="mine-section-header">
-                <h3><span className="step-badge">2</span>我的战区</h3>
+                <h3>我的战区</h3>
             </div>
             <div className="mine-skeleton">
                 <span className="skeleton" />
@@ -570,16 +541,24 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
     return (
         <div className="mine-section">
             <div className="mine-section-header">
-                <h3><span className="step-badge">2</span>我的战区</h3>
-            </div>
-            <MyTrendSection zones={zones} syncStamp={syncStamp} />
-            <ChallengeSection zones={zones} syncStamp={syncStamp} />
-            <div className="score-note">
-                注意：历史记录自「登录网站账号 + 绑定库街区」后开始记录每周分数；<b>每周日战区结算前</b>请进入网站同步分数（进页面自动同步，也可点「同步分数」手动同步），分数会随账号上传云端，换设备登录可查
+                <h3>我的战区</h3>
+                {latest && (
+                    <span className="msh-stat">
+                        第 {latest.week} 周 <b>{formatNumber(latest.total)}</b>
+                        {latest.totalRank > 0
+                            ? (latest.totalRank <= 100
+                                ? <em className="msh-rank ok">全榜 #{latest.totalRank}</em>
+                                : <em className="msh-rank">差 {formatNumber(latest.totalDiff)} 进前 100</em>)
+                            : <em className="msh-rank">未上榜</em>}
+                    </span>
+                )}
             </div>
             {scores.length === 0 ? (
-                <div className="score-empty">暂无历史记录 —— 同步本周分数后自动生成</div>
+                <div className="mine-empty">同步一次分数后，这里会显示本周曲线与每周历史</div>
             ) : (
+                <>
+            <MyTrendSection zones={zones} syncStamp={syncStamp} />
+            <ChallengeSection zones={zones} syncStamp={syncStamp} />
                 <ScoreTable
                     rows={scores}
                     columns={columns}
@@ -614,6 +593,7 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                     onDelete={setPendingWeek}
                     onTeam={setTeamRecord}
                 />
+                </>
             )}
             <DeleteConfirmModal
                 pending={pendingWeek}
@@ -622,6 +602,12 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
                 onClose={() => setPendingWeek(null)}
             />
             <HistoryTeamModal record={teamRecord} onClose={() => setTeamRecord(null)} />
+            {scores.length > 0 && (
+                <details className="mine-note">
+                    <summary>记录规则</summary>
+                    <p>历史记录自「手机号登录」后开始记录每周分数；<b>每周日战区结算前</b>进一次网站同步分数（进页面会自动同步，也可点右上角「同步分数」），分数随账号上传云端，换设备登录即可查看。</p>
+                </details>
+            )}
         </div>
     );
 }
@@ -644,7 +630,7 @@ function PpcScoreSection({ bosses, currentWeek, onChanged, syncStamp }) {
     if (bosses.length === 0) return (
         <div className="mine-section">
             <div className="mine-section-header">
-                <h3><span className="step-badge">3</span>我的幻痛</h3>
+                <h3>我的幻痛</h3>
             </div>
             <div className="mine-skeleton">
                 <span className="skeleton" />
@@ -661,8 +647,10 @@ function PpcScoreSection({ bosses, currentWeek, onChanged, syncStamp }) {
     return (
         <div className="mine-section">
             <div className="mine-section-header">
-                <h3><span className="step-badge">3</span>我的幻痛</h3>
-                <span className="score-live-total">本周总分 <b>{formatNumber(weekScore ? weekScore.total : 0)}</b></span>
+                <h3>我的幻痛</h3>
+                <span className="msh-stat">
+                    {weekScore ? <>本周 <b>{formatNumber(weekScore.total)}</b></> : '本周暂无'}
+                </span>
             </div>
             {weekScore ? (
                 <div className="score-week-card">
@@ -673,7 +661,7 @@ function PpcScoreSection({ bosses, currentWeek, onChanged, syncStamp }) {
                     </div>
                 </div>
             ) : (
-                <div className="score-empty">本周暂无记录 —— 绑定库街区后自动同步</div>
+                <div className="mine-empty">本周还没有幻痛记录，同步一次分数就会记下来</div>
             )}
             <ScoreTable
                 rows={scores}
@@ -1582,19 +1570,46 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, showS
     );
 }
 
-// 账号卡片：左网站账号，右库街区，底部说明
+// 账号卡片：一行摘要（是谁 / 库街区绑没绑 / 主操作），细节收进「详情」折叠里
 function AccountSection({ onSyncData, onAuthChange, onBoundChange, authReady, authTick, syncRef, onOpenLogin }) {
+    const loggedIn = auth.isLoggedIn();
+    const name = (loggedIn && (auth.playerName || auth.playerId)) || '未登录';
+    const kuroPhone = getKuroPhone();
     return (
-        <div className="mine-section" id="mine-account">
-            <div className="mine-section-header"><h3><span className="step-badge">1</span>账号 · 库街区</h3></div>
-            <div className="account-grid">
-                <WebLoginBlock onAuthChange={onAuthChange} onOpenLogin={onOpenLogin} />
-                <KuroBlock onSyncData={onSyncData} onBoundChange={onBoundChange} authReady={authReady} authTick={authTick} syncRef={syncRef} />
+        <div className="mine-section mine-account" id="mine-account">
+            <div className="ma-row">
+                <div className={`ma-avatar${loggedIn ? ' on' : ''}`}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                        <circle cx="12" cy="8" r="3.6" />
+                        <path d="M4.5 20.5c0-3.9 3.4-6.3 7.5-6.3s7.5 2.4 7.5 6.3" />
+                    </svg>
+                </div>
+                <div className="ma-info">
+                    <div className="ma-name">{name}</div>
+                    <div className="ma-sub">
+                        {loggedIn
+                            ? <span>账号 ID {auth.playerId}</span>
+                            : <span>登录后分数自动备份，换设备也能看历史</span>}
+                        <span className={`ma-badge${kuroPhone ? ' on' : ''}`}>
+                            库街区 {kuroPhone ? maskPhone(kuroPhone) : '未绑定'}
+                        </span>
+                    </div>
+                </div>
+                <div className="ma-actions">
+                    {loggedIn
+                        ? <button className="ma-btn ghost" onClick={onOpenLogin}>切换账号</button>
+                        : <button className="ma-btn" onClick={onOpenLogin}>手机号登录</button>}
+                </div>
             </div>
-            <div className="account-intro">
-                <span>· 手机号登录：短信验证码同时用于库街区，登录即完成绑定</span>
-                <span>· 分数保存自动同步云端，换设备登录即可查看历史</span>
-            </div>
+            {loggedIn && (
+                <details className="ma-more">
+                    <summary><span>账号与绑定详情</span><em>换绑 · 数据管理</em></summary>
+                    <div className="account-grid">
+                        <WebLoginBlock onAuthChange={onAuthChange} onOpenLogin={onOpenLogin} />
+                        <KuroBlock onSyncData={onSyncData} onBoundChange={onBoundChange} authReady={authReady} authTick={authTick} syncRef={syncRef} />
+                    </div>
+                </details>
+            )}
         </div>
     );
 }
@@ -1860,25 +1875,44 @@ export default function MinePage() {
         setGuideMsg('');
         syncScoreRef.current();
     };
-    const syncLabel = !user ? '先登录' : (!kuroBound ? '去绑定' : (weekSaved ? '已同步' : '同步分数'));
-
     const removeFollow = id => {
         const next = follows.filter(f => String(f.id) !== String(id));
         saveFollows(next);
         setFollows(next);
     };
 
+    const headActionLabel = !user ? '手机号登录' : (!kuroBound ? '补绑库街区' : (weekSaved ? '重新同步' : '同步分数'));
+
     return (
-        <div>
-            <SetupGuide
+        <div className="mine-page">
+            <div className="page-head mine-head">
+                <div className="page-head-main">
+                    <h1 className="page-title">我的</h1>
+                    <div className="page-meta">
+                        <span className={kuroBound ? 'meta-state on' : 'meta-state'}>{kuroBound ? '库街区已绑定' : '库街区未绑定'}</span>
+                        {wzWeek ? <><span className="meta-sep">·</span><span>第 {wzWeek} 周</span></> : null}
+                    </div>
+                </div>
+                {user && (
+                    <button className={`head-sync-btn${weekSaved ? ' done' : ''}`} onClick={requestSync}>{headActionLabel}</button>
+                )}
+            </div>
+
+            <OnboardStrip
                 loggedIn={!!user}
                 kuroBound={kuroBound}
-                weekSaved={weekSaved}
                 authReady={authReady}
-                onOpenLogin={setLoginModal}
-                onSyncRequest={requestSync}
-                syncLabel={syncLabel}
-                hint={guideMsg}
+            />
+            {guideMsg && <div className="mine-toast">{guideMsg}</div>}
+
+            <AccountSection
+                onSyncData={saveSyncedScores}
+                onAuthChange={u => { setUser(u); setAuthTick(t => t + 1); }}
+                onBoundChange={setKuroBound}
+                authReady={authReady}
+                authTick={authTick}
+                syncRef={syncScoreRef}
+                onOpenLogin={() => setLoginModal('login')}
             />
 
             <WeekScoreCard
@@ -1893,28 +1927,18 @@ export default function MinePage() {
                 onSync={requestSync}
             />
 
-            <AccountSection
-                onSyncData={saveSyncedScores}
-                onAuthChange={u => { setUser(u); setAuthTick(t => t + 1); }}
-                onBoundChange={setKuroBound}
-                authReady={authReady}
-                authTick={authTick}
-                syncRef={syncScoreRef}
-                onOpenLogin={() => setLoginModal('login')}
-            />
-
             <div id="mine-scores">
                 <WzScoreSection zones={wzZones} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
                 <PpcScoreSection bosses={ppcBosses} currentWeek={ppcWeek} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
             </div>
 
-            <div className="mine-section">
+            <div className="mine-section mine-follows">
                 <div className="mine-section-header">
-                    <h3><span className="step-badge">4</span>关注列表</h3>
-                    <button className="clear-btn" onClick={clearFollows}>清空</button>
+                    <h3>关注列表</h3>
+                    {follows.length > 0 && <button className="clear-btn" onClick={clearFollows}>清空</button>}
                 </div>
                 <div className="follow-list">
-                    {follows.length === 0 && <span className="follow-empty">暂无关注</span>}
+                    {follows.length === 0 && <span className="follow-empty">还没有关注任何人，在玩家查询页点「关注」即可收藏到这里</span>}
                     {follows.map(f => (
                         <div className="follow-item" key={f.id}>
                             {f.portrait && <img className="follow-avatar" src={getImageUrl(f.portrait)} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
