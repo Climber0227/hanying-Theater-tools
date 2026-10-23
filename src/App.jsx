@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import Nav from './components/Nav.jsx';
 import WarzonePage from './components/WarzonePage.jsx';
 import AdFloat from './components/AdFloat.jsx';
+import UpdateRail from './components/UpdateRail.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import './styles/app.css';
 
@@ -78,6 +79,7 @@ export default function App() {
                         {page === 'changelog' && <ChangelogPage />}
                     </Suspense>
                 </div>
+                {page === 'warzone' && <UpdateRail onChangePage={changePage} />}
                 <AdFloat />
                 <a
                     className="corner-feedback"
