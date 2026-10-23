@@ -1,10 +1,10 @@
 {
   "boot": {
     "markBox": {
-      "x": 674.4608764648438,
-      "y": 352.712646484375,
-      "width": 91.07818603515625,
-      "height": 91.07818603515625
+      "x": 674.46044921875,
+      "y": 352.71142578125,
+      "width": 91.07904052734375,
+      "height": 91.07904052734375
     },
     "backgroundImage": "url(\"https://jiatenghui.icu/img/brand-176.webp\")",
     "requests": [
@@ -45,8 +45,8 @@
   "mobile": {
     "naturalWidth": 64,
     "rendered": {
-      "w": 0,
-      "h": 0
+      "w": 22,
+      "h": 22
     },
     "docW": 390
   }
