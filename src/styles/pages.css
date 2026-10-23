@@ -365,9 +365,9 @@
 /* ========== 幻痛囚笼 ========== */
 .ppc-bosses {
     display: flex;
-    justify-content: center;
-    gap: 14px;
-    margin-bottom: 28px;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
 }
 .ppc-boss-card {
@@ -1115,6 +1115,33 @@
 .setup-guide-sub {
     font-size: 12px;
     color: var(--text-3);
+}
+/* 点了「同步分数」但前置步骤没完成时的提示 */
+.setup-guide-hint {
+    margin-top: 12px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background: var(--gold-soft);
+    border: 0.5px solid rgba(176, 122, 18, 0.22);
+    color: var(--gold);
+    font-size: 12px;
+    line-height: 1.5;
+}
+/* 分数区数据未就绪时的骨架（替代原来的一行裸文字） */
+.mine-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 6px 2px 10px;
+}
+.mine-skeleton .skeleton {
+    height: 14px;
+}
+.mine-skeleton .skeleton:nth-child(2) {
+    width: 78%;
+}
+.mine-skeleton .skeleton:nth-child(3) {
+    width: 52%;
 }
 .guide-steps {
     display: grid;

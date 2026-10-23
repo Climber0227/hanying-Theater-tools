@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { loadPpc, friendlyError } from '../api/client.js';
 import { getImageUrl } from '../api/config.js';
-import { formatNumber, formatTime } from '../utils/format.js';
+import { formatNumber, formatTime, formatDateRange } from '../utils/format.js';
 import Modal from './Modals/Modal.jsx';
 
 const LEVELS = [
@@ -94,8 +94,15 @@ export default function PpcPage({ onOpenPlayer }) {
 
     return (
         <div>
-            <header className="header">
-                <h1>幻痛囚笼</h1>
+            <header className="page-head">
+                <div className="page-head-main">
+                    <h1 className="page-title">幻痛囚笼</h1>
+                    <div className="page-meta">
+                        {ppc && <span>{formatDateRange(ppc.start, ppc.end)}</span>}
+                        {ppc && <><span className="meta-dot" /><span>{ppc.level.name}</span></>}
+                        {ppc && <><span className="meta-dot" /><span className="meta-updated">更新于 {formatTime(ppc.updatedAt)}</span></>}
+                    </div>
+                </div>
                 <div className="controls">
                     <select value={level} onChange={e => { setLevel(e.target.value); localStorage.setItem('currentPpcLevel', e.target.value); }}>
                         {LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
@@ -108,9 +115,6 @@ export default function PpcPage({ onOpenPlayer }) {
                         <option value="">本周</option>
                         {weeks.map(w => <option key={w} value={w}>第{w}周</option>)}
                     </select>
-                    <span className="date-range">{ppc ? `${ppc.start} ~ ${ppc.end}` : ''}</span>
-                    <span className="ranking-meta">{ppc ? `分区: ${ppc.level.name}` : ''}</span>
-                    <span className="ranking-meta">{ppc ? `更新时间: ${formatTime(ppc.updatedAt)}` : ''}</span>
                 </div>
             </header>
 
@@ -132,11 +136,14 @@ export default function PpcPage({ onOpenPlayer }) {
                 </div>
             )}
 
-            <div className="rankings">
-                <h2>
-                    排行榜 <span className="top-label">TOP 100</span>
-                    {loading && <span className="top-label">加载中…</span>}
-                </h2>
+            <div className="rankings ppc-panel">
+                <div className="panel-head">
+                    <div className="panel-title">
+                        <h2>排行榜</h2>
+                        <span className="top-label">TOP 100</span>
+                    </div>
+                    {loading && sorted.length > 0 && <span className="panel-sub">刷新中…</span>}
+                </div>
                 <div className="ranking-table ppc-ranking">
                     <div className="ranking-header">
                         <div className="col-rank">排名</div>
@@ -145,6 +152,18 @@ export default function PpcPage({ onOpenPlayer }) {
                             总分<span className="sort-arrow">{sortAsc ? ' ▲' : ' ▼'}</span>
                         </div>
                     </div>
+                    {loading && sorted.length === 0 && (
+                        <div className="ppc-skeleton">
+                            {Array.from({ length: 6 }).map((_, i) => (
+                                <div className="ppc-skeleton-row" key={i}>
+                                    <span className="skeleton sk-rank" />
+                                    <span className="skeleton sk-avatar" />
+                                    <span className="skeleton sk-name" />
+                                    <span className="skeleton sk-score" />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     {sorted.map((r, i) => {
                         const top = i < 3;
                         return (
@@ -167,6 +186,12 @@ export default function PpcPage({ onOpenPlayer }) {
                             </div>
                         );
                     })}
+                    {!loading && sorted.length === 0 && !error && (
+                        <div className="ranking-empty">
+                            <div className="ranking-empty-title">本周暂无榜单数据</div>
+                            <div className="ranking-empty-sub">游戏内还没结算，或该分区本周没有记录</div>
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -117,7 +117,8 @@ function maskPhone(p) {
 
 // 三步使用引导（横向步骤条）
 // 1 登录网站账号 2 登录库街区 3 同步分数
-function SetupGuide({ loggedIn, kuroBound, weekSaved, authReady, onOpenLogin, onSyncRequest }) {
+function SetupGuide({ loggedIn, kuroBound, weekSaved, authReady, onOpenLogin, onSyncRequest, syncLabel, hint }) {
+    const syncText = syncLabel || (weekSaved ? '已完成' : '同步分数');
     return (
         <div className="setup-guide">
             <div className="setup-guide-header">
@@ -158,10 +159,11 @@ function SetupGuide({ loggedIn, kuroBound, weekSaved, authReady, onOpenLogin, on
                         <div className="guide-step-desc">{weekSaved ? '已完成 · 已备份云端' : '一键拉取游戏内最新分数'}</div>
                     </div>
                     <button className="guide-action" onClick={e => { e.stopPropagation(); onSyncRequest && onSyncRequest(); }}>
-                        同步分数
+                        {syncText}
                     </button>
                 </div>
             </div>
+            {hint && <div className="setup-guide-hint">{hint}</div>}
         </div>
     );
 }
@@ -559,7 +561,18 @@ function WzScoreSection({ zones, syncStamp, onChanged }) {
         onChanged && onChanged();
     };
 
-    if (zones.length === 0) return <div className="score-input-label">加载战区数据中…</div>;
+    if (zones.length === 0) return (
+        <div className="mine-section">
+            <div className="mine-section-header">
+                <h3><span className="step-badge">2</span>我的战区</h3>
+            </div>
+            <div className="mine-skeleton">
+                <span className="skeleton" />
+                <span className="skeleton" />
+                <span className="skeleton" />
+            </div>
+        </div>
+    );
 
     const latest = scores[0];
     // 表头用通用列名（每周区名/机制不同，区名在行内单元格自描述，避免错位）
@@ -640,7 +653,17 @@ function PpcScoreSection({ bosses, currentWeek, onChanged, syncStamp }) {
         onChanged && onChanged();
     };
 
-    if (bosses.length === 0) return <div className="score-input-label">加载幻痛数据中…</div>;
+    if (bosses.length === 0) return (
+        <div className="mine-section">
+            <div className="mine-section-header">
+                <h3><span className="step-badge">3</span>我的幻痛</h3>
+            </div>
+            <div className="mine-skeleton">
+                <span className="skeleton" />
+                <span className="skeleton" />
+            </div>
+        </div>
+    );
 
     const weekScore = scores.find(s => String(s.week) === String(currentWeek));
     const maxBosses = scores.length ? Math.max(...scores.map(s => s.bosses.length)) : bosses.length;
@@ -1818,7 +1841,30 @@ export default function MinePage() {
     const isMobile = useMediaQuery(MOBILE_QUERY);
     const trend = useTrendData(wzZones, syncStamp);
     const [loginModal, setLoginModal] = useState(null); // null | 'web' | 'kuro'
+    const [guideMsg, setGuideMsg] = useState('');
     const syncScoreRef = useRef(null); // 库街区同步函数（KuroBlock 注册）
+
+    // 所有「同步分数」入口都走这里：
+    // 没登录 / 没绑定 / 绑定还在恢复时，必须先给出明确反馈，而不是点了没反应
+    const requestSync = () => {
+        if (!user) {
+            setGuideMsg('请先完成第 1 步：登录网站账号（分数才会保存并备份到云端）');
+            setLoginModal('web');
+            return;
+        }
+        if (!kuroBound) {
+            setGuideMsg('请先完成第 2 步：绑定库街区，才能拉取游戏内分数');
+            setLoginModal('kuro');
+            return;
+        }
+        if (!syncScoreRef.current) {
+            setGuideMsg('库街区绑定还在恢复中，请稍等几秒再点一次');
+            return;
+        }
+        setGuideMsg('');
+        syncScoreRef.current();
+    };
+    const syncLabel = !user ? '先登录' : (!kuroBound ? '去绑定' : (weekSaved ? '已同步' : '同步分数'));
 
     const removeFollow = id => {
         const next = follows.filter(f => String(f.id) !== String(id));
@@ -1834,7 +1880,9 @@ export default function MinePage() {
                 weekSaved={weekSaved}
                 authReady={authReady}
                 onOpenLogin={setLoginModal}
-                onSyncRequest={() => syncScoreRef.current && syncScoreRef.current()}
+                onSyncRequest={requestSync}
+                syncLabel={syncLabel}
+                hint={guideMsg}
             />
 
             <WeekScoreCard
@@ -1846,13 +1894,8 @@ export default function MinePage() {
                 trend={trend}
                 showTrendBtn={isMobile}
                 showSyncBtn={isMobile && kuroBound}
-                onSync={() => syncScoreRef.current && syncScoreRef.current()}
+                onSync={requestSync}
             />
-
-            <div id="mine-scores">
-                <WzScoreSection zones={wzZones} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
-                <PpcScoreSection bosses={ppcBosses} currentWeek={ppcWeek} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
-            </div>
 
             <AccountSection
                 onSyncData={saveSyncedScores}
@@ -1862,6 +1905,11 @@ export default function MinePage() {
                 authTick={authTick}
                 syncRef={syncScoreRef}
             />
+
+            <div id="mine-scores">
+                <WzScoreSection zones={wzZones} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
+                <PpcScoreSection bosses={ppcBosses} currentWeek={ppcWeek} syncStamp={syncStamp} onChanged={() => setWeekSaved(getScores(WZ_SCORE_KEY).some(s => String(s.week) === String(wzWeek)))} />
+            </div>
 
             <div className="mine-section">
                 <div className="mine-section-header">
@@ -1891,6 +1939,7 @@ export default function MinePage() {
                     kuroBound={kuroBound}
                     onLoggedIn={() => {
                         setLoginModal(null);
+                        setGuideMsg('');
                         setUser(auth.isLoggedIn() ? { id: auth.playerId, name: auth.playerName } : null);
                         setAuthTick(t => t + 1); // 触发库街区恢复绑定/自动同步
                         setKuroBound(!!getKuroToken());

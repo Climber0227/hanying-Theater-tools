@@ -505,6 +505,8 @@
 }
 
 /* ========== 表格容器 ========== */
+/* 首页是虚拟滚动（react-window 自己给高度），所以这里锁高；
+   幻痛页是普通 DOM 列表，必须放开高度，否则第 7 名之后全被裁掉 */
 .ranking-table {
     height: clamp(420px, calc(100vh - 320px), 820px);
     overflow-x: auto;
@@ -512,6 +514,21 @@
     position: relative;
     background: var(--surface);
     scrollbar-width: thin;
+}
+.ranking-table.ppc-ranking {
+    height: auto;
+    overflow: visible;
+}
+/* 幻痛只有三列，让玩家列吃掉剩余宽度，总分贴右，避免右侧大片空白 */
+.ppc-ranking .ranking-header .col-player,
+.ppc-row .ranking-player {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+/* 三色细线是战区面板的语义（三区配色），幻痛没有三区 */
+.ppc-panel::before {
+    display: none;
 }
 .ranking-empty {
     padding: 56px 20px;
@@ -991,6 +1008,21 @@
     height: 92px;
     border-bottom: 1px solid var(--border-soft);
 }
+/* 幻痛页骨架（列结构与 .ppc-row 对齐） */
+.ppc-skeleton {
+    padding: 0 24px;
+}
+.ppc-skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 68px;
+    border-bottom: 1px solid var(--border-soft);
+}
+.ppc-skeleton-row .sk-rank { width: 28px; }
+.ppc-skeleton-row .sk-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
+.ppc-skeleton-row .sk-name { width: 180px; }
+.ppc-skeleton-row .sk-score { width: 96px; margin-left: auto; }
 
 /* ========== 页头（战区数据首页） ========== */
 .page-head {

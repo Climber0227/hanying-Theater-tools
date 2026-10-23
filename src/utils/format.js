@@ -11,14 +11,34 @@ export function formatScoreCompact(num) {
     return String(num);
 }
 
-export function formatTime(timeStr) {
-    if (!timeStr) return '--';
-    return String(timeStr);
+// 后端给的是 ISO 字符串（可能带 6 位小数秒，如 2026-10-23T16:05:00.001091Z），
+// 旧实现直接 String() 输出，页面上就是原文。这里统一解析成本地时间显示。
+function parseIso(input) {
+    if (!input) return null;
+    if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input;
+    const s = String(input).trim();
+    // 小数秒超过 3 位时部分浏览器 parse 失败，先截断到毫秒
+    const d = new Date(s.replace(/(\.\d{3})\d+/, '$1'));
+    return Number.isNaN(d.getTime()) ? null : d;
 }
 
+const pad2 = n => String(n).padStart(2, '0');
+
+// '2026-10-23T16:05:00.001091Z' → '10-23 16:05'
+export function formatTime(timeStr) {
+    const d = parseIso(timeStr);
+    if (!d) return timeStr ? String(timeStr) : '--';
+    return `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+// 起止时间 → '10.18 — 10.25'（跨年时带上年份）
 export function formatDateRange(start, end) {
-    if (!start || !end) return '';
-    return `${start} ~ ${end}`;
+    const a = parseIso(start);
+    const b = parseIso(end);
+    if (!a || !b) return start && end ? `${start} ~ ${end}` : '';
+    const md = d => `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
+    const sameYear = a.getFullYear() === b.getFullYear();
+    return sameYear ? `${md(a)} — ${md(b)}` : `${a.getFullYear()}.${md(a)} — ${b.getFullYear()}.${md(b)}`;
 }
 
 // 品质/阶级信息
