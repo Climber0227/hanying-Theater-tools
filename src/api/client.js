@@ -20,10 +20,10 @@ function sleep(ms) {
 // ---------- 代理可用性 ----------
 // 源站（api.huaxu.app）在 Cloudflare 后面，数据中心 IP 会被挑战（403 + 验证页）。
 // 所以同源代理只能「尽力而为」：一旦发现它返回 502/HTML，本次会话就改用直连，
-// 30 分钟后再试一次。这样即便代理走不通，用户也只会多花一次快速失败的请求。
+// 12 小时后再试一次。这样即便代理走不通，每个浏览器也只多花一次快速失败的请求。
 const PROXY_PREFIX = '/api/huaxu?';
 const PROXY_BLOCK_KEY = 'huaxu_proxy_blocked_at';
-const PROXY_RETRY_MS = 30 * 60 * 1000;
+const PROXY_RETRY_MS = 12 * 60 * 60 * 1000; // 12 小时内不再试代理
 
 function isProxyUrl(url) {
     return typeof url === 'string' && url.startsWith(PROXY_PREFIX);
@@ -31,7 +31,7 @@ function isProxyUrl(url) {
 
 function isProxyDisabled() {
     try {
-        const at = Number(sessionStorage.getItem(PROXY_BLOCK_KEY) || 0);
+        const at = Number(localStorage.getItem(PROXY_BLOCK_KEY) || 0);
         return at > 0 && Date.now() - at < PROXY_RETRY_MS;
     } catch (e) {
         return false;
@@ -40,7 +40,7 @@ function isProxyDisabled() {
 
 function markProxyDisabled() {
     try {
-        sessionStorage.setItem(PROXY_BLOCK_KEY, String(Date.now()));
+        localStorage.setItem(PROXY_BLOCK_KEY, String(Date.now()));
     } catch (e) { /* 隐私模式下忽略 */ }
 }
 

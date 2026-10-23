@@ -78,7 +78,7 @@
     {
       "name": "慢源站按超时返回",
       "pass": true,
-      "detail": "606ms status=504"
+      "detail": "610ms status=504"
     },
     {
       "name": "nocache 返回 no-store",
@@ -101,5 +101,5 @@
       "detail": "no-store"
     }
   ],
-  "at": "2026-10-23T14:04:20.966Z"
+  "at": "2026-10-23T14:07:28.155Z"
 }
