@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { loadPlayer, fetchJson } from '../api/client.js';
-import { API_CONFIG, getImageUrl } from '../api/config.js';
+import { loadPlayer, fetchJson, friendlyError } from '../api/client.js';
+import { apiUrl, getImageUrl } from '../api/config.js';
 import { getSearchHistory, saveSearchHistory, getFollows, saveFollows } from '../api/storage.js';
 import { readRosterCache, writeRosterCache } from '../api/history.js';
 import { rosterLookup } from '../utils/roster.js';
 import { formatNumber, getQualityInfo } from '../utils/format.js';
+import LazyImage from './LazyImage.jsx';
 import CharacterModal from './Modals/CharacterModal.jsx';
 import HistoryModal from './Modals/HistoryModal.jsx';
 import RosterModal from './Modals/RosterModal.jsx';
@@ -26,7 +27,17 @@ function CharacterCard({ c, onClick, inferred }) {
             onClick={onClick}
             title={tip}
         >
-            {iconUrl && <img className="character-icon" src={iconUrl} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+            {iconUrl && (
+                <LazyImage
+                    className="character-icon"
+                    src={iconUrl}
+                    alt=""
+                    width="48"
+                    height="48"
+                    rootMargin="250px"
+                    onError={e => { e.currentTarget.style.display = 'none'; }}
+                />
+            )}
             <div className="character-info">
                 <div className="character-name">
                     {c.characterName}
@@ -53,6 +64,7 @@ export default function PlayerPage({ pendingPlayerId }) {
     const [player, setPlayer] = useState(null);
     const [characters, setCharacters] = useState([]);
     const [error, setError] = useState('');
+    const [lastQuery, setLastQuery] = useState(''); // 网络失败时用于「重试」
     const [follows, setFollows] = useState(getFollows());
     const [charDetail, setCharDetail] = useState(null); // { charId }
     const [showHistory, setShowHistory] = useState(false);
@@ -65,7 +77,7 @@ export default function PlayerPage({ pendingPlayerId }) {
     useEffect(() => {
         (async () => {
             try {
-                const result = await fetchJson(`${API_CONFIG.warzone}/current/16`);
+                const result = await fetchJson(apiUrl('/servers/cn/warzone/current/16'));
                 if (result.data && result.data.activities) {
                     setWeekOptions({ min: result.data.activities.min, max: result.data.activities.max });
                 }
@@ -88,13 +100,22 @@ export default function PlayerPage({ pendingPlayerId }) {
             if (signal.aborted) return;
             setPlayer(data.player);
             setCharacters(data.characters || []);
+            setLastQuery('');
             // 记历史
             const h = getSearchHistory().filter(x => String(x.id) !== String(data.player.id));
             h.unshift({ id: data.player.id, name: data.player.name, portrait: data.player.portrait });
             saveSearchHistory(h.slice(0, 20));
             refreshHistory();
         } catch (e) {
-            if (!signal.aborted) setError('未找到该玩家');
+            if (signal.aborted) return;
+            // 「查无此人」和「网络抖动」必须分开报，否则断网也被说成玩家不存在
+            if (e && e.notFound) {
+                setError('未找到该玩家');
+                setLastQuery('');
+            } else {
+                setError(friendlyError(e));
+                setLastQuery(id);
+            }
         }
     }, [refreshHistory]);
 
@@ -169,7 +190,7 @@ export default function PlayerPage({ pendingPlayerId }) {
                     {history.length === 0 && <span className="history-empty">暂无查询记录</span>}
                     {history.map(h => (
                         <div className="history-item" key={h.id} onClick={() => query(h.id)}>
-                            {h.portrait && <img className="history-avatar" src={getImageUrl(h.portrait)} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+                            {h.portrait && <LazyImage className="history-avatar" src={getImageUrl(h.portrait)} alt="" width="36" height="36" onError={e => { e.currentTarget.style.display = 'none'; }} />}
                             <div className="history-info">
                                 <div className="history-name">{h.name}</div>
                                 <div className="history-id">ID: {h.id}</div>
@@ -179,7 +200,14 @@ export default function PlayerPage({ pendingPlayerId }) {
                 </div>
             </div>
 
-            {error && <div className="team-empty">{error}</div>}
+            {error && (
+                <div className="data-alert" role="status">
+                    <span className="data-alert-text">{error}</span>
+                    {lastQuery && (
+                        <button className="data-alert-btn" onClick={() => query(lastQuery)}>重试</button>
+                    )}
+                </div>
+            )}
 
             {player && (
                 <div className="player-profile">

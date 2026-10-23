@@ -27,3 +27,8 @@ Thumbs.db
 *.log
 .vercel
 .env*
+
+# 审计产物：截图与响应样本体积大，只保留结论文档
+docs/ui-audit/
+docs/perf/fixture-*.json
+PGRUID-main/

@@ -5,7 +5,7 @@
 // 说明：只包含该玩家进入 TOP100 的周（结算后的周），单次最多约 100 周；响应约 500KB（gzip 后 ~20KB）
 // 用途：隐藏角色详情时，用历届上阵阵容反推角色阶级/战力
 
-import { API_CONFIG } from './config.js';
+import { apiUrl } from './config.js';
 import { fetchJson } from './client.js';
 
 const CACHE_VERSION = 1;
@@ -33,13 +33,15 @@ function normalizeWeek(item) {
         difficulty: String(wz.challenge || ''),
         rank: rk.rank || 0,
         score: rk.score || 0,
-        zones
+        zones,
+        // 该周三个战区的元信息（id/name/属性等），历史战绩弹窗直接用来渲染区名
+        zoneMeta: (wz.area && wz.area.zones) || []
     };
 }
 
 // 拉取并归一化：返回按周次降序排列的记录数组
 export async function loadPlayerHistory(playerId, { signal, force = false } = {}) {
-    const url = `${API_CONFIG.player}/${playerId}/warzone`;
+    const url = apiUrl(`/servers/cn/players/${playerId}/warzone`);
     // 响应约 500KB，不进内存缓存（避免多玩家累积占用）；结果由 localStorage 反推缓存兜底
     const result = await fetchJson(url, { signal, force, cache: false });
     if (!result || result.status !== 'success' || !result.data) {

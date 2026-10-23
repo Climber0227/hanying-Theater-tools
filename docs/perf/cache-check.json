@@ -1,0 +1,28 @@
+{
+  "results": [
+    {
+      "name": "first-visit-英雄(15)",
+      "prefix": "D15·",
+      "ms": 288,
+      "requests": 1
+    },
+    {
+      "name": "back-传奇(16)-cached",
+      "prefix": "D16·",
+      "ms": 2,
+      "requests": 0
+    },
+    {
+      "name": "stale-revalidate-英雄",
+      "ms": 2,
+      "bgRequests": 1,
+      "totalMs": 1221
+    },
+    {
+      "name": "after-reload-英雄",
+      "ms": 2,
+      "requests": 0
+    }
+  ],
+  "at": "2026-10-23T13:24:32.246Z"
+}

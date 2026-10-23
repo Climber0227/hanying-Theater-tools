@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { loadPpc } from '../api/client.js';
+import { loadPpc, friendlyError } from '../api/client.js';
 import { getImageUrl } from '../api/config.js';
 import { formatNumber, formatTime } from '../utils/format.js';
 import Modal from './Modals/Modal.jsx';
@@ -63,23 +63,28 @@ export default function PpcPage({ onOpenPlayer }) {
     const [sortAsc, setSortAsc] = useState(false);
     const [detailBoss, setDetailBoss] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [tick, setTick] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
         (async () => {
             setLoading(true);
+            setError('');
             try {
                 const data = await loadPpc(week, level);
                 if (cancelled) return;
                 if (data.activities) setWeekOptions({ min: data.activities.min, max: data.activities.max });
                 setPpc(data.ppc);
                 if (data.ranking) setRanking(data.ranking || []);
-            } catch { /* 忽略 */ } finally {
+            } catch (e) {
+                if (!cancelled) setError(friendlyError(e));
+            } finally {
                 if (!cancelled) setLoading(false);
             }
         })();
         return () => { cancelled = true; };
-    }, [level, week]);
+    }, [level, week, tick]);
 
     const sorted = [...(ranking || [])].sort((a, b) => (sortAsc ? a.score - b.score : b.score - a.score)).slice(0, 100);
     const weeks = [];
@@ -117,6 +122,15 @@ export default function PpcPage({ onOpenPlayer }) {
                     </div>
                 ))}
             </section>
+
+            {error && (
+                <div className="data-alert" role="status">
+                    <span className="data-alert-text">{error}</span>
+                    <button className="data-alert-btn" onClick={() => setTick(t => t + 1)} disabled={loading}>
+                        {loading ? '重试中…' : '重试'}
+                    </button>
+                </div>
+            )}
 
             <div className="rankings">
                 <h2>

@@ -1,0 +1,339 @@
+{
+  "base": "http://127.0.0.1:4173",
+  "at": "2026-10-23T12:50:18.344Z",
+  "pages": {
+    "warzone": {
+      "requests": 13,
+      "reqByHost": {
+        "127.0.0.1:4173": 6,
+        "api.huaxu.app": 1,
+        "assets.huaxu.app": 6
+      },
+      "totalKB": 238,
+      "byExtKB": {
+        "js": 76,
+        "css": 16,
+        "webp": 135,
+        "other": 0,
+        "ico": 11
+      },
+      "byHostKB": {
+        "127.0.0.1:4173": 238,
+        "api.huaxu.app": 0,
+        "assets.huaxu.app": 0
+      },
+      "images": {
+        "count": 7,
+        "kb": 135
+      },
+      "imgElements": 19,
+      "brokenImgs": 6,
+      "lcpMs": 320,
+      "dclMs": 58,
+      "loadMs": 59,
+      "nodes": 871,
+      "top": [
+        {
+          "url": "/img/ad-warzone.webp",
+          "kb": 135,
+          "ms": 15
+        },
+        {
+          "url": "/assets/index-CBnsEhAv.js",
+          "kb": 75,
+          "ms": 29
+        },
+        {
+          "url": "/assets/index-B0Pn5TbZ.css",
+          "kb": 16,
+          "ms": 20
+        },
+        {
+          "url": "/assets/favicon-h-B6wVS9.ico",
+          "kb": 11,
+          "ms": 14
+        },
+        {
+          "url": "/assets/format-Bs2tDJPe.js",
+          "kb": 1,
+          "ms": 15
+        },
+        {
+          "url": "/api/trends",
+          "kb": 0,
+          "ms": 17
+        },
+        {
+          "url": "/servers/cn/warzone/current/16",
+          "kb": 0,
+          "ms": 13
+        },
+        {
+          "url": "/cn/image/roleplayersp/roleplaysuper01.webp",
+          "kb": 0,
+          "ms": 4203
+        },
+        {
+          "url": "/cn/image/roleplayersp/headframe24.webp",
+          "kb": 0,
+          "ms": 2473
+        },
+        {
+          "url": "/cn/image/roleplayersp/headmusicfeasival01.webp",
+          "kb": 0,
+          "ms": 3400
+        },
+        {
+          "url": "/cn/image/roleplayersp/roleheadr4luxiya8ss.webp",
+          "kb": 0,
+          "ms": 4203
+        },
+        {
+          "url": "/cn/image/roleplayersp/roleheadr2jietawei5.webp",
+          "kb": 0,
+          "ms": 4203
+        }
+      ]
+    },
+    "player": {
+      "requests": 11,
+      "reqByHost": {
+        "127.0.0.1:4173": 7,
+        "api.huaxu.app": 2,
+        "assets.huaxu.app": 2
+      },
+      "totalKB": 247,
+      "byExtKB": {
+        "js": 85,
+        "css": 16,
+        "webp": 135,
+        "ico": 11,
+        "other": 0
+      },
+      "byHostKB": {
+        "127.0.0.1:4173": 247,
+        "api.huaxu.app": 0,
+        "assets.huaxu.app": 0
+      },
+      "images": {
+        "count": 3,
+        "kb": 135
+      },
+      "imgElements": 89,
+      "brokenImgs": 85,
+      "lcpMs": 132,
+      "dclMs": 78,
+      "loadMs": 78,
+      "nodes": 692,
+      "top": [
+        {
+          "url": "/img/ad-warzone.webp",
+          "kb": 135,
+          "ms": 18
+        },
+        {
+          "url": "/assets/index-CBnsEhAv.js",
+          "kb": 75,
+          "ms": 47
+        },
+        {
+          "url": "/assets/index-B0Pn5TbZ.css",
+          "kb": 16,
+          "ms": 39
+        },
+        {
+          "url": "/assets/favicon-h-B6wVS9.ico",
+          "kb": 11,
+          "ms": 7
+        },
+        {
+          "url": "/assets/PlayerPage-AKlKkrRN.js",
+          "kb": 9,
+          "ms": 22
+        },
+        {
+          "url": "/assets/format-Bs2tDJPe.js",
+          "kb": 1,
+          "ms": 32
+        },
+        {
+          "url": "/assets/Modal-D_kJbhlp.js",
+          "kb": 1,
+          "ms": 18
+        },
+        {
+          "url": "/servers/cn/warzone/current/16",
+          "kb": 0,
+          "ms": 12
+        },
+        {
+          "url": "/servers/cn/players/27826672",
+          "kb": 0,
+          "ms": 10
+        },
+        {
+          "url": "/cn/image/roleplayersp/roleheadr4luxiya8ss.webp",
+          "kb": 0,
+          "ms": 2720
+        },
+        {
+          "url": "/cn/image/roleplayersp/headframe24.webp",
+          "kb": 0,
+          "ms": 873
+        }
+      ]
+    },
+    "ppc": {
+      "requests": 8,
+      "reqByHost": {
+        "127.0.0.1:4173": 7,
+        "api.huaxu.app": 1
+      },
+      "totalKB": 241,
+      "byExtKB": {
+        "js": 78,
+        "css": 16,
+        "webp": 135,
+        "ico": 11,
+        "other": 0
+      },
+      "byHostKB": {
+        "127.0.0.1:4173": 241,
+        "api.huaxu.app": 0
+      },
+      "images": {
+        "count": 1,
+        "kb": 135
+      },
+      "imgElements": 1,
+      "brokenImgs": 0,
+      "lcpMs": 128,
+      "dclMs": 78,
+      "loadMs": 78,
+      "nodes": 69,
+      "top": [
+        {
+          "url": "/img/ad-warzone.webp",
+          "kb": 135,
+          "ms": 15
+        },
+        {
+          "url": "/assets/index-CBnsEhAv.js",
+          "kb": 75,
+          "ms": 49
+        },
+        {
+          "url": "/assets/index-B0Pn5TbZ.css",
+          "kb": 16,
+          "ms": 37
+        },
+        {
+          "url": "/assets/favicon-h-B6wVS9.ico",
+          "kb": 11,
+          "ms": 6
+        },
+        {
+          "url": "/assets/PpcPage-D8_dSyr8.js",
+          "kb": 2,
+          "ms": 17
+        },
+        {
+          "url": "/assets/format-Bs2tDJPe.js",
+          "kb": 1,
+          "ms": 30
+        },
+        {
+          "url": "/assets/Modal-D_kJbhlp.js",
+          "kb": 1,
+          "ms": 16
+        },
+        {
+          "url": "/servers/cn/ppc/current/4?ranking=true",
+          "kb": 0,
+          "ms": 4
+        }
+      ]
+    },
+    "history": {
+      "requests": 10,
+      "reqByHost": {
+        "127.0.0.1:4173": 7,
+        "api.huaxu.app": 3
+      },
+      "totalKB": 247,
+      "byExtKB": {
+        "js": 85,
+        "css": 16,
+        "webp": 135,
+        "ico": 11,
+        "other": 0
+      },
+      "byHostKB": {
+        "127.0.0.1:4173": 247,
+        "api.huaxu.app": 0
+      },
+      "images": {
+        "count": 1,
+        "kb": 135
+      },
+      "imgElements": 260,
+      "brokenImgs": 259,
+      "lcpMs": 140,
+      "dclMs": 83,
+      "loadMs": 83,
+      "nodes": 1550,
+      "top": [
+        {
+          "url": "/img/ad-warzone.webp",
+          "kb": 135,
+          "ms": 19
+        },
+        {
+          "url": "/assets/index-CBnsEhAv.js",
+          "kb": 75,
+          "ms": 52
+        },
+        {
+          "url": "/assets/index-B0Pn5TbZ.css",
+          "kb": 16,
+          "ms": 40
+        },
+        {
+          "url": "/assets/favicon-h-B6wVS9.ico",
+          "kb": 11,
+          "ms": 7
+        },
+        {
+          "url": "/assets/PlayerPage-AKlKkrRN.js",
+          "kb": 9,
+          "ms": 23
+        },
+        {
+          "url": "/assets/format-Bs2tDJPe.js",
+          "kb": 1,
+          "ms": 33
+        },
+        {
+          "url": "/assets/Modal-D_kJbhlp.js",
+          "kb": 1,
+          "ms": 20
+        },
+        {
+          "url": "/servers/cn/warzone/current/16",
+          "kb": 0,
+          "ms": 15
+        },
+        {
+          "url": "/servers/cn/players/27826672",
+          "kb": 0,
+          "ms": 8
+        },
+        {
+          "url": "/servers/cn/players/27826672/warzone",
+          "kb": 0,
+          "ms": 30
+        }
+      ]
+    }
+  }
+}

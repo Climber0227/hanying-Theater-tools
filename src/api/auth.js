@@ -33,23 +33,32 @@ export const auth = {
         return !!this.token;
     },
 
+    // 多个组件都会调 init()，这里做单例：一次页面生命周期内只跑一次，
+    // 并且云端数据只拉一次（原来 init 拉一次 + _pullFromCloud 又拉一次）
     async init() {
-        this.token = localStorage.getItem(AUTH_TOKEN_KEY);
-        this.playerId = localStorage.getItem(AUTH_PLAYER_ID_KEY);
-        this.playerName = localStorage.getItem(AUTH_PLAYER_NAME_KEY);
-        if (this.token && USER_DATA_API) {
-            try {
-                const resp = await fetch(USER_DATA_API, {
-                    headers: { 'Authorization': `Bearer ${this.token}` }
-                });
-                if (resp.status === 401) {
-                    this._clearLocal();
-                } else if (resp.ok) {
-                    await this._pullFromCloud();
-                }
-            } catch { /* 网络错误保留会话 */ }
-        }
-        return this;
+        if (this._initPromise) return this._initPromise;
+        this._initPromise = (async () => {
+            this.token = localStorage.getItem(AUTH_TOKEN_KEY);
+            this.playerId = localStorage.getItem(AUTH_PLAYER_ID_KEY);
+            this.playerName = localStorage.getItem(AUTH_PLAYER_NAME_KEY);
+            if (this.token && USER_DATA_API) {
+                try {
+                    const resp = await fetch(USER_DATA_API, {
+                        headers: { 'Authorization': `Bearer ${this.token}` }
+                    });
+                    if (resp.status === 401) {
+                        this._clearLocal();
+                    } else if (resp.ok) {
+                        const result = await resp.json().catch(() => null);
+                        if (result && result.status === 'success' && result.data) {
+                            this._applyCloudData(result.data);
+                        }
+                    }
+                } catch { /* 网络错误保留会话 */ }
+            }
+            return this;
+        })();
+        return this._initPromise;
     },
 
     async login(playerId, password) {
@@ -150,6 +159,7 @@ export const auth = {
         this.token = null;
         this.playerId = null;
         this.playerName = null;
+        this._initPromise = null; // 会话失效后允许下次 init 重新拉取
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(AUTH_PLAYER_ID_KEY);
         localStorage.removeItem(AUTH_PLAYER_NAME_KEY);
@@ -164,37 +174,47 @@ export const auth = {
             if (!resp.ok) return;
             const result = await resp.json();
             if (result.status !== 'success' || !result.data) return;
-            Object.entries(STORAGE_KEYS).forEach(([cloudKey, storageKey]) => {
-                if (result.data[cloudKey] != null) {
-                    const v = result.data[cloudKey];
-                    localStorage.setItem(storageKey, STRING_KEYS.has(cloudKey) ? v : JSON.stringify(v));
-                    // 云端拉到的库街区绑定归属当前登录账号
-                    if (cloudKey === 'kuro_token' && this.playerId) {
-                        localStorage.setItem('kurobbs_bound_user', this.playerId);
-                    }
-                }
-            });
+            this._applyCloudData(result.data);
         } catch { /* 忽略 */ }
+    },
+
+    // 把云端数据写回 localStorage（init 和 _pullFromCloud 共用）
+    _applyCloudData(data) {
+        Object.entries(STORAGE_KEYS).forEach(([cloudKey, storageKey]) => {
+            if (data[cloudKey] == null) return;
+            const v = data[cloudKey];
+            localStorage.setItem(storageKey, STRING_KEYS.has(cloudKey) ? v : JSON.stringify(v));
+            // 云端拉到的库街区绑定归属当前登录账号
+            if (cloudKey === 'kuro_token' && this.playerId) {
+                localStorage.setItem('kurobbs_bound_user', this.playerId);
+            }
+        });
     },
 
     async _pushToCloud() {
         if (!this.token || !USER_DATA_API) return;
+        // 原来是一条条串行 PUT（最多 6 条，登录后要等 1~2s），改成并发
+        const jobs = [];
         for (const [cloudKey, storageKey] of Object.entries(STORAGE_KEYS)) {
             if (PUSH_EXCLUDE.has(cloudKey)) continue; // 库街区绑定只在主动绑定时推送
+            const raw = localStorage.getItem(storageKey);
+            if (!raw) continue;
+            let payload;
             try {
-                const raw = localStorage.getItem(storageKey);
-                if (!raw) continue;
-                const payload = STRING_KEYS.has(cloudKey) ? raw : JSON.parse(raw);
-                await fetch(USER_DATA_API, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${this.token}`
-                    },
-                    body: JSON.stringify({ key: cloudKey, data: payload })
-                });
-            } catch { /* 忽略 */ }
+                payload = STRING_KEYS.has(cloudKey) ? raw : JSON.parse(raw);
+            } catch {
+                continue;
+            }
+            jobs.push(fetch(USER_DATA_API, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({ key: cloudKey, data: payload })
+            }).catch(() => null));
         }
+        await Promise.all(jobs);
     },
 
     async syncToCloud(key, data) {

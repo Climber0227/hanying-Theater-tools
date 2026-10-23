@@ -1,0 +1,95 @@
+{
+  "results": [
+    {
+      "name": "200 透传",
+      "pass": true,
+      "detail": "status=200 bytes=202719"
+    },
+    {
+      "name": "Cache-Control 含 s-maxage=60",
+      "pass": true,
+      "detail": "public, s-maxage=60, stale-while-revalidate=600, stale-if-error=86400"
+    },
+    {
+      "name": "同时给 CDN-Cache-Control",
+      "pass": true,
+      "detail": "public, s-maxage=60, stale-while-revalidate=600, stale-if-error=86400"
+    },
+    {
+      "name": "X-Data-State=fresh",
+      "pass": true,
+      "detail": "fresh"
+    },
+    {
+      "name": "任意路径被拒",
+      "pass": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "非法难度被拒",
+      "pass": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "双斜杠被拒",
+      "pass": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "query 透传",
+      "pass": true,
+      "detail": "/servers/cn/ppc/current/4?ranking=true"
+    },
+    {
+      "name": "ppc TTL=60",
+      "pass": true,
+      "detail": "public, s-maxage=60, stale-while-revalidate=600, stale-if-error=86400"
+    },
+    {
+      "name": "历史战绩 TTL=300",
+      "pass": true,
+      "detail": "public, s-maxage=300, stale-while-revalidate=600, stale-if-error=86400"
+    },
+    {
+      "name": "4xx 透传状态码",
+      "pass": true,
+      "detail": "status=404"
+    },
+    {
+      "name": "4xx 不缓存",
+      "pass": true,
+      "detail": "no-store"
+    },
+    {
+      "name": "5xx 时返回快照",
+      "pass": true,
+      "detail": "status=200 state=stale"
+    },
+    {
+      "name": "快照命中的数据完整",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "无快照时返回 504",
+      "pass": true,
+      "detail": "status=504"
+    },
+    {
+      "name": "慢源站按超时返回",
+      "pass": true,
+      "detail": "616ms status=504"
+    },
+    {
+      "name": "nocache 返回 no-store",
+      "pass": true,
+      "detail": "no-store"
+    },
+    {
+      "name": "真实源站可用",
+      "pass": true,
+      "detail": "202719 bytes"
+    }
+  ],
+  "at": "2026-10-23T13:46:03.739Z"
+}

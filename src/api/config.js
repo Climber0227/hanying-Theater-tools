@@ -1,13 +1,55 @@
 // API 配置（迁移自 js/config.js）
 
+export const API_ORIGIN = 'https://api.huaxu.app';
+
 export const API_CONFIG = {
-    warzone: 'https://api.huaxu.app/servers/cn/warzone',
-    player: 'https://api.huaxu.app/servers/cn/players',
-    ppc: 'https://api.huaxu.app/servers/cn/ppc',
+    warzone: `${API_ORIGIN}/servers/cn/warzone`,
+    player: `${API_ORIGIN}/servers/cn/players`,
+    ppc: `${API_ORIGIN}/servers/cn/ppc`,
     assets: 'https://assets.huaxu.app/cn'
 };
 
+// ---------- 上游 API 代理 ----------
+// 线上环境走同源 /api/huaxu（Vercel 函数 + CDN 缓存）：
+//   · 命中 CDN 时函数不执行，用户也不用等源站偶发 20s 卡顿
+//   · 源站抖动时函数返回上一份快照（stale），页面不会空白
+// 本地开发（vite dev，端口 localhost）和 Electron（file://）没有该函数，仍直连源站。
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]']);
+
+function detectProxy() {
+    if (typeof window === 'undefined') return false;
+    if (globalThis.__HUAXU_FORCE_PROXY__) return true; // 测试用开关
+    if (typeof location === 'undefined') return false;
+    if (location.protocol === 'file:') return false;
+    return !LOCAL_HOSTS.has(location.hostname);
+}
+
+export const USE_API_PROXY = detectProxy();
+
+// path 形如 '/servers/cn/warzone/current/16'；query 为原样附加的查询串
+export function apiUrl(path, query = '') {
+    if (!USE_API_PROXY) return `${API_ORIGIN}${path}${query ? `?${query}` : ''}`;
+    const params = new URLSearchParams({ path });
+    if (query) params.set('q', query);
+    return `/api/huaxu?${params.toString()}`;
+}
+
+// 手动刷新：换一个带 nocache 参数的 URL，绕过 CDN 缓存（只影响这一次请求）
+export function apiUrlNoCache(path, query = '') {
+    if (!USE_API_PROXY) return `${API_ORIGIN}${path}${query ? `?${query}` : ''}`;
+    const params = new URLSearchParams({ path, nocache: '1' });
+    if (query) params.set('q', query);
+    return `/api/huaxu?${params.toString()}`;
+}
+
+// 资源站同路径下同时有 .png 和 .webp（体积约为 png 的 1/7），优先用 webp，
+// 万一某个资源没有 webp，imageFallback.js 会把它换回 png。
 export function getImageUrl(path) {
+    if (!path) return '';
+    return `${API_CONFIG.assets}/${path}.webp`;
+}
+
+export function getImageUrlPng(path) {
     if (!path) return '';
     return `${API_CONFIG.assets}/${path}.png`;
 }

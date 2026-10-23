@@ -1,0 +1,114 @@
+{
+  "tag": "before",
+  "apiDelay": 250,
+  "scenarios": [
+    {
+      "name": "switch-英雄",
+      "reqs": 1,
+      "clickToNewDataMs": 269,
+      "oldRowKeptDuringLoad": true
+    },
+    {
+      "name": "switch-领袖",
+      "reqs": 1,
+      "clickToNewDataMs": 269,
+      "oldRowKeptDuringLoad": true
+    },
+    {
+      "name": "switch-尖兵",
+      "reqs": 1,
+      "clickToNewDataMs": 287,
+      "oldRowKeptDuringLoad": true
+    },
+    {
+      "name": "switch-先锋",
+      "reqs": 1,
+      "clickToNewDataMs": 285,
+      "oldRowKeptDuringLoad": true
+    },
+    {
+      "name": "switch-侦察",
+      "reqs": 1,
+      "clickToNewDataMs": 270,
+      "oldRowKeptDuringLoad": true
+    },
+    {
+      "name": "switch-back-warm",
+      "reqs": 0,
+      "clickToNewDataMs": 19,
+      "dataMs": 1
+    },
+    {
+      "name": "m-type-8-keys",
+      "wallMs": 1762,
+      "longTasks": 0,
+      "longTaskMs": 0,
+      "frameP95": 0,
+      "jank": 0
+    },
+    {
+      "name": "m-scroll-15",
+      "wallMs": 1768,
+      "longTasks": 0,
+      "longTaskMs": 0,
+      "frameP95": 0,
+      "jank": 0
+    },
+    {
+      "name": "m-open-bracket",
+      "wallMs": 1593,
+      "longTasks": 1,
+      "longTaskMs": 202,
+      "frameP95": 0,
+      "jank": 0
+    },
+    {
+      "name": "page-switch",
+      "pageSwits": [
+        {
+          "label": "玩家查询",
+          "wallMs": 1222,
+          "apiReqs": 0,
+          "chunks": [
+            "Modal-mr2OljsX.js",
+            "PlayerPage-C0loAoln.js"
+          ]
+        },
+        {
+          "label": "幻痛囚笼",
+          "wallMs": 1218,
+          "apiReqs": 1,
+          "chunks": [
+            "PpcPage-DmJxNOVm.js"
+          ]
+        },
+        {
+          "label": "我的",
+          "wallMs": 1228,
+          "apiReqs": 0,
+          "chunks": [
+            "modalData-WMD1MQH3.js",
+            "CurveModal-BtYp16-A.js",
+            "MinePage-DmqWRM6c.js"
+          ]
+        },
+        {
+          "label": "战区数据",
+          "wallMs": 1237,
+          "apiReqs": 0,
+          "chunks": []
+        }
+      ]
+    }
+  ],
+  "requests": [
+    "/warzone/current/16",
+    "/warzone/current/15",
+    "/warzone/current/14",
+    "/warzone/current/12",
+    "/warzone/current/9",
+    "/warzone/current/6",
+    "/ppc/current/4"
+  ],
+  "totalMs": 15659
+}

@@ -82,7 +82,15 @@ export default function AdFloat() {
                     >
                         &times;
                     </button>
-                    <img src="/img/Snipaste_2026-10-19_15-30-13.png" alt="纷争战区" draggable="false" />
+                    {/* 只换图片编码（1.34MB PNG → 138KB WebP），画面与原图一致 */}
+                    <img
+                        src="/img/ad-warzone.webp"
+                        alt="纷争战区"
+                        draggable="false"
+                        width="340"
+                        height="303"
+                        decoding="async"
+                    />
                 </div>
             )}
 

@@ -1,0 +1,49 @@
+{
+  "results": [
+    {
+      "name": "初始有数据",
+      "pass": true
+    },
+    {
+      "name": "搜索后首行包含关键词",
+      "pass": true
+    },
+    {
+      "name": "无结果时显示空态",
+      "pass": true
+    },
+    {
+      "name": "清空搜索恢复列表",
+      "pass": true
+    },
+    {
+      "name": "清空搜索恢复总数",
+      "pass": true
+    },
+    {
+      "name": "筛选后出现 chips",
+      "pass": true
+    },
+    {
+      "name": "筛选后人数变化",
+      "pass": true
+    },
+    {
+      "name": "清除全部恢复总数",
+      "pass": true
+    },
+    {
+      "name": "清除全部后 chips 消失",
+      "pass": true
+    },
+    {
+      "name": "排序后仍有数据",
+      "pass": true
+    },
+    {
+      "name": "无运行时异常",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

@@ -1,23 +1,23 @@
 import React, { useMemo, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Modal from './Modal.jsx';
 import { computeBrackets } from '../../utils/modalData.js';
 import { formatNumber, formatScoreCompact } from '../../utils/format.js';
 
-// 分数分布：总分 + 各区（Recharts 柱状图，shadcn 视觉）
+// 分数分布：总分 + 各区。
+// 用轻量条形列表代替 Recharts（原来这个弹窗要单独拉 358KB 图表库，
+// 中端手机上打开时会有 ~200ms 长任务；现在这段代码不到 3KB）。
 export default function BracketModal({ rankings, zones, difficulty, onClose }) {
     const [key, setKey] = useState('total');
 
     const data = useMemo(() => computeBrackets(rankings, zones, key), [rankings, zones, key]);
     const title = key === 'total' ? '总分' : (zones[parseInt(key)]?.name || '');
 
-    const chartData = useMemo(() => {
-        if (!data || !data.buckets) return [];
-        return data.buckets.map(b => ({
-            label: `${formatScoreCompact(b.from)}~${formatScoreCompact(b.to)}`,
-            count: b.count
-        }));
-    }, [data]);
+    const rows = (data && data.buckets) || [];
+    const maxCount = Math.max(1, ...rows.map(b => b.count));
+    const peak = useMemo(() => {
+        if (!rows.length) return null;
+        return rows.reduce((a, b) => (b.count > a.count ? b : a), rows[0]);
+    }, [rows]);
 
     return (
         <Modal title="分数分布" sub={`(第${difficulty}段位)`} onClose={onClose} wide>
@@ -30,56 +30,29 @@ export default function BracketModal({ rankings, zones, difficulty, onClose }) {
                 ))}
             </div>
 
-            {data && data.buckets && data.buckets.length > 0 ? (
+            {rows.length > 0 ? (
                 <>
-                    <div className="bracket-title">{title}分布（{formatNumber(data.total)} 人）</div>
-                    <ResponsiveContainer width="100%" height={280}>
-                        <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 4 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.07)" vertical={false} />
-                            <XAxis
-                                dataKey="label"
-                                tick={{ fontSize: 10, fill: '#86868b' }}
-                                tickLine={false}
-                                axisLine={{ stroke: 'rgba(0,0,0,0.1)' }}
-                                interval={0}
-                                angle={-30}
-                                textAnchor="end"
-                                height={46}
-                            />
-                            <YAxis
-                                tick={{ fontSize: 10, fill: '#86868b' }}
-                                tickLine={false}
-                                axisLine={false}
-                                width={30}
-                                allowDecimals={false}
-                            />
-                            <Tooltip
-                                cursor={{ fill: 'rgba(0,0,0,0.04)' }}
-                                content={({ active, payload }) => {
-                                    if (!active || !payload || !payload.length) return null;
-                                    const p = payload[0].payload;
-                                    return (
-                                        <div className="chart-tooltip">
-                                            <div className="chart-tooltip-label">分数区间 {p.label}</div>
-                                            <div className="chart-tooltip-row">
-                                                <span className="chart-tooltip-indicator" />
-                                                <span className="chart-tooltip-name">人数</span>
-                                                <span className="chart-tooltip-value">{formatNumber(p.count)}</span>
-                                            </div>
-                                        </div>
-                                    );
-                                }}
-                            />
-                            <Bar
-                                dataKey="count"
-                                fill="#1d1d1f"
-                                radius={[4, 4, 0, 0]}
-                                maxBarSize={40}
-                                animationDuration={500}
-                                animationEasing="ease-out"
-                            />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <div className="bracket-title">
+                        {title}分布（{formatNumber(data.total)} 人）
+                        {peak && (
+                            <span className="bracket-peak-note">
+                                最多 {formatScoreCompact(peak.from)}–{formatScoreCompact(peak.to)} · {peak.count} 人
+                            </span>
+                        )}
+                    </div>
+                    <div className="bracket-list">
+                        {rows.map(b => (
+                            <div className={`bracket-row${peak && b.from === peak.from ? ' is-peak' : ''}`} key={b.from}>
+                                <div className="bracket-label">
+                                    {formatScoreCompact(b.from)}<span className="bracket-dash">–</span>{formatScoreCompact(b.to)}
+                                </div>
+                                <div className="bracket-bar-wrap">
+                                    <div className="bracket-bar" style={{ width: `${Math.max(2, (b.count / maxCount) * 100)}%` }} />
+                                </div>
+                                <div className="bracket-count">{b.count}</div>
+                            </div>
+                        ))}
+                    </div>
                 </>
             ) : (
                 <div className="bracket-empty">暂无数据</div>

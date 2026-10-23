@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "name": "榜单通过 /api/huaxu 取数",
+      "pass": true,
+      "detail": "?path=%2Fservers%2Fcn%2Fwarzone%2Fcurrent%2F16"
+    },
+    {
+      "name": "首行渲染",
+      "pass": true,
+      "detail": "D16·露斟月"
+    },
+    {
+      "name": "切难度走代理",
+      "pass": true,
+      "detail": "?path=%2Fservers%2Fcn%2Fwarzone%2Fcurrent%2F15"
+    },
+    {
+      "name": "手动刷新带 nocache=1",
+      "pass": true,
+      "detail": "?path=%2Fservers%2Fcn%2Fwarzone%2Fcurrent%2F15&nocache=1"
+    },
+    {
+      "name": "无运行时异常",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "proxyHits": [
+    "?path=%2Fservers%2Fcn%2Fwarzone%2Fcurrent%2F15&nocache=1"
+  ],
+  "errors": []
+}

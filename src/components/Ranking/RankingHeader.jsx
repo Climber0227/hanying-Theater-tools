@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-const RANK_OPTIONS = [
+export const RANK_OPTIONS = [
     { value: '', label: '-' },
     { value: '3', label: 'S' },
     { value: '4', label: 'SS' },
@@ -8,100 +8,82 @@ const RANK_OPTIONS = [
     { value: '6', label: 'SSS+' }
 ];
 
-// 手机端：折叠筛选面板（默认收起，展开后各区阶级下拉 + 快捷按钮）+ 常显排序行
-function MobileFilterPanel({ zones, charFilters, setCharFilter, setZoneQuick, sortKey, sortAsc, toggleSort, onReset }) {
-    const [open, setOpen] = useState(false);
-    const arrow = key => (sortKey === key ? (sortAsc ? '▲' : '▼') : '');
+export const RANK_LABEL = RANK_OPTIONS.reduce((m, o) => { if (o.value) m[o.value] = o.label; return m; }, {});
+
+function FunnelIcon() {
     return (
-        <>
-            <div className="mobile-sort-row">
-                {zones.map((zone, i) => (
-                    <button
-                        key={zone.id}
-                        className={`mobile-sort-btn${sortKey === String(i) ? ' active' : ''}`}
-                        onClick={() => toggleSort(String(i))}
-                    >
-                        {zone.name}{arrow(String(i)) && <span className="sort-arrow"> {arrow(String(i))}</span>}
-                    </button>
-                ))}
-                <button
-                    className={`mobile-sort-btn${sortKey === 'total' ? ' active' : ''}`}
-                    onClick={() => toggleSort('total')}
-                >
-                    总分{arrow('total') && <span className="sort-arrow"> {arrow('total')}</span>}
-                </button>
-            </div>
-            <div className="mobile-filter">
-                <button className="mobile-filter-toggle" onClick={() => setOpen(o => !o)}>
-                    筛选 {open ? '▴' : '▾'}
-                </button>
-                {open && (
-                    <div className="mobile-filter-body">
-                        {zones.map((zone, i) => (
-                            <div className="mobile-filter-zone" key={zone.id}>
-                                <div className="mobile-filter-zone-name">{zone.name}</div>
-                                <div className="char-slot-filters">
-                                    {[0, 1, 2].map(ci => (
-                                        <select
-                                            key={ci}
-                                            className="char-slot-select"
-                                            value={(charFilters[i] || ['', '', ''])[ci] || ''}
-                                            onChange={e => setCharFilter(i, ci, e.target.value)}
-                                        >
-                                            {RANK_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                                        </select>
-                                    ))}
-                                </div>
-                                <div className="zone-quick-filters">
-                                    <button className="zone-quick-btn" onClick={() => setZoneQuick(i, '5')}>全SSS</button>
-                                    <button className="zone-quick-btn" onClick={() => setZoneQuick(i, '6')}>全SSS+</button>
-                                </div>
-                            </div>
-                        ))}
-                        <button className="reset-filter-btn" onClick={onReset}>重置筛选</button>
-                    </div>
-                )}
-            </div>
-        </>
+        <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
+            <path d="M1.5 2.2h9L7.3 6.4v3.6L4.7 11V6.4z" fill="currentColor" opacity=".85" />
+        </svg>
     );
 }
 
-export default function RankingHeader({ zones, charFilters, setCharFilter, setZoneQuick, sortKey, sortAsc, toggleSort, onReset, isMobile }) {
+// 手机端排序行（筛选已收进工具条弹层）
+const ZONE_COLORS = ['#3f6ecb', '#cf3d3d', '#b07a12'];
+
+function MobileSortRow({ zones, sortKey, sortAsc, toggleSort }) {
+    const arrow = key => (sortKey === key ? (sortAsc ? '↑' : '↓') : '');
+    // 默认按总分降序（服务端顺序），所以未显式排序时总分就是激活态
+    const totalActive = !sortKey || sortKey === 'total';
+    const totalArrow = sortKey === 'total' ? (sortAsc ? '↑' : '↓') : !sortKey ? '↓' : '';
+    return (
+        <div className="mobile-sort-row">
+            {zones.map((zone, i) => (
+                <button
+                    key={zone.id}
+                    className={`mobile-sort-btn${sortKey === String(i) ? ' active' : ''}`}
+                    onClick={() => toggleSort(String(i))}
+                >
+                    <span className="zone-dot" style={{ background: ZONE_COLORS[i % ZONE_COLORS.length] }} />
+                    {zone.name}{arrow(String(i)) && <span className="sort-arrow">{arrow(String(i))}</span>}
+                </button>
+            ))}
+            <button
+                className={`mobile-sort-btn${totalActive ? ' active' : ''}`}
+                onClick={() => toggleSort('total')}
+            >
+                总分{totalArrow && <span className="sort-arrow">{totalArrow}</span>}
+            </button>
+        </div>
+    );
+}
+
+export default function RankingHeader({ zones, sortKey, sortAsc, toggleSort, isMobile, onToggleFilter, activeZones }) {
     if (isMobile) {
-        return <MobileFilterPanel zones={zones} charFilters={charFilters} setCharFilter={setCharFilter} setZoneQuick={setZoneQuick} sortKey={sortKey} sortAsc={sortAsc} toggleSort={toggleSort} onReset={onReset} />;
+        return <MobileSortRow zones={zones} sortKey={sortKey} sortAsc={sortAsc} toggleSort={toggleSort} />;
     }
-    const arrow = key => (sortKey === key ? (sortAsc ? ' ▲' : ' ▼') : ' ⇅');
+
+    const sortArrow = key => (sortKey === key ? (sortAsc ? '↑' : '↓') : '');
+
     return (
         <div className="ranking-header">
             <div className="col-rank">排名</div>
             <div className="col-player">玩家</div>
             {zones.map((zone, i) => (
-                <div className="col-zone-detail" key={zone.id}>
-                    <div className={`sortable${sortKey === String(i) ? ' active' : ''}`} onClick={() => toggleSort(String(i))}>
-                        {zone.name}<span className="sort-arrow">{arrow(String(i))}</span>
-                    </div>
-                    <div className="char-slot-filters">
-                        {[0, 1, 2].map(ci => (
-                            <select
-                                key={ci}
-                                className="char-slot-select"
-                                value={(charFilters[i] || ['', '', ''])[ci] || ''}
-                                onChange={e => setCharFilter(i, ci, e.target.value)}
-                            >
-                                {RANK_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                            </select>
-                        ))}
-                    </div>
-                    <div className="zone-quick-filters">
-                        <button className="zone-quick-btn" onClick={() => setZoneQuick(i, '5')}>全SSS</button>
-                        <button className="zone-quick-btn" onClick={() => setZoneQuick(i, '6')}>全SSS+</button>
-                    </div>
+                <div className="col-zone" key={zone.id}>
+                    <button
+                        className={`col-sort${sortKey === String(i) ? ' active' : ''}`}
+                        onClick={() => toggleSort(String(i))}
+                    >
+                        <span className="zone-dot" style={{ background: ZONE_COLORS[i % ZONE_COLORS.length] }} />
+                        {zone.name}
+                        <span className="sort-arrow">{sortArrow(String(i))}</span>
+                    </button>
+                    <button
+                        className={`col-funnel${activeZones && activeZones[i] ? ' active' : ''}`}
+                        onClick={() => onToggleFilter && onToggleFilter()}
+                        title="按该区角色阶级筛选"
+                        aria-label="筛选"
+                    >
+                        <FunnelIcon />
+                    </button>
                 </div>
             ))}
-            <div className={`col-total sortable${sortKey === 'total' ? ' active' : ''}`} onClick={() => toggleSort('total')}>
-                总分<span className="sort-arrow">{arrow('total')}</span>
+            <div className={`col-total${sortKey === 'total' ? ' active' : ''}`}>
+                <button className="col-sort" onClick={() => toggleSort('total')}>
+                    总分<span className="sort-arrow">{sortArrow('total')}</span>
+                </button>
             </div>
-            <div className="col-reset"><button className="reset-filter-btn" onClick={onReset}>重置</button></div>
         </div>
     );
 }

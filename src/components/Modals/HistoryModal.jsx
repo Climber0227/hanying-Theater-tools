@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Modal from './Modal.jsx';
-import { fetchJson } from '../../api/client.js';
-import { API_CONFIG, getDifficultyShort, getImageUrl } from '../../api/config.js';
+import { getDifficultyShort, getImageUrl } from '../../api/config.js';
+import { loadPlayerHistory } from '../../api/history.js';
+import { friendlyError } from '../../api/client.js';
 import { formatNumber, extractZoneElement, getQualityInfo } from '../../utils/format.js';
 
 const MAX_WEEKS = 20;
-const BATCH_DELAY = 150; // 周间隔（限速）
 
 // 单条历史战绩行：周/段位/排名/总分 + 三区（属性、分数、角色）
 function HistoryRow({ row }) {
@@ -108,75 +108,41 @@ export default function HistoryModal({ playerId, playerName, weekOptions, onClos
         setRows([]);
         setSearching(true);
 
-        const results = [];
-        let checked = 0;
-
-        // 段位链式搜索：每周段位只可能 晋级(+1)/保级(0)/掉级(-1)
-        // 从上周命中段位 d 的邻域 [d, d+1, d-1] 依次查，命中即停
-        const neighbors = d => [d, d + 1, d - 1].filter(x => x >= 1 && x <= 16).map(String);
-        const memKey = `history_last_diff_${playerId}`;
-        let hitD = null;
-
-        // 起始候选：记忆的最近段位及其邻域优先；无记忆则从最高段位（传奇）降序探测
-        let initCandidates = [];
+        setProgress('正在获取历届战绩…');
         try {
-            const m = Number(localStorage.getItem(memKey));
-            if (m >= 1 && m <= 16) {
-                initCandidates = [m, m + 1, m - 1].filter(x => x >= 1 && x <= 16).map(String);
+            // 一次请求取回该玩家所有上榜周（约 100 周 / 300KB），不再逐周 × 逐段位探测
+            const weeks = await loadPlayerHistory(playerId);
+            if (cancelledRef.current) return;
+            const results = weeks
+                .filter(w => w.week >= f && w.week <= t)
+                .map(w => ({
+                    week: w.week,
+                    difficulty: w.difficulty,
+                    rank: w.rank,
+                    score: w.score,
+                    zones: w.zones,
+                    zoneMeta: w.zoneMeta || []
+                }))
+                .sort((a, b) => a.week - b.week);
+            if (cancelledRef.current) return;
+            setRows(results);
+            setProgress(results.length
+                ? `共找到 ${results.length} 周上榜记录`
+                : `第 ${f}–${t} 周没有上榜记录`);
+        } catch (e) {
+            if (!cancelledRef.current) {
+                setRows([]);
+                setProgress(friendlyError(e));
             }
-        } catch { /* 忽略 */ }
-        if (initCandidates.length === 0) {
-            initCandidates = [];
-            for (let d = 16; d >= 1; d--) initCandidates.push(String(d));
+        } finally {
+            if (!cancelledRef.current) setSearching(false);
         }
-        let firstWeek = true;
-
-        for (let w = t; w >= f; w--) {
-            if (cancelledRef.current) break;
-            const candidates = firstWeek ? initCandidates : neighbors(hitD);
-            firstWeek = false;
-
-            let hit = null;
-            for (const d of candidates) {
-                if (cancelledRef.current) break;
-                const result = await fetchJson(`${API_CONFIG.warzone}/${w}/${d}`).catch(() => null);
-                if (result && result.status === 'success' && result.data && result.data.rankings) {
-                    const found = result.data.rankings.find(r => r && r.player && String(r.player.id) === String(playerId));
-                    if (found) {
-                        hit = {
-                            difficulty: d,
-                            rank: found.rank,
-                            score: found.score || 0,
-                            zones: found.zones || [],
-                            zoneMeta: (result.data.warzone && result.data.warzone.area && result.data.warzone.area.zones) || []
-                        };
-                        break;
-                    }
-                }
-                await new Promise(r => setTimeout(r, 60));
-            }
-
-            if (hit) {
-                hitD = Number(hit.difficulty);
-                try { localStorage.setItem(memKey, String(hitD)); } catch { /* 忽略 */ }
-                results.push({ week: w, ...hit });
-            }
-            checked++;
-            setProgress(`查询中... 已查 ${checked} 周`);
-            await new Promise(r => setTimeout(r, BATCH_DELAY));
-        }
-
-        if (cancelledRef.current) return;
-        setSearching(false);
-        results.sort((a, b) => a.week - b.week);
-        setRows(results);
-        setProgress(`共找到 ${results.length} 周上榜记录`);
     };
 
     return (
         <Modal
             title={`${playerName} 历史战绩`}
-            sub={`自动识别段位 · 仅统计进入 TOP100 的周`}
+            sub={`一次请求取回全部上榜周 · 仅统计进入 TOP100 的周`}
             onClose={onClose}
             wide
         >
@@ -205,7 +171,7 @@ export default function HistoryModal({ playerId, playerName, weekOptions, onClos
                     {searching ? '查询中…' : '查询'}
                 </button>
             </div>
-            <div className="history-tip">段位自动识别：每周只查保级/晋级/掉级三个段位，命中即停</div>
+            <div className="history-tip">一次请求取回全部上榜周 · 段位自动识别 · 仅统计进入 TOP100 的周</div>
             {rangeError && <div className="history-empty">{rangeError}</div>}
             {searching && <div className="history-loading">{progress}</div>}
             {!searching && rows.length === 0 && progress && <div className="history-empty">{progress}</div>}

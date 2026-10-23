@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchJson } from '../api/client.js';
-import { API_CONFIG, getImageUrl } from '../api/config.js';
+import { apiUrl, getImageUrl } from '../api/config.js';
 import { getFollows, saveFollows } from '../api/storage.js';
 import { auth } from '../api/auth.js';
 import {
@@ -1788,7 +1788,7 @@ export default function MinePage() {
     useEffect(() => {
         (async () => {
             try {
-                const result = await fetchJson(`${API_CONFIG.warzone}/current/16`);
+                const result = await fetchJson(apiUrl('/servers/cn/warzone/current/16'));
                 if (result.data && result.data.warzone) {
                     setWzWeek(result.data.warzone.activity);
                     setWzZones(result.data.warzone.area.zones.map(z => ({
@@ -1799,7 +1799,7 @@ export default function MinePage() {
         })();
         (async () => {
             try {
-                const result = await fetchJson(`${API_CONFIG.ppc}/current/4?ranking=true`);
+                const result = await fetchJson(apiUrl('/servers/cn/ppc/current/4', 'ranking=true'));
                 if (result.data && result.data.ppc) {
                     setPpcWeek(result.data.ppc.activity);
                     setPpcBosses((result.data.ppc.bosses || []).map(b => ({ name: b.name })));

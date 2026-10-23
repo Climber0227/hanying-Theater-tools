@@ -3,29 +3,28 @@ import { List } from 'react-window';
 import RankingRow, { ROW_HEIGHT, ROW_HEIGHT_MOBILE } from './RankingRow.jsx';
 import useMediaQuery, { MOBILE_QUERY } from '../../hooks/useMediaQuery.js';
 
-// 列宽常量（桌面与 CSS 一致）
-const COL_RANK = 80;
+// 列宽常量（必须与 ranking.css 里 .col-rank / .col-player / .col-zone / .col-total 一致）
+const COL_RANK = 64;
 const COL_PLAYER = 220;
-const COL_ZONE = 268;
-const COL_TOTAL = 160;
-const COL_RESET = 56;
+const COL_ZONE = 290;
+const COL_TOTAL = 150;
 
 export default function VirtualRankingTable({ rows, zones, teamMax, prevSnapshot, header, onOpenPlayer, onOpenAnalysis, onOpenTrend, onOpenMobileRow }) {
     const wrapRef = useRef(null);
     const [wrapHeight, setWrapHeight] = useState(640);
-    const [headerH, setHeaderH] = useState(114);
+    const [headerH, setHeaderH] = useState(40);
     const isMobile = useMediaQuery(MOBILE_QUERY);
 
     const tableWidth = isMobile
         ? '100%'
-        : COL_RANK + COL_PLAYER + (zones || []).length * COL_ZONE + COL_TOTAL + COL_RESET;
+        : COL_RANK + COL_PLAYER + (zones || []).length * COL_ZONE + COL_TOTAL;
 
     useEffect(() => {
         const el = wrapRef.current;
         if (!el) return;
         const update = () => {
             setWrapHeight(el.clientHeight);
-            const h = el.querySelector('.ranking-header');
+            const h = el.querySelector('.ranking-header, .mobile-sort-row');
             if (h) setHeaderH(h.offsetHeight);
         };
         update();
@@ -34,7 +33,7 @@ export default function VirtualRankingTable({ rows, zones, teamMax, prevSnapshot
         return () => ro.disconnect();
     }, [zones, isMobile]);
 
-    // teamMax 由 RankingPanel 基于全量榜单计算传入（过滤/TOP100 截断不影响"同阶级阵容最高"）
+    // teamMax 由 RankingPanel 基于全量榜单计算传入（过滤/TOP100 截断不影响「同阶级阵容最高」）
     const totalMaxScore = useMemo(() => rows.reduce((m, r) => Math.max(m, r.score || 0), 0), [rows]);
 
     const listHeight = Math.max(wrapHeight - headerH, 120);

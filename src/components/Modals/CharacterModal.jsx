@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Modal from './Modal.jsx';
-import { API_CONFIG, getImageUrl } from '../../api/config.js';
+import { apiUrl, getImageUrl } from '../../api/config.js';
 
 function cleanDesc(text) {
     return (text || '').replace(/<color=[^>]*>/g, '').replace(/<\/color>/g, '');
@@ -122,7 +122,7 @@ export default function CharacterModal({ playerId, charId, onClose }) {
         setError('');
         (async () => {
             try {
-                const resp = await fetch(`${API_CONFIG.player}/${playerId}/characters/${charId}`, {
+                const resp = await fetch(apiUrl(`/servers/cn/players/${playerId}/characters/${charId}`), {
                     headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' }
                 });
                 const result = await resp.json();

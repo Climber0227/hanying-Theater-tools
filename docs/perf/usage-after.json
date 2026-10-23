@@ -1,0 +1,105 @@
+{
+  "tag": "after",
+  "apiDelay": 250,
+  "scenarios": [
+    {
+      "name": "switch-英雄",
+      "reqs": 1,
+      "clickToNewDataMs": 270,
+      "oldRowKeptDuringLoad": true
+    },
+    {
+      "name": "switch-领袖",
+      "reqs": 1,
+      "clickToNewDataMs": 271,
+      "oldRowKeptDuringLoad": true
+    },
+    {
+      "name": "switch-尖兵",
+      "reqs": 1,
+      "clickToNewDataMs": 272,
+      "oldRowKeptDuringLoad": true
+    },
+    {
+      "name": "switch-先锋",
+      "reqs": 1,
+      "clickToNewDataMs": 271,
+      "oldRowKeptDuringLoad": true
+    },
+    {
+      "name": "switch-侦察",
+      "reqs": 1,
+      "clickToNewDataMs": 272,
+      "oldRowKeptDuringLoad": true
+    },
+    {
+      "name": "switch-back-warm",
+      "reqs": 0,
+      "clickToNewDataMs": 21,
+      "dataMs": 2
+    },
+    {
+      "name": "m-type-8-keys",
+      "wallMs": 1697,
+      "longTasks": 0,
+      "longTaskMs": 0,
+      "frameP95": 0,
+      "jank": 0
+    },
+    {
+      "name": "m-scroll-15",
+      "wallMs": 1818,
+      "longTasks": 1,
+      "longTaskMs": 84,
+      "frameP95": 0,
+      "jank": 0
+    },
+    {
+      "name": "m-open-bracket",
+      "wallMs": 1248,
+      "longTasks": 1,
+      "longTaskMs": 50,
+      "frameP95": 0,
+      "jank": 0
+    },
+    {
+      "name": "page-switch",
+      "pageSwits": [
+        {
+          "label": "玩家查询",
+          "wallMs": 1220,
+          "apiReqs": 0,
+          "chunks": []
+        },
+        {
+          "label": "幻痛囚笼",
+          "wallMs": 1219,
+          "apiReqs": 1,
+          "chunks": []
+        },
+        {
+          "label": "我的",
+          "wallMs": 1218,
+          "apiReqs": 0,
+          "chunks": []
+        },
+        {
+          "label": "战区数据",
+          "wallMs": 1233,
+          "apiReqs": 0,
+          "chunks": []
+        }
+      ]
+    }
+  ],
+  "requests": [
+    "/warzone/current/16",
+    "/warzone/current/15",
+    "/warzone/current/14",
+    "/warzone/current/12",
+    "/warzone/current/9",
+    "/warzone/current/6",
+    "/ppc/current/4"
+  ],
+  "totalMs": 15346
+}

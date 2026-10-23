@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import Nav from './components/Nav.jsx';
 import WarzonePage from './components/WarzonePage.jsx';
 import AdFloat from './components/AdFloat.jsx';
@@ -20,6 +20,27 @@ export default function App() {
         return ['warzone', 'player', 'ppc', 'mine', 'changelog'].includes(h) ? h : 'warzone';
     });
     const [pendingPlayerId, setPendingPlayerId] = useState(null);
+
+    // 首屏稳定后，空闲时预取其它页面的代码块：点导航直接出内容，不再等 chunk 下载+解析。
+    // 省流量模式 / 2G 下跳过（预取只是抢跑，不应该让用户为流量买单）。
+    useEffect(() => {
+        const conn = navigator.connection;
+        if (conn && (conn.saveData || /(^|-)2g$/.test(conn.effectiveType || ''))) return;
+        const idle = window.requestIdleCallback || (cb => setTimeout(cb, 1500));
+        const handle = idle(
+            () => {
+                import('./components/PlayerPage.jsx');
+                import('./components/PpcPage.jsx');
+                import('./components/MinePage.jsx');
+                import('./components/ChangelogPage.jsx');
+            },
+            { timeout: 4000 }
+        );
+        return () => {
+            if (window.cancelIdleCallback) window.cancelIdleCallback(handle);
+            else clearTimeout(handle);
+        };
+    }, []);
 
     const changePage = useCallback(next => {
         setPage(next);

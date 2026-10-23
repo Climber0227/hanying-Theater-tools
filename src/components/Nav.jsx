@@ -16,25 +16,24 @@ const IS_WEB = true;
 const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const VISIT_KEY = 'huaxu_visit_count';
 
-export default function Nav({ current, onChange }) {
-    const [duration, setDuration] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-    const [visits, setVisits] = useState(0);
-
-    // 建站时长（每秒更新）
+// 建站天数独立成组件：每分钟刷新也只重渲染这几个字，不带动整条导航
+function Uptime() {
+    const [days, setDays] = useState(() => Math.max(0, Math.floor((Date.now() - SITE_START.getTime()) / 86400000)));
     useEffect(() => {
-        const tick = () => {
-            const diff = Math.floor((Date.now() - SITE_START.getTime()) / 1000);
-            setDuration({
-                days: Math.floor(diff / 86400),
-                hours: Math.floor((diff % 86400) / 3600),
-                minutes: Math.floor((diff % 3600) / 60),
-                seconds: diff % 60
-            });
-        };
-        tick();
-        const timer = setInterval(tick, 1000);
+        const timer = setInterval(() => {
+            setDays(Math.max(0, Math.floor((Date.now() - SITE_START.getTime()) / 86400000)));
+        }, 60000);
         return () => clearInterval(timer);
     }, []);
+    return (
+        <span className="nav-meta-item nav-meta-uptime">
+            已运行 <b>{days}</b> 天
+        </span>
+    );
+}
+
+export default function Nav({ current, onChange }) {
+    const [visits, setVisits] = useState(0);
 
     // 访问计数
     useEffect(() => {
@@ -55,14 +54,15 @@ export default function Nav({ current, onChange }) {
 
     return (
         <nav className="nav">
-            <div className="nav-stats">
-                <span>建站 <strong>{duration.days}</strong> 天 <strong>{duration.hours}</strong> 时 <strong>{duration.minutes}</strong> 分 <strong>{duration.seconds}</strong> 秒</span>
-                <span className="stats-divider">|</span>
-                <span>访问 <strong>{visits}</strong> 次</span>
-                <span className="stats-divider">|</span>
-                <span>数据来源 <a href="https://huaxu.app" target="_blank" rel="noreferrer">huaxu.app</a></span>
-            </div>
-            <div className="nav-btns">
+            <button className="nav-brand" onClick={() => onChange('warzone')} title="返回首页">
+                <span className="nav-logo">含</span>
+                <span className="nav-brand-text">
+                    <span className="nav-brand-name">含英牌战区数据</span>
+                    <span className="nav-brand-sub">战双帕弥什 · 榜单分析</span>
+                </span>
+            </button>
+
+            <div className="nav-tabs">
                 {PAGES.map(p => (
                     <button
                         key={p.key}
@@ -72,6 +72,19 @@ export default function Nav({ current, onChange }) {
                         {p.label}
                     </button>
                 ))}
+            </div>
+
+            <div className="nav-meta">
+                <span className="nav-meta-item">
+                    <i className="nav-meta-dot" />
+                    数据来源 <a href="https://huaxu.app" target="_blank" rel="noreferrer">huaxu.app</a>
+                </span>
+                <span className="nav-meta-sep" />
+                <span className="nav-meta-item">
+                    访问 <b>{visits}</b> 次
+                </span>
+                <span className="nav-meta-sep nav-meta-uptime" />
+                <Uptime />
             </div>
         </nav>
     );
