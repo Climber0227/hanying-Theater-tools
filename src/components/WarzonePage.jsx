@@ -107,12 +107,6 @@ export default function WarzonePage({ onOpenPlayer }) {
                     <div className="page-meta">
                         {weekNo != null && <span>第 <b>{weekNo}</b> 周</span>}
                         {dateLabel && <><span className="meta-dot" /><span>{dateLabel}</span></>}
-                        {updatedLabel && (
-                            <span className="meta-updated">
-                                <span className="meta-dot" />
-                                <span>更新于 {updatedLabel}</span>
-                            </span>
-                        )}
                     </div>
                 </div>
                 <DifficultySwitch difficulty={difficulty} onChange={setDifficulty} />

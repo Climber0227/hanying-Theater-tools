@@ -4,7 +4,7 @@ import { formatNumber, formatScoreCompact, getQualityInfo, getTeamKey } from '..
 import { getRankDelta } from '../../utils/ranking.js';
 
 export const ROW_HEIGHT = 96;
-export const ROW_HEIGHT_MOBILE = 96;
+export const ROW_HEIGHT_MOBILE = 112;
 
 function RankDelta({ delta }) {
     if (!delta) return null;
@@ -47,14 +47,34 @@ export function TeamCompareTag({ zd, teamMax, zone }) {
         );
 }
 
+// 每区的三个角色：小头像 + 名字 + 品质 + 战力。
+// 头像走本地 96px 小图（/img/chars/，单张 2–4KB），不然这里一次要拉 90 张 1024×1024 的原图。
 function CharList({ chars }) {
     if (!chars || chars.length === 0) return null;
     return chars.map((c, i) => (
-        <span className="char-chip" key={i} title={c.cubName ? `${c.characterName} · 辅助机 ${c.cubName}` : c.characterName}>
+        <div
+            className="char-row"
+            key={i}
+            title={c.cubName ? `${c.characterName} · 辅助机 ${c.cubName}` : c.characterName}
+        >
+            {c.icon ? (
+                <img
+                    className="char-icon-sm"
+                    src={getImageUrl(c.icon)}
+                    alt=""
+                    width="18"
+                    height="18"
+                    loading="lazy"
+                    decoding="async"
+                    onError={e => { e.currentTarget.style.visibility = 'hidden'; }}
+                />
+            ) : (
+                <span className="char-icon-sm char-icon-empty" aria-hidden="true" />
+            )}
             <span className="char-name-sm">{c.characterName}</span>
             {getQualityInfo(c.rank) && <span className={`rank-quality-sm quality-${c.rank}`}>{getQualityInfo(c.rank)}</span>}
             {c.bp ? <span className="char-bp">{c.bp}</span> : null}
-        </span>
+        </div>
     ));
 }
 
@@ -111,6 +131,25 @@ function MobileZoneBar({ zones, r, delta, teamMax }) {
                                     : <span className="score-delta-down">-{formatScoreCompact(Math.abs(zdDiff))}</span>
                             )}
                         </span>
+                        {zd && zd.characters && zd.characters.length > 0 && (
+                            <span className="mobile-zone-chars">
+                                {zd.characters.map((c, i) => (
+                                    c.icon ? (
+                                        <img
+                                            key={i}
+                                            src={getImageUrl(c.icon)}
+                                            alt=""
+                                            width="15"
+                                            height="15"
+                                            loading="lazy"
+                                            decoding="async"
+                                            title={c.characterName}
+                                            onError={e => { e.currentTarget.style.display = 'none'; }}
+                                        />
+                                    ) : null
+                                ))}
+                            </span>
+                        )}
                     </div>
                 );
             })}

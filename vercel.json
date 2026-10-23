@@ -3,5 +3,13 @@
     "outputDirectory": "dist-web",
     "rewrites": [
         { "source": "/api/proxy/(.*)", "destination": "/api/proxy?apiPath=$1" }
+    ],
+    "headers": [
+        {
+            "source": "/img/chars/(.*)",
+            "headers": [
+                { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+            ]
+        }
     ]
 }

@@ -13,6 +13,8 @@ export function installImageFallback() {
             const el = event.target;
             if (!el || el.tagName !== 'IMG') return;
             const src = el.currentSrc || el.src || '';
+            // 本地小图（/img/chars/）没有 png 版本，失败就直接放弃，别再打一个 404
+            if (src.includes('/img/chars/')) return;
             if (!/\.webp(\?|$)/i.test(src) || el.dataset[MARK] === '1') return;
             el.dataset[MARK] = '1';
             el.src = src.replace(/\.webp(\?|$)/i, '.png');

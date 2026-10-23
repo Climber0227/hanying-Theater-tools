@@ -1,5 +1,7 @@
 // API 配置（迁移自 js/config.js）
 
+import { localIconPath } from './charPack.generated.js';
+
 export const API_ORIGIN = 'https://api.huaxu.app';
 
 export const API_CONFIG = {
@@ -44,8 +46,13 @@ export function apiUrlNoCache(path, query = '') {
 
 // 资源站同路径下同时有 .png 和 .webp（体积约为 png 的 1/7），优先用 webp，
 // 万一某个资源没有 webp，imageFallback.js 会把它换回 png。
+//
+// 角色头像 / 辅助机 / 玩家头像是 1024×1024 的原图（单张 40–150KB），但页面上只显示 20–48px。
+// sync-char-icons.mjs 预先缩了一份 96px 的 WebP 放在 /img/chars/（单张 2–4KB），命中就用本地的。
 export function getImageUrl(path) {
     if (!path) return '';
+    const local = localIconPath(path);
+    if (local) return local;
     return `${API_CONFIG.assets}/${path}.webp`;
 }
 

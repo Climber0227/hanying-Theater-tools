@@ -800,24 +800,48 @@
     white-space: nowrap;
 }
 
-/* 角色 chips */
+/* 角色列表：每区三个角色，竖排「头像 + 名字 + 品质 + 战力」 */
 .zone-chars {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+    flex-direction: column;
+    gap: 1px;
 }
-.char-chip {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 4px;
-    background: var(--surface-2);
+.zone-chars .char-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 19px;
+    line-height: 1;
+}
+.zone-chars .char-icon-sm {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    background: var(--surface-3);
     border: 1px solid var(--border-soft);
-    border-radius: 4px;
-    padding: 1px 5px;
-    font-size: var(--fs-11);
-    color: var(--text-2);
+    object-fit: cover;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+.char-icon-empty {
+    display: inline-block;
+}
+.zone-chars .char-name-sm {
+    flex: 0 0 56px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
-    line-height: 1.5;
+    color: var(--text-2);
+    font-weight: 600;
+}
+.zone-chars .rank-quality-sm {
+    flex: 0 0 26px;
+}
+.zone-chars .char-bp {
+    margin-left: 2px;
+    font-size: 10px;
+    color: var(--text-4);
+    font-variant-numeric: tabular-nums;
 }
 .char-name-sm {
     color: var(--text-2);
@@ -1175,6 +1199,20 @@
     .mobile-zone-score .score-delta-same {
         font-size: 9px;
         margin-left: 3px;
+    }
+    .mobile-zone-chars {
+        display: flex;
+        gap: 2px;
+        margin-top: 2px;
+    }
+    .mobile-zone-chars img {
+        width: 15px;
+        height: 15px;
+        border-radius: 4px;
+        background: var(--surface-3);
+        object-fit: cover;
+        flex-shrink: 0;
+        box-sizing: border-box;
     }
 
     .mobile-sort-row {
