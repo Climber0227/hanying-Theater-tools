@@ -93,6 +93,34 @@ export const auth = {
         return result.data;
     },
 
+    // 手机号一次性登录：验证码由库街区下发并校验，登录成功即自动绑定库街区
+    // 首次登录由服务端自动建号；改版前的老账号按云端 kuro_phone 自动接管
+    async loginWithPhone(phone, code) {
+        const p = String(phone || '').trim();
+        const c = String(code || '').trim();
+        if (!/^1[3-9]\d{9}$/.test(p)) throw new Error('请输入正确的11位手机号');
+        if (!/^\d{4,8}$/.test(c)) throw new Error('请输入短信验证码');
+        if (!AUTH_API) throw new Error('本地开发环境不支持登录');
+        const resp = await fetch(AUTH_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'phone_login', phone: p, code: c })
+        });
+        const result = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(result.error || '登录失败');
+        const data = result.data || {};
+        this._saveSession(data);
+        // 同一次验证码已经建立库街区绑定，本地直接落上，页面无需再走一遍绑定流程
+        if (data.kuroToken) {
+            localStorage.setItem(STORAGE_KEYS.kuro_token, data.kuroToken);
+            if (data.kuroPhone) localStorage.setItem(STORAGE_KEYS.kuro_phone, data.kuroPhone);
+            localStorage.setItem('kurobbs_bound_user', data.playerId);
+        }
+        await this._pullFromCloud();
+        await this._pushToCloud();
+        return data;
+    },
+
     // 找回密码 Step1：获取账号绑定的库街区手机号（脱敏）
     async getResetPhone(username) {
         if (!AUTH_API) throw new Error('本地开发环境不支持');

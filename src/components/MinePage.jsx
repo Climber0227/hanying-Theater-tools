@@ -115,45 +115,35 @@ function maskPhone(p) {
     return String(p).replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2');
 }
 
-// 三步使用引导（横向步骤条）
-// 1 登录网站账号 2 登录库街区 3 同步分数
+// 两步使用引导（横向步骤条）
+// 1 手机号登录（同一验证码顺带绑定库街区） 2 同步分数
 function SetupGuide({ loggedIn, kuroBound, weekSaved, authReady, onOpenLogin, onSyncRequest, syncLabel, hint }) {
     const syncText = syncLabel || (weekSaved ? '已完成' : '同步分数');
+    const done = loggedIn && kuroBound;
     return (
         <div className="setup-guide">
             <div className="setup-guide-header">
                 <div className="setup-guide-title">使用引导</div>
-                <div className="setup-guide-sub">三步开启「分数一键同步 · 历史多端可查」</div>
+                <div className="setup-guide-sub">一个手机号完成登录，库街区自动绑定</div>
             </div>
             <div className="guide-steps">
-                <div className={`guide-step${loggedIn ? ' done' : ''}`} onClick={() => !loggedIn && onOpenLogin && onOpenLogin('web')}>
-                    <div className="guide-step-dot">{loggedIn ? '✓' : '1'}</div>
+                <div className={`guide-step${done ? ' done' : ''}`} onClick={() => !done && onOpenLogin && onOpenLogin()}>
+                    <div className="guide-step-dot">{done ? '✓' : '1'}</div>
                     <div className="guide-step-info">
-                        <div className="guide-step-title">登录网站账号</div>
+                        <div className="guide-step-title">手机号登录</div>
                         <div className="guide-step-lights">
                             <span className={`guide-light${loggedIn ? ' on' : ''}${!authReady ? ' checking' : ''}`}>
-                                网站 {!authReady ? '检查中…' : (loggedIn ? '已登录' : '未登录')}
+                                账号 {!authReady ? '检查中…' : (loggedIn ? '已登录' : '未登录')}
                             </span>
-                        </div>
-                    </div>
-                    <button className="guide-action" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin('web'); }}>
-                        {loggedIn ? '登录状态' : '登录/注册'}
-                    </button>
-                </div>
-                <div className={`guide-step${kuroBound ? ' done' : ''}`} onClick={() => !kuroBound && onOpenLogin && onOpenLogin('kuro')}>
-                    <div className="guide-step-dot">{kuroBound ? '✓' : '2'}</div>
-                    <div className="guide-step-info">
-                        <div className="guide-step-title">登录库街区</div>
-                        <div className="guide-step-lights">
                             <span className={`guide-light${kuroBound ? ' on' : ''}`}>库街区 {kuroBound ? '已绑定' : '未绑定'}</span>
                         </div>
                     </div>
-                    <button className="guide-action guide-action-kuro" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin('kuro'); }}>
-                        {kuroBound ? '绑定状态' : '去绑定'}
+                    <button className="guide-action" onClick={e => { e.stopPropagation(); onOpenLogin && onOpenLogin(); }}>
+                        {done ? '登录状态' : (loggedIn ? '补绑库街区' : '手机号登录')}
                     </button>
                 </div>
                 <div className={`guide-step${weekSaved ? ' done' : ''}`} onClick={() => !weekSaved && onSyncRequest && onSyncRequest()}>
-                    <div className="guide-step-dot">{weekSaved ? '✓' : '3'}</div>
+                    <div className="guide-step-dot">{weekSaved ? '✓' : '2'}</div>
                     <div className="guide-step-info">
                         <div className="guide-step-title">同步分数</div>
                         <div className="guide-step-desc">{weekSaved ? '已完成 · 已备份云端' : '一键拉取游戏内最新分数'}</div>
@@ -168,39 +158,26 @@ function SetupGuide({ loggedIn, kuroBound, weekSaved, authReady, onOpenLogin, on
     );
 }
 
-// 登录弹窗：网站账号（登录/注册） + 库街区（验证码绑定）双 tab
-// 已登录/已绑定时显示状态视图，不再重复表单
-function LoginModal({ tab, onClose, onLoggedIn, userLoggedIn, kuroBound }) {
-    const [mode, setMode] = useState(tab === 'kuro' ? 'kuro' : 'web');
+// 登录弹窗：一个手机号走完整个流程
+// 验证码由库街区下发，服务端用同一张验证码登录库街区 → 登录即自动完成库街区绑定
+// 老用户可展开「用老账号密码登录」，绑定过库街区的老账号会被手机号登录自动接管（历史数据不丢）
+function LoginModal({ onClose, onLoggedIn, userLoggedIn, kuroBound }) {
+    const [legacy, setLegacy] = useState(false); // 展开老账号密码登录
+    const [forceForm, setForceForm] = useState(false); // 已登录时主动切换账号
     // 倒计时定时器：弹窗关闭/组件卸载时清理，避免泄漏与卸载后 setState
     const countdownTimerRef = useRef(null);
     useEffect(() => () => { if (countdownTimerRef.current) { clearInterval(countdownTimerRef.current); countdownTimerRef.current = null; } }, []);
-    // 网站账号
-    const [id, setId] = useState('');
-    const [pw, setPw] = useState('');
-    const [isReg, setIsReg] = useState(false);
-    // 库街区
+    // 手机号登录
     const [phone, setPhone] = useState('');
     const [code, setCode] = useState('');
     const [countdown, setCountdown] = useState(0);
+    // 老账号密码登录
+    const [id, setId] = useState('');
+    const [pw, setPw] = useState('');
     const [msg, setMsg] = useState('');
     const [busy, setBusy] = useState('');
 
-    const doWeb = async () => {
-        setMsg('');
-        setBusy(isReg ? '注册中…' : '登录中…');
-        try {
-            if (isReg) await auth.register(id.trim(), pw);
-            else await auth.login(id.trim(), pw);
-            setBusy('');
-            onLoggedIn && onLoggedIn();
-        } catch (e) {
-            setBusy('');
-            setMsg(e.message || (isReg ? '注册失败' : '登录失败'));
-        }
-    };
-
-    const sendKuroCode = async () => {
+    const sendCode = async () => {
         if (!/^1[3-9]\d{9}$/.test(phone)) return setMsg('请输入正确的11位手机号');
         setMsg('请完成滑块验证…');
         try {
@@ -219,112 +196,123 @@ function LoginModal({ tab, onClose, onLoggedIn, userLoggedIn, kuroBound }) {
         }
     };
 
-    const doKuro = async () => {
+    const doPhone = async () => {
+        if (busy) return;
         if (!/^1[3-9]\d{9}$/.test(phone)) return setMsg('请输入正确的11位手机号');
-        if (!code) return setMsg('请输入验证码');
+        if (!/^\d{4,8}$/.test(code)) return setMsg('请输入短信验证码');
         setMsg('');
         setBusy('登录中…');
         try {
-            const result = await kuroLogin(phone, code);
-            if (result && result.token) setKuroToken(result.token);
-            setKuroPhone(phone);
-            const curUser = auth.isLoggedIn() ? auth.playerId : null;
-            if (curUser) localStorage.setItem('kurobbs_bound_user', curUser);
+            const data = await auth.loginWithPhone(phone, code);
+            setBusy('');
+            onLoggedIn && onLoggedIn(data);
+        } catch (e) {
+            setBusy('');
+            setMsg(e.message || '登录失败');
+        }
+    };
+
+    const doLegacy = async () => {
+        if (busy) return;
+        setMsg('');
+        setBusy('登录中…');
+        try {
+            await auth.login(id.trim(), pw);
             setBusy('');
             onLoggedIn && onLoggedIn();
         } catch (e) {
             setBusy('');
-            setMsg(e.message || '绑定失败');
+            setMsg(e.message || '登录失败');
         }
     };
 
-    return (
-        <Modal title={mode === 'web' ? '网站账号登录' : '库街区绑定'} onClose={onClose}>
-            <div className="login-modal-tabs">
-                <button className={`login-modal-tab${mode === 'web' ? ' active' : ''}`} onClick={() => { setMode('web'); setMsg(''); }}>网站账号</button>
-                <button className={`login-modal-tab${mode === 'kuro' ? ' active' : ''}`} onClick={() => { setMode('kuro'); setMsg(''); }}>库街区绑定</button>
-            </div>
+    // 已登录：显示状态，可主动切换账号
+    if (userLoggedIn && !forceForm) {
+        return (
+            <Modal title="账号" onClose={onClose}>
+                <div className="login-modal-body">
+                    <div className="login-done">
+                        <div className="login-done-icon">✓</div>
+                        <div className="login-done-text">
+                            <b>已登录</b>
+                            <span>账号：{auth.playerName || auth.playerId}</span>
+                            <span>库街区：{kuroBound ? `已绑定 ${maskPhone(getKuroPhone())}` : '未绑定'}</span>
+                            <span>分数保存自动同步云端，换设备登录即可查看历史</span>
+                        </div>
+                    </div>
+                    <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} onClick={onClose}>完成</button>
+                    <button className="login-modal-switch" onClick={() => { setForceForm(true); setMsg(''); }}>
+                        换个账号登录
+                    </button>
+                </div>
+            </Modal>
+        );
+    }
 
-            {mode === 'web' ? (
-                userLoggedIn ? (
-                    <div className="login-modal-body">
-                        <div className="login-done">
-                            <div className="login-done-icon">✓</div>
-                            <div className="login-done-text">
-                                <b>网站账号已登录</b>
-                                <span>账号：{auth.playerName || auth.playerId}</span>
-                                <span>云端同步已开启 · 分数/历史多端可查</span>
-                            </div>
-                        </div>
-                        <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} onClick={onClose}>完成</button>
-                    </div>
-                ) : (
-                    <div className="login-modal-body">
-                        <input
-                            className="bind-input"
-                            style={{ width: '100%', maxWidth: 'none' }}
-                            placeholder="账号（手机号/用户名）"
-                            value={id}
-                            onChange={e => setId(e.target.value)}
-                        />
-                        <input
-                            className="bind-input"
-                            style={{ width: '100%', maxWidth: 'none' }}
-                            type="password"
-                            placeholder="密码"
-                            value={pw}
-                            onChange={e => setPw(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') doWeb(); }}
-                        />
-                        <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} disabled={!!busy} onClick={doWeb}>
-                            {busy || (isReg ? '注册并登录' : '登录')}
-                        </button>
-                        <button className="login-modal-switch" onClick={() => { setIsReg(r => !r); setMsg(''); }}>
-                            {isReg ? '已有账号？去登录' : '没有账号？一键注册'}
-                        </button>
-                        {msg && <div className="data-mgmt-msg">{msg}</div>}
-                    </div>
-                )
+    return (
+        <Modal title={legacy ? '老账号登录' : '手机号登录'} onClose={onClose}>
+            {legacy ? (
+                <div className="login-modal-body">
+                    <input
+                        className="bind-input"
+                        style={{ width: '100%', maxWidth: 'none' }}
+                        placeholder="老账号用户名"
+                        value={id}
+                        onChange={e => setId(e.target.value)}
+                    />
+                    <input
+                        className="bind-input"
+                        style={{ width: '100%', maxWidth: 'none' }}
+                        type="password"
+                        placeholder="密码"
+                        value={pw}
+                        onChange={e => setPw(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') doLegacy(); }}
+                    />
+                    <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} disabled={!!busy} onClick={doLegacy}>
+                        {busy || '登录'}
+                    </button>
+                    <button className="login-modal-switch" onClick={() => { setLegacy(false); setMsg(''); }}>
+                        改用手机号登录
+                    </button>
+                    {msg && <div className="data-mgmt-msg">{msg}</div>}
+                </div>
             ) : (
-                kuroBound ? (
-                    <div className="login-modal-body">
-                        <div className="login-done">
-                            <div className="login-done-icon">✓</div>
-                            <div className="login-done-text">
-                                <b>库街区已绑定</b>
-                                <span>手机号：{maskPhone(getKuroPhone())}</span>
-                                <span>每周点「同步分数」一键拉取游戏内战区 / 幻痛数据</span>
-                            </div>
-                        </div>
-                        <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} onClick={onClose}>完成</button>
+                <div className="login-modal-body">
+                    <div className="kuro-bound-hint">
+                        验证码由库街区下发，登录后自动绑定库街区，可直接同步分数。首次登录自动创建账号。
                     </div>
-                ) : (
-                    <div className="login-modal-body">
-                        <div className="kuro-bound-hint">绑定后每周点「同步分数」，一键拉取游戏内战区 / 幻痛数据（需先在库街区App打开「纷争战区」刷新）</div>
+                    <input
+                        className="bind-input"
+                        style={{ width: '100%', maxWidth: 'none' }}
+                        inputMode="numeric"
+                        maxLength={11}
+                        placeholder="手机号"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                    />
+                    <div className="login-modal-code-row">
                         <input
                             className="bind-input"
-                            style={{ width: '100%', maxWidth: 'none' }}
-                            placeholder="库街区绑定手机号"
-                            value={phone}
-                            onChange={e => setPhone(e.target.value)}
+                            inputMode="numeric"
+                            maxLength={8}
+                            placeholder="短信验证码"
+                            value={code}
+                            onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                            onKeyDown={e => { if (e.key === 'Enter') doPhone(); }}
                         />
-                        <div className="login-modal-code-row">
-                            <input
-                                className="bind-input"
-                                placeholder="验证码"
-                                value={code}
-                                onChange={e => setCode(e.target.value)}
-                            />
-                            <button className="bind-btn login-modal-send" disabled={countdown > 0 || !!busy} onClick={sendKuroCode}>
-                                {countdown > 0 ? `${countdown}s` : '发送验证码'}
-                            </button>
-                        </div>
-                        <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} disabled={!!busy} onClick={doKuro}>
-                            {busy || '绑定并登录'}
+                        <button className="bind-btn login-modal-send" disabled={countdown > 0 || !!busy} onClick={sendCode}>
+                            {countdown > 0 ? `${countdown}s` : '发送验证码'}
                         </button>
-                        {msg && <div className="data-mgmt-msg">{msg}</div>}
                     </div>
-                )
+                    <button className="bind-btn" style={{ width: '100%', minHeight: 44 }} disabled={!!busy} onClick={doPhone}>
+                        {busy || '登录'}
+                    </button>
+                    <button className="login-modal-switch" onClick={() => { setLegacy(true); setMsg(''); }}>
+                        已有老账号？用密码登录
+                    </button>
+                    {msg && <div className="data-mgmt-msg">{msg}</div>}
+                </div>
             )}
         </Modal>
     );
@@ -703,13 +691,14 @@ function PpcScoreSection({ bosses, currentWeek, onChanged, syncStamp }) {
     );
 }
 // 网站账号登录/注册
-function WebLoginBlock({ onAuthChange }) {
+function WebLoginBlock({ onAuthChange, onOpenLogin }) {
     const [id, setId] = useState('');
     const [pw, setPw] = useState('');
     const [error, setError] = useState('');
     const [busy, setBusy] = useState('');
     const [user, setUser] = useState(null);
     const [showForgot, setShowForgot] = useState(false);
+    const [showLegacy, setShowLegacy] = useState(false); // 老账号密码登录
 
     useEffect(() => {
         auth.init().then(() => {
@@ -735,21 +724,6 @@ function WebLoginBlock({ onAuthChange }) {
         setBusy('');
     };
 
-    const doRegister = async () => {
-        setError('');
-        setBusy('注册中…');
-        try {
-            await auth.register(id.trim(), pw);
-            const u = { id: auth.playerId, name: auth.playerName };
-            setUser(u);
-            onAuthChange && onAuthChange(u);
-            setPw('');
-        } catch (e) {
-            setError(e.message);
-        }
-        setBusy('');
-    };
-
     const doLogout = () => {
         auth.logout();
         setUser(null);
@@ -760,35 +734,47 @@ function WebLoginBlock({ onAuthChange }) {
         <div className="account-block">
             <div className="account-block-title">
                 <span className="step-badge">1</span>
-                网站账号
+                账号
                 <span className={`status-dot${user ? ' on' : ' off'}`} />
                 <span className={`status-text${user ? ' on' : ' off'}`}>{user ? '已登录' : '未登录'}</span>
             </div>
-            <div className="account-block-desc">登录后分数保存自动同步云端，换设备登录即可查看历史</div>
+            <div className="account-block-desc">一个手机号即可登录，登录时自动绑定库街区；分数保存后自动同步云端</div>
             {!user ? (
-                <div className="account-form">
-                    <div className="login-input-row">
-                        <input className="login-input" placeholder="用户名（2-20位字母或数字）" value={id} onChange={e => setId(e.target.value)} />
+                showLegacy ? (
+                    <div className="account-form">
+                        <div className="login-input-row">
+                            <input className="login-input" placeholder="老账号用户名" value={id} onChange={e => setId(e.target.value)} />
+                        </div>
+                        <div className="login-input-row">
+                            <input
+                                className="login-input"
+                                type="password"
+                                placeholder="密码"
+                                value={pw}
+                                onChange={e => setPw(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') doLogin(); }}
+                            />
+                        </div>
+                        <div className="login-btns">
+                            <button className="bind-btn" disabled={!!busy} onClick={doLogin}>{busy || '登录'}</button>
+                        </div>
+                        <div className="login-links">
+                            <button className="login-link" onClick={() => setShowForgot(true)}>忘记密码</button>
+                            <button className="login-link" onClick={() => { setShowLegacy(false); setError(''); }}>改用手机号登录</button>
+                        </div>
+                        <div className="login-error">{error}</div>
                     </div>
-                    <div className="login-input-row">
-                        <input
-                            className="login-input"
-                            type="password"
-                            placeholder="密码（6-20位）"
-                            value={pw}
-                            onChange={e => setPw(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') doLogin(); }}
-                        />
+                ) : (
+                    <div className="account-form">
+                        <button className="bind-btn" style={{ width: '100%' }} onClick={() => onOpenLogin && onOpenLogin()}>
+                            手机号登录
+                        </button>
+                        <div className="account-block-desc" style={{ marginTop: 8 }}>首次登录自动创建账号，验证码同时用于库街区</div>
+                        <div className="login-links">
+                            <button className="login-link" onClick={() => setShowLegacy(true)}>老账号密码登录</button>
+                        </div>
                     </div>
-                    <div className="login-btns">
-                        <button className="bind-btn" disabled={!!busy} onClick={doLogin}>{busy || '登录'}</button>
-                        <button className="bind-set-btn follow-set-btn" disabled={!!busy} onClick={doRegister}>注册</button>
-                    </div>
-                    <div className="login-links">
-                        <button className="login-link" onClick={() => setShowForgot(true)}>忘记密码</button>
-                    </div>
-                    <div className="login-error">{error}</div>
-                </div>
+                )
             ) : (
                 <div className="logged-in-info" style={{ padding: 0 }}>
                     <div className="logged-in-user">
@@ -1090,6 +1076,7 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick, syncRef }) 
             </div>
             <div className="account-block-desc">绑定后每周点「同步分数」，一键拉取游戏内战区 / 幻痛数据</div>
             {!token ? (
+                auth.isLoggedIn() ? (
                 <div className="account-form">
                     {boundPhone && (
                         <div className="kuro-bound-hint">
@@ -1124,6 +1111,13 @@ function KuroBlock({ onSyncData, onBoundChange, authReady, authTick, syncRef }) 
                         <button className="bind-btn" disabled={!!busy} onClick={doBind}>{busy || '绑定登录'}</button>
                     </div>
                 </div>
+                ) : (
+                <div className="account-form">
+                    <div className="kuro-bound-hint">
+                        不用单独绑定：用手机号登录时，同一个短信验证码会一并完成库街区绑定。
+                    </div>
+                </div>
+                )
             ) : (
                 <>
                     <div className="logged-in-info" style={{ padding: 0 }}>
@@ -1587,17 +1581,17 @@ function WeekScoreCard({ area, ppc, roleId, serverId, trend, showTrendBtn, showS
 }
 
 // 账号卡片：左网站账号，右库街区，底部说明
-function AccountSection({ onSyncData, onAuthChange, onBoundChange, authReady, authTick, syncRef }) {
+function AccountSection({ onSyncData, onAuthChange, onBoundChange, authReady, authTick, syncRef, onOpenLogin }) {
     return (
         <div className="mine-section" id="mine-account">
             <div className="mine-section-header"><h3><span className="step-badge">1</span>账号 · 库街区</h3></div>
             <div className="account-grid">
-                <WebLoginBlock onAuthChange={onAuthChange} />
+                <WebLoginBlock onAuthChange={onAuthChange} onOpenLogin={onOpenLogin} />
                 <KuroBlock onSyncData={onSyncData} onBoundChange={onBoundChange} authReady={authReady} authTick={authTick} syncRef={syncRef} />
             </div>
             <div className="account-intro">
-                <span>· 登录网站账号：分数保存自动同步云端，换设备登录即可查看历史</span>
-                <span>· 绑定库街区：每周点「同步分数」，一键拉取游戏内战区/幻痛数据</span>
+                <span>· 手机号登录：短信验证码同时用于库街区，登录即完成绑定</span>
+                <span>· 分数保存自动同步云端，换设备登录即可查看历史</span>
             </div>
         </div>
     );
@@ -1840,7 +1834,7 @@ export default function MinePage() {
 
     const isMobile = useMediaQuery(MOBILE_QUERY);
     const trend = useTrendData(wzZones, syncStamp);
-    const [loginModal, setLoginModal] = useState(null); // null | 'web' | 'kuro'
+    const [loginModal, setLoginModal] = useState(null); // null | 'login'
     const [guideMsg, setGuideMsg] = useState('');
     const syncScoreRef = useRef(null); // 库街区同步函数（KuroBlock 注册）
 
@@ -1848,13 +1842,13 @@ export default function MinePage() {
     // 没登录 / 没绑定 / 绑定还在恢复时，必须先给出明确反馈，而不是点了没反应
     const requestSync = () => {
         if (!user) {
-            setGuideMsg('请先完成第 1 步：登录网站账号（分数才会保存并备份到云端）');
-            setLoginModal('web');
+            setGuideMsg('请先完成第 1 步：手机号登录（同一个验证码会自动绑定库街区）');
+            setLoginModal('login');
             return;
         }
         if (!kuroBound) {
-            setGuideMsg('请先完成第 2 步：绑定库街区，才能拉取游戏内分数');
-            setLoginModal('kuro');
+            setGuideMsg('库街区还没绑定，用手机号重新登录一次即可自动完成绑定');
+            setLoginModal('login');
             return;
         }
         if (!syncScoreRef.current) {
@@ -1904,6 +1898,7 @@ export default function MinePage() {
                 authReady={authReady}
                 authTick={authTick}
                 syncRef={syncScoreRef}
+                onOpenLogin={() => setLoginModal('login')}
             />
 
             <div id="mine-scores">
@@ -1933,13 +1928,12 @@ export default function MinePage() {
 
             {loginModal && (
                 <LoginModal
-                    tab={loginModal}
                     onClose={() => setLoginModal(null)}
                     userLoggedIn={!!user}
                     kuroBound={kuroBound}
-                    onLoggedIn={() => {
+                    onLoggedIn={data => {
                         setLoginModal(null);
-                        setGuideMsg('');
+                        setGuideMsg(data && data.adopted ? '已恢复你原有的账号，历史分数与关注都还在' : '');
                         setUser(auth.isLoggedIn() ? { id: auth.playerId, name: auth.playerName } : null);
                         setAuthTick(t => t + 1); // 触发库街区恢复绑定/自动同步
                         setKuroBound(!!getKuroToken());

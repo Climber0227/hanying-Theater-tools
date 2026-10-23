@@ -82,6 +82,62 @@ function maskPhone(phone) {
     return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
 }
 
+// 手机号格式校验（国内 11 位）
+function isValidPhone(phone) {
+    return /^1[3-9]\d{9}$/.test(String(phone || ''));
+}
+
+// 用「手机号 + 短信验证码」登录库街区，返回 kuro token
+// 关键：验证码由库街区校验，所以手机号归属可信；前端传的手机号不能直接当账号用
+async function kuroLoginByCode(phone, code) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let devcode = '';
+    for (let i = 0; i < 32; i++) devcode += chars.charAt(Math.floor(Math.random() * chars.length));
+    const data = { mobile: phone, code: String(code), devCode: devcode };
+    let resp = null;
+    for (const path of ['/user/sdkLoginForH5', '/user/sdkLogin']) {
+        resp = await kuroPost(path, { data });
+        if (resp && (resp.code === 0 || resp.code === 200)) {
+            const payload = resp.data || {};
+            return payload.token || (typeof payload === 'string' ? payload : '');
+        }
+        // 验证码错误/过期/风控：换接口也没意义，直接抛
+        if (resp && (resp.code === 130 || resp.code === 132 || resp.code === 270)) break;
+    }
+    const err = new Error((resp && resp.msg) || '验证码错误或已过期');
+    err.kuroCode = resp && resp.code;
+    throw err;
+}
+
+// 按云端绑定的库街区手机号反查老账号
+// 改版前注册的用户没有手机号列，靠 user_data 里的 kuro_phone 匹配置信接管，历史数据不丢
+async function findPlayerIdByKuroPhone(phone) {
+    // data 列是 jsonb，字符串值要用带引号的 JSON 字面量比较
+    for (const val of [JSON.stringify(phone), phone]) {
+        try {
+            const { data, error } = await supabase
+                .from('user_data')
+                .select('player_id')
+                .eq('data_key', 'kuro_phone')
+                .filter('data', 'eq', val)
+                .limit(1);
+            if (!error && data && data.length) return data[0].player_id;
+        } catch { /* 换下一种写法再试 */ }
+    }
+    return null;
+}
+
+// 该账号是否已有战区历史（用来判断两个候选账号里哪个才是"真身"）
+async function hasScoreData(playerId) {
+    const { data } = await supabase
+        .from('user_data')
+        .select('player_id')
+        .eq('player_id', playerId)
+        .eq('data_key', 'wz_scores')
+        .limit(1);
+    return !!(data && data.length);
+}
+
 module.exports = async function handler(req, res) {
     // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -192,6 +248,97 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ status: 'success', msg: '密码已重置，请重新登录' });
         } catch (error) {
             console.error('Reset error:', error.message);
+            return res.status(500).json({ error: '服务器错误: ' + error.message });
+        }
+    }
+
+    // 手机号一次性登录：库街区校验验证码 → 查/建账号 → 发网站 session
+    // 同一个验证码顺带把库街区 token 写进云端，用户不再需要单独「绑定库街区」
+    if (action === 'phone_login') {
+        const { phone, code } = req.body || {};
+        const p = String(phone || '').trim();
+        const c = String(code || '').trim();
+        if (!isValidPhone(p)) {
+            return res.status(400).json({ error: '请输入正确的11位手机号' });
+        }
+        if (!/^\d{4,8}$/.test(c)) {
+            return res.status(400).json({ error: '请输入短信验证码' });
+        }
+
+        let kuroToken = '';
+        try {
+            kuroToken = await kuroLoginByCode(p, c);
+        } catch (e) {
+            const map = {
+                130: '验证码错误，请重新输入',
+                132: '验证码已过期，请重新获取',
+                270: '当前网络环境存在风险，请切换网络（Wi-Fi ↔ 流量）后重试'
+            };
+            return res.status(401).json({ error: map[e.kuroCode] || '验证码错误或已过期' });
+        }
+
+        try {
+            // 身份优先级：手机号账号 → 云端 kuro_phone 匹配到的老账号 → 新建
+            let playerId = p;
+            let playerName = maskPhone(p);
+            let adopted = false;
+
+            const { data: phoneUser } = await supabase
+                .from('users')
+                .select('player_id, player_name')
+                .eq('player_id', p)
+                .maybeSingle();
+            const oldId = await findPlayerIdByKuroPhone(p);
+
+            const adoptOld = async () => {
+                playerId = oldId;
+                adopted = true;
+                const { data: oldUser } = await supabase
+                    .from('users')
+                    .select('player_name')
+                    .eq('player_id', oldId)
+                    .maybeSingle();
+                if (oldUser && oldUser.player_name) playerName = oldUser.player_name;
+            };
+
+            if (phoneUser) {
+                playerName = phoneUser.player_name || playerName;
+                // 手机号账号若是空壳、老账号却有分数 → 用老账号，历史数据不丢
+                if (oldId && oldId !== p && !(await hasScoreData(p)) && (await hasScoreData(oldId))) {
+                    await adoptOld();
+                }
+            } else if (oldId) {
+                await adoptOld();
+            } else {
+                // 首次登录自动建号：随机密码（用户无需知道，也登录不了密码通道）
+                const passwordHash = hashPassword(crypto.randomBytes(16).toString('hex'));
+                const { error: insertError } = await supabase
+                    .from('users')
+                    .insert({ player_id: p, password_hash: passwordHash, player_name: playerName });
+                if (insertError && insertError.code !== '23505') {
+                    console.error('Phone register error:', JSON.stringify(insertError));
+                    return res.status(500).json({ error: '登录失败: ' + (insertError.message || '未知错误') });
+                }
+            }
+
+            // 同一个验证码顺带完成库街区绑定（换设备也能自动恢复）
+            const now = new Date().toISOString();
+            const rows = [{ player_id: playerId, data_key: 'kuro_phone', data: p, updated_at: now }];
+            if (kuroToken) {
+                rows.unshift({ player_id: playerId, data_key: 'kuro_token', data: kuroToken, updated_at: now });
+            }
+            await supabase.from('user_data').upsert(rows, { onConflict: 'player_id,data_key' });
+
+            const token = generateToken();
+            const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+            await supabase.from('sessions').insert({ token, player_id: playerId, expires_at: expiresAt });
+
+            return res.status(200).json({
+                status: 'success',
+                data: { token, playerId, playerName, kuroToken, kuroPhone: p, adopted }
+            });
+        } catch (error) {
+            console.error('Phone login error:', error.message, error.stack);
             return res.status(500).json({ error: '服务器错误: ' + error.message });
         }
     }
