@@ -55,5 +55,17 @@ const imgs = await page.evaluate(() => {
 const errs = [];
 page.on('pageerror', (e) => errs.push(e.message));
 
-console.log(JSON.stringify({ firstRowMs, rows, firstText, ok, second, imgs, hits, errs }, null, 2));
+// 同一浏览器上下文再加载一次：代理不可用的记忆应当生效，不再打 /api/huaxu
+const before = hits.length;
+const t2 = Date.now();
+await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });
+let ok2 = false;
+try {
+    await page.waitForSelector('.ranking-row', { timeout: 90000 });
+    ok2 = true;
+} catch {}
+const reloadMs = Date.now() - t2;
+const reloadProxyHits = hits.length - before;
+
+console.log(JSON.stringify({ firstRowMs, rows, firstText, ok, second, imgs, hits, reload: { ok: ok2, ms: reloadMs, proxyHits: reloadProxyHits }, errs }, null, 2));
 await browser.close();
