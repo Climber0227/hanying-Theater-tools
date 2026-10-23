@@ -78,7 +78,7 @@
     {
       "name": "慢源站按超时返回",
       "pass": true,
-      "detail": "616ms status=504"
+      "detail": "606ms status=504"
     },
     {
       "name": "nocache 返回 no-store",
@@ -86,10 +86,20 @@
       "detail": "no-store"
     },
     {
-      "name": "真实源站可用",
+      "name": "挑战页不当作数据透传",
       "pass": true,
-      "detail": "202719 bytes"
+      "detail": ""
+    },
+    {
+      "name": "挑战页标记 X-Proxy-Usable=0",
+      "pass": true,
+      "detail": "0"
+    },
+    {
+      "name": "挑战页不缓存",
+      "pass": true,
+      "detail": "no-store"
     }
   ],
-  "at": "2026-10-23T13:46:03.739Z"
+  "at": "2026-10-23T14:04:20.966Z"
 }

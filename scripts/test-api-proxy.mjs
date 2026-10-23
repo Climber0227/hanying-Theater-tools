@@ -9,13 +9,13 @@ const UPSTREAM_PORT = 4731;
 const PROXY_PORT = 4732;
 
 // ---------- 可控的假上游 ----------
-const ctl = { delay: 30, status: 200, body: JSON.stringify(wz), hits: 0, lastUrl: '' };
+const ctl = { delay: 30, status: 200, type: 'application/json; charset=utf-8', body: JSON.stringify(wz), hits: 0, lastUrl: '' };
 const upstream = http.createServer((req, res) => {
     ctl.hits++;
     ctl.lastUrl = req.url;
     setTimeout(() => {
         res.statusCode = ctl.status;
-        res.setHeader('content-type', 'application/json; charset=utf-8');
+        res.setHeader('content-type', ctl.type);
         res.end(ctl.body);
     }, ctl.delay);
 });
@@ -102,6 +102,18 @@ ctl.delay = 30;
 // 9) nocache=1 时不缓存
 r = await callProxy({ path: '/servers/cn/warzone/current/16', nocache: '1' });
 check('nocache 返回 no-store', r.headers['cache-control'] === 'no-store', r.headers['cache-control']);
+
+// 10) 源站被 Cloudflare 挑战（403 + HTML）：不能把验证页当数据，要标记代理不可用
+ctl.status = 403;
+ctl.type = 'text/html; charset=UTF-8';
+ctl.body = '<!DOCTYPE html><html><head><title>Just a moment...</title></head><body>cf</body></html>';
+r = await callProxy({ path: '/servers/cn/warzone/current/16' });
+check('挑战页不当作数据透传', r.status === 502, );
+check('挑战页标记 X-Proxy-Usable=0', r.headers['x-proxy-usable'] === '0', r.headers['x-proxy-usable']);
+check('挑战页不缓存', r.headers['cache-control'] === 'no-store', r.headers['cache-control']);
+ctl.status = 200;
+ctl.type = 'application/json; charset=utf-8';
+ctl.body = JSON.stringify(wz);
 
 // 10) 真实源站透传（可选）
 if (process.env.REAL === '1') {

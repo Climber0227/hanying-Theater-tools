@@ -24,10 +24,39 @@
       "name": "无运行时异常",
       "pass": true,
       "detail": ""
+    },
+    {
+      "name": "代理被挡时自动降级直连",
+      "pass": true,
+      "detail": "https://api.huaxu.app/servers/cn/warzone/current/16"
+    },
+    {
+      "name": "降级后榜单仍有数据",
+      "pass": true,
+      "detail": "rows=8"
+    },
+    {
+      "name": "降级后不再尝试代理",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "降级后切难度走直连",
+      "pass": true,
+      "detail": "https://api.huaxu.app/servers/cn/warzone/current/15"
+    },
+    {
+      "name": "降级场景无运行时异常",
+      "pass": true,
+      "detail": ""
     }
   ],
   "proxyHits": [
     "?path=%2Fservers%2Fcn%2Fwarzone%2Fcurrent%2F15&nocache=1"
+  ],
+  "blockedHits": [],
+  "directHits": [
+    "https://api.huaxu.app/servers/cn/warzone/current/15"
   ],
   "errors": []
 }

@@ -80,7 +80,37 @@ check('手动刷新带 nocache=1', proxyHits.some(h => h.includes('nocache=1')),
 
 check('无运行时异常', errors.length === 0, errors.join(' | '));
 
-fs.writeFileSync('docs/perf/proxy-e2e.json', JSON.stringify({ results, proxyHits, errors }, null, 2));
+// 场景 B：代理被 Cloudflare 挡（502 + upstream_blocked）→ 前端应自动降级直连
+const page2 = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+const errors2 = [];
+page2.on('pageerror', e => errors2.push(e.message));
+await page2.route('https://assets.huaxu.app/**', r => r.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') }));
+const directHits = [];
+await page2.route('https://api.huaxu.app/**', route => {
+    directHits.push(route.request().url());
+    route.fulfill({ status: 200, contentType: 'application/json; charset=utf-8', body: JSON.stringify(wz) });
+});
+const blockedHits = [];
+await page2.route(`http://127.0.0.1:${APP_PORT}/api/huaxu*`, route => {
+    blockedHits.push(route.request().url());
+    route.fulfill({ status: 502, contentType: 'application/json; charset=utf-8', body: '{"status":"error","error":"upstream_blocked"}' });
+});
+await page2.addInitScript(() => { globalThis.__HUAXU_FORCE_PROXY__ = true; });
+await page2.goto(`http://127.0.0.1:${APP_PORT}/#/warzone`, { waitUntil: 'load' });
+await page2.waitForFunction(() => document.querySelectorAll('.ranking-row').length >= 5, null, { timeout: 40000 });
+check('代理被挡时自动降级直连', directHits.length >= 1 && directHits[0].includes('warzone'), directHits[0] || '（无直连请求）');
+check('降级后榜单仍有数据', (await page2.locator('.ranking-row').count()) >= 5, `rows=${await page2.locator('.ranking-row').count()}`);
+
+// 降级后切难度：应当直接走直连，不再浪费一次代理请求
+blockedHits.length = 0;
+directHits.length = 0;
+await page2.locator('.seg-btn', { hasText: '英雄' }).first().click();
+await page2.waitForTimeout(2500);
+check('降级后不再尝试代理', blockedHits.length === 0, blockedHits.join(' | '));
+check('降级后切难度走直连', directHits.some(u => u.includes('/15')), directHits.join(' | '));
+check('降级场景无运行时异常', errors2.length === 0, errors2.join(' | '));
+
+fs.writeFileSync('docs/perf/proxy-e2e.json', JSON.stringify({ results, proxyHits, blockedHits, directHits, errors }, null, 2));
 await browser.close();
 app.close();
 upstream.close();

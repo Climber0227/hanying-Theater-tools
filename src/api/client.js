@@ -1,4 +1,4 @@
-import { apiUrl, apiUrlNoCache } from './config.js';
+import { API_ORIGIN, apiUrl, apiUrlNoCache } from './config.js';
 
 // 内存缓存：URL → { data, expire }，TTL 60s（与 CDN max-age=60 对齐）
 // 目的：切难度/切周/页面跳转复用数据，减少对源站请求次数
@@ -15,6 +15,47 @@ const RETRY_BASE_DELAY = 400;
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ---------- 代理可用性 ----------
+// 源站（api.huaxu.app）在 Cloudflare 后面，数据中心 IP 会被挑战（403 + 验证页）。
+// 所以同源代理只能「尽力而为」：一旦发现它返回 502/HTML，本次会话就改用直连，
+// 30 分钟后再试一次。这样即便代理走不通，用户也只会多花一次快速失败的请求。
+const PROXY_PREFIX = '/api/huaxu?';
+const PROXY_BLOCK_KEY = 'huaxu_proxy_blocked_at';
+const PROXY_RETRY_MS = 30 * 60 * 1000;
+
+function isProxyUrl(url) {
+    return typeof url === 'string' && url.startsWith(PROXY_PREFIX);
+}
+
+function isProxyDisabled() {
+    try {
+        const at = Number(sessionStorage.getItem(PROXY_BLOCK_KEY) || 0);
+        return at > 0 && Date.now() - at < PROXY_RETRY_MS;
+    } catch (e) {
+        return false;
+    }
+}
+
+function markProxyDisabled() {
+    try {
+        sessionStorage.setItem(PROXY_BLOCK_KEY, String(Date.now()));
+    } catch (e) { /* 隐私模式下忽略 */ }
+}
+
+// 把 /api/huaxu?path=/servers/... 还原成直连源站的地址
+function directUrlFor(proxyUrl) {
+    try {
+        const query = proxyUrl.slice(proxyUrl.indexOf('?') + 1);
+        const params = new URLSearchParams(query);
+        const path = params.get('path');
+        if (!path) return null;
+        const extra = params.get('q');
+        return `${API_ORIGIN}${path}${extra ? `?${extra}` : ''}`;
+    } catch (e) {
+        return null;
+    }
 }
 
 function cacheGet(url) {
@@ -138,9 +179,17 @@ async function requestJson(url, { signal, timeout, retries, noStore = false }) {
             if (noStore) init.cache = 'no-store';
             if (url.startsWith('/api/')) init.credentials = 'omit';
             const response = await fetch(url, init);
+            const contentType = response.headers.get('content-type') || '';
             if (!response.ok) {
                 const err = new Error(`HTTP ${response.status}`);
                 err.status = response.status;
+                err.isHtml = /text\/html/i.test(contentType);
+                throw err;
+            }
+            // 正常接口只会是 JSON；拿到 HTML 说明被中间的验证页拦截了
+            if (/text\/html/i.test(contentType)) {
+                const err = new SyntaxError('响应不是 JSON');
+                err.isHtml = true;
                 throw err;
             }
             return await response.json();
@@ -154,6 +203,8 @@ async function requestJson(url, { signal, timeout, retries, noStore = false }) {
             } else {
                 lastError = e;
             }
+            // 拿到验证页 / 代理自身报 502：没必要重试，立刻交给上层降级
+            if (lastError.isHtml) throw lastError;
             // 4xx（限流除外）是确定性错误，重试没有意义
             const status = lastError.status;
             if (status && status >= 400 && status < 500 && status !== 429) throw lastError;
@@ -163,6 +214,24 @@ async function requestJson(url, { signal, timeout, retries, noStore = false }) {
         }
     }
     throw lastError || new Error('加载失败');
+}
+
+// 先试同源代理（能命中 CDN 就赚到），被拦就退回直连，并记住这次会话不再试
+async function requestWithFallback(url, opts) {
+    let target = url;
+    if (isProxyUrl(target) && isProxyDisabled()) {
+        target = directUrlFor(target) || target;
+    }
+    try {
+        return await requestJson(target, opts);
+    } catch (e) {
+        const unusable = isProxyUrl(target) && e.name !== 'AbortError' && (e.isHtml || !e.status || e.status >= 500);
+        if (!unusable) throw e;
+        markProxyDisabled();
+        const direct = directUrlFor(target);
+        if (!direct) throw e;
+        return await requestJson(direct, opts);
+    }
 }
 
 export async function fetchJson(url, {
@@ -188,7 +257,7 @@ export async function fetchJson(url, {
     }
 
     const task = (async () => {
-        const data = await requestJson(networkUrl, { signal, timeout, retries, noStore: force });
+        const data = await requestWithFallback(networkUrl, { signal, timeout, retries, noStore: force });
         if (useCache) {
             cacheSet(url, data);
             if (persist) persistSet(url, data);

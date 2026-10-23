@@ -119,6 +119,16 @@ module.exports = async function handler(req, res) {
             result = await fetchUpstream(target);
         }
 
+        // 源站被 Cloudflare 挡了（403 + HTML 验证页）：这不是「数据不存在」，
+        // 而是我们这台机器的数据中心 IP 被判定成机器人。返回 502 让前端降级为直连，
+        // 绝不能把验证页当成数据透传给页面。
+        if (looksLikeChallenge(result)) {
+            res.setHeader('Cache-Control', 'no-store');
+            res.setHeader('X-Proxy-Usable', '0');
+            res.setHeader('X-Proxy-Reason', 'upstream_challenge');
+            return sendJson(res, 502, { status: 'error', error: 'upstream_blocked' });
+        }
+
         // 源站明确说「没有」（4xx）：原样透传，不写快照、不缓存
         if (!result.ok && result.status < 500 && result.status !== 429) {
             res.setHeader('Cache-Control', 'no-store');
@@ -130,6 +140,7 @@ module.exports = async function handler(req, res) {
         remember(key, result.text, result.contentType);
         res.setHeader('Content-Type', result.contentType);
         res.setHeader('X-Data-State', 'fresh');
+        res.setHeader('X-Proxy-Usable', '1');
         res.setHeader('X-Proxy-Ms', String(Date.now() - started));
         if (nocache) {
             res.setHeader('Cache-Control', 'no-store');
@@ -146,6 +157,15 @@ module.exports = async function handler(req, res) {
         return serveStale(res, key, err?.name === 'AbortError' ? 'timeout' : err?.message, started);
     }
 };
+
+// 源站被 Cloudflare 挑战时会返回 HTML 验证页（403 / 503），正常 API 只会是 JSON。
+// 只要拿到 HTML 就认定「这台机器被挡了」，由前端降级直连。
+function looksLikeChallenge(result) {
+    const ct = String(result.contentType || '').toLowerCase();
+    if (ct.includes('text/html')) return true;
+    const head = String(result.text || '').trimStart().slice(0, 60).toLowerCase();
+    return head.startsWith('<!doctype html') || head.startsWith('<html');
+}
 
 function serveStale(res, key, reason, started) {
     const snap = recall(key);
