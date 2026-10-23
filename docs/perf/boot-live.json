@@ -6,7 +6,7 @@
   },
   "desktop": {
     "bootPresentAtStart": true,
-    "bootRemovedAfterMs": 1787,
+    "bootRemovedAfterMs": 1497,
     "rows": 8,
     "skeleton": 8,
     "zoneCards": 3,
@@ -14,7 +14,7 @@
   },
   "mobile": {
     "bootPresentAtStart": true,
-    "bootRemovedAfterMs": 1792,
+    "bootRemovedAfterMs": 2446,
     "rows": 8,
     "skeleton": 8,
     "zoneCards": 3,

@@ -55,7 +55,9 @@ export default function Nav({ current, onChange }) {
     return (
         <nav className="nav">
             <button className="nav-brand" onClick={() => onChange('warzone')} title="返回首页">
-                <span className="nav-logo">含</span>
+                <span className="nav-logo">
+                    <img src="/img/brand-64.webp" alt="" width="32" height="32" decoding="async" />
+                </span>
                 <span className="nav-brand-text">
                     <span className="nav-brand-name">含英牌战区数据</span>
                     <span className="nav-brand-sub">战双帕弥什 · 榜单分析</span>
