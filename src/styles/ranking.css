@@ -993,6 +993,8 @@
     font-size: var(--fs-13);
     color: var(--text-3);
     font-variant-numeric: tabular-nums;
+    /* 数据没到之前这里是空的：留出刚好一行的高度，标题区不会先矮一截再长高 */
+    min-height: calc(var(--fs-13) * 1.5);
 }
 .page-meta b {
     color: var(--text-2);

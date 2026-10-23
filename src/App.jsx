@@ -11,7 +11,13 @@ const PpcPage = lazy(() => import('./components/PpcPage.jsx'));
 const MinePage = lazy(() => import('./components/MinePage.jsx'));
 const ChangelogPage = lazy(() => import('./components/ChangelogPage.jsx'));
 
-const PAGE_FALLBACK = <div className="m1-placeholder">加载中…</div>;
+// 切页时 chunk 还在下载（首屏没预取到 / 弱网）：给一个和整体风格一致的占位，别只剩一行灰字
+const PAGE_FALLBACK = (
+    <div className="page-loader">
+        <span className="page-loader-ring" aria-hidden="true" />
+        <span className="page-loader-text">正在加载…</span>
+    </div>
+);
 
 export default function App() {
     // 页面状态持久化：URL hash（刷新/分享保留当前页）

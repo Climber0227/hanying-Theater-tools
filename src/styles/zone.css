@@ -381,3 +381,51 @@
         font-size: 17px;
     }
 }
+
+/* ===== 加载占位（三张卡先占位，避免数据到了整页往下跳） ===== */
+.zone-card-skeleton {
+    pointer-events: none;
+    /* 和真实卡片同高，数据到了不会把下面的排行榜整体顶下去 */
+    min-height: 113px;
+}
+.zone-card-skeleton .zone-card-main {
+    gap: 14px;
+}
+.zone-card-skeleton .zone-card-right {
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.sk-line {
+    display: block;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--surface-sunken) 20%, var(--surface-3) 45%, var(--surface-sunken) 70%);
+    background-size: 320% 100%;
+    animation: sk-shimmer 1.5s ease-in-out infinite;
+}
+
+.sk-tall {
+    height: 22px;
+    border-radius: 6px;
+}
+
+.sk-w-80 { width: 80px; }
+.sk-w-110 { width: 110px; }
+.sk-w-150 { width: 150px; }
+
+@keyframes sk-shimmer {
+    0% { background-position: 120% 0; }
+    100% { background-position: -120% 0; }
+}
+
+@media (max-width: 560px) {
+    .zone-card-skeleton { min-height: 95px; }
+    .sk-w-150 { width: 96px; }
+    .sk-w-110 { width: 76px; }
+    .sk-w-80 { width: 58px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sk-line { animation: none; }
+}

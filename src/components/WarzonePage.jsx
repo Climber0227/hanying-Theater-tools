@@ -143,7 +143,7 @@ export default function WarzonePage({ onOpenPlayer }) {
                 </div>
             </section>
 
-            <ZoneCards zones={zones} rankings={rankings} />
+            <ZoneCards zones={zones} rankings={rankings} loading={warzone.loading} />
             <RankingPanel warzone={warzone} onOpenPlayer={onOpenPlayer} />
         </>
     );

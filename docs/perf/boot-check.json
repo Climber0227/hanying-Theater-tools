@@ -1,0 +1,40 @@
+{
+  "boot-desktop": {
+    "bootVisible": true,
+    "tip": "正在连接数据源",
+    "dismissedAfterMount": true
+  },
+  "boot-mobile": {
+    "bootVisible": true,
+    "tip": "正在连接数据源",
+    "dismissedAfterMount": true
+  },
+  "skeleton-desktop": {
+    "bootGone": true,
+    "skeletonRows": 8,
+    "zoneCardH": 113,
+    "panelTop": 404.890625,
+    "panelH": 877.5,
+    "scrollH": 1314
+  },
+  "skeleton-mobile": {
+    "bootGone": true,
+    "skeletonRows": 8,
+    "zoneCardH": 95,
+    "panelTop": 372.890625,
+    "panelH": 905.5,
+    "scrollH": 1302
+  },
+  "loaded-desktop": {
+    "rows": 8,
+    "zoneCardH": 113,
+    "panelTop": 404.890625,
+    "scrollH": 1158
+  },
+  "loaded-mobile": {
+    "rows": 8,
+    "zoneCardH": 95.296875,
+    "panelTop": 373.1875,
+    "scrollH": 1111
+  }
+}

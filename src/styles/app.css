@@ -325,3 +325,45 @@
     .corner-feedback { font-size: 10px; padding: 3px 8px; }
     .ad-reopen { left: 10px; bottom: 10px; font-size: 11px; padding: 5px 10px; }
 }
+
+/* ===== 切页 / 挂载中的占位 =====
+   首屏由 index.html 的 #boot 负责；这里管两件事：
+   1) 切到还没下载完的页面 chunk（Suspense fallback）
+   2) React 已挂载但页面数据还在路上的留白
+   统一成「一个小转圈 + 一句说明」，不再是一行灰字。 */
+.page-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-3);
+    min-height: 44vh;
+    padding: 48px 0;
+    color: var(--text-3);
+}
+
+.page-loader-ring {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--line-strong);
+    border-top-color: var(--accent);
+    animation: page-loader-spin 720ms linear infinite;
+}
+
+.page-loader-text {
+    font-size: var(--fs-12);
+    letter-spacing: 0.01em;
+}
+
+@keyframes page-loader-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-loader-ring {
+        animation: none;
+        border-top-color: var(--line-strong);
+        border-right-color: var(--accent);
+    }
+}

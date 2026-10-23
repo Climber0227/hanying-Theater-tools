@@ -15,7 +15,7 @@ const ZONE_ACCENTS = ['#3f6ecb', '#cf3d3d', '#b07a12'];
 const ZONE_TINTS = ['rgba(63, 110, 203, 0.09)', 'rgba(207, 61, 61, 0.08)', 'rgba(176, 122, 18, 0.09)'];
 
 // 战区卡片：区名 + 机制 + 本周榜首 / 该区最高分 + 详情弹窗
-export default function ZoneCards({ zones, rankings }) {
+export default function ZoneCards({ zones, rankings, loading }) {
     const [detailZone, setDetailZone] = useState(null);
 
     // 各区榜首（榜单已按总分排序，仍在榜内取该区最高分者）
@@ -36,7 +36,32 @@ export default function ZoneCards({ zones, rankings }) {
         return map;
     }, [rankings]);
 
-    if (!zones || zones.length === 0) return null;
+    // 数据没到之前保留三张等高占位卡：避免卡片突然插入把下面的排行榜整体推下去
+    if (!zones || zones.length === 0) {
+        if (!loading) return null;
+        return (
+            <section className="zones-container" aria-hidden="true">
+                {[0, 1, 2].map(i => (
+                    <div
+                        className="zone-card zone-card-skeleton"
+                        key={i}
+                        style={{
+                            '--zone-accent': ZONE_ACCENTS[i % ZONE_ACCENTS.length],
+                            '--zone-tint': ZONE_TINTS[i % ZONE_TINTS.length]
+                        }}
+                    >
+                        <div className="zone-card-main">
+                            <div className="zone-card-head"><span className="sk-line sk-w-110" /></div>
+                            <div className="zone-card-foot"><span className="sk-line sk-w-150" /></div>
+                        </div>
+                        <div className="zone-card-right">
+                            <span className="sk-line sk-w-80 sk-tall" />
+                        </div>
+                    </div>
+                ))}
+            </section>
+        );
+    }
 
     return (
         <section className="zones-container">
